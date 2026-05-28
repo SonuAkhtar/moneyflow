@@ -26,8 +26,8 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === "production",
   },
   sassOptions: {
-    includePaths: [path.join(__dirname, "src/styles")],
-    prependData: `@use "abstracts" as *;`,
+    loadPaths: [path.join(__dirname, "src/styles")],
+    additionalData: `@use "abstracts" as *;`,
   },
   experimental: {
     optimizePackageImports: ["lucide-react", "framer-motion", "recharts"],
