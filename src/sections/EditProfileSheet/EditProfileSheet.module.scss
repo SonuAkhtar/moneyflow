@@ -1,0 +1,35 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.avatar {
+  position: relative;
+  align-self: center;
+  cursor: pointer;
+  @include tap-highlight-none;
+
+  &_badge {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-pill);
+    background: var(--gradient-lime);
+    color: var(--text-inverse);
+    border: 3px solid var(--surface-elevated);
+    box-shadow: var(--shadow-soft);
+  }
+
+  &_input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+}

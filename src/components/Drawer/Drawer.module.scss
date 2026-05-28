@@ -1,0 +1,62 @@
+.drawer {
+  position: fixed;
+  inset: 0;
+  z-index: z("drawer");
+  display: flex;
+
+  &--right {
+    justify-content: flex-end;
+  }
+
+  &--left {
+    justify-content: flex-start;
+  }
+
+  &_backdrop {
+    position: absolute;
+    inset: 0;
+    background: var(--surface-overlay);
+    backdrop-filter: blur(6px);
+  }
+
+  &_panel {
+    position: relative;
+    width: min(86vw, 380px);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface-elevated);
+    border-left: 1px solid var(--border-glass);
+    box-shadow: var(--shadow-float);
+    padding: var(--space-5);
+    @include safe-area(padding-bottom, 20px);
+  }
+
+  &_header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-4);
+  }
+
+  &_title {
+    font-size: var(--font-lg);
+  }
+
+  &_close {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-glass);
+    color: var(--text-secondary);
+    margin-left: auto;
+  }
+
+  &_body {
+    flex: 1;
+    overflow-y: auto;
+    @include scrollbar-hide;
+  }
+}

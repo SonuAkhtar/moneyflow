@@ -1,0 +1,64 @@
+.card {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  isolation: isolate;
+
+  &--padded {
+    padding: var(--space-5);
+  }
+
+  &--solid {
+    background: var(--surface-card-solid);
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-card);
+  }
+
+  &--glass {
+    @include glass(20px);
+    box-shadow: var(--shadow-soft);
+  }
+
+  &--gradient {
+    background: var(--gradient-card);
+    border: 1px solid var(--border-glass);
+    box-shadow: var(--shadow-card);
+    backdrop-filter: blur(16px);
+  }
+
+  &--glow-lime::before,
+  &--glow-orange::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  &--glow-lime::before {
+    background: radial-gradient(
+      120% 80% at 0% 0%,
+      rgba(198, 244, 50, 0.16),
+      transparent 60%
+    );
+  }
+
+  &--glow-orange::before {
+    background: radial-gradient(
+      120% 80% at 100% 0%,
+      rgba(255, 122, 26, 0.16),
+      transparent 60%
+    );
+  }
+
+  &--interactive {
+    cursor: pointer;
+    @include tap-highlight-none;
+    transition: box-shadow var(--dur-base) var(--ease-smooth);
+
+    &:hover {
+      box-shadow: var(--shadow-float);
+    }
+  }
+}

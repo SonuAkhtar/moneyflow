@@ -1,0 +1,40 @@
+.progress {
+  width: 100%;
+  background: var(--surface-input);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+
+  &--sm {
+    height: 6px;
+  }
+
+  &--md {
+    height: 10px;
+  }
+
+  &--glow {
+    box-shadow: var(--shadow-inset);
+  }
+
+  &_fill {
+    display: block;
+    height: 100%;
+    border-radius: var(--radius-pill);
+
+    &--lime {
+      background: var(--gradient-lime);
+    }
+
+    &--orange {
+      background: var(--gradient-orange);
+    }
+
+    &--ocean {
+      background: linear-gradient(135deg, #57b8ff 0%, #2bff95 100%);
+    }
+
+    &--danger {
+      background: linear-gradient(135deg, #ff5470 0%, #ff7a1a 100%);
+    }
+  }
+}

@@ -1,0 +1,22 @@
+.intro {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+
+  &_title {
+    font-size: var(--font-2xl);
+    letter-spacing: -0.02em;
+  }
+
+  &_subtitle {
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  &_action {
+    flex-shrink: 0;
+  }
+}

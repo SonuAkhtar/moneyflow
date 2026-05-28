@@ -1,0 +1,31 @@
+.shell {
+  position: relative;
+  min-height: 100dvh;
+  width: 100%;
+  max-width: $content-max;
+  margin: 0 auto;
+  overflow-x: clip;
+
+  &_glow {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: $content-max;
+    height: 320px;
+    background: var(--gradient-hero);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  &_inner {
+    position: relative;
+    z-index: 1;
+    padding: 0 var(--space-5);
+  }
+
+  &_main {
+    padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
+  }
+}

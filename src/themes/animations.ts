@@ -1,0 +1,20 @@
+import type { Variants } from "framer-motion";
+
+type Bezier = [number, number, number, number];
+
+const easeOutExpo: Bezier = [0.16, 1, 0.3, 1];
+
+export const fadeInUp: Variants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.42, ease: easeOutExpo } },
+};
+
+export const listItem: Variants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.24, ease: easeOutExpo } },
+};
+
+export const staggerContainer: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.07, delayChildren: 0.04 } },
+};

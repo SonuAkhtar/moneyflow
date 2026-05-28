@@ -1,0 +1,93 @@
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+
+  &_badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--font-2xs);
+    font-weight: var(--weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+  }
+
+  &_text {
+    font-size: var(--font-lg);
+    font-weight: var(--weight-semibold);
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+  }
+
+  &_refresh {
+    align-self: flex-start;
+  }
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+
+  &_head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  &_icon {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+
+    &--lime {
+      background: rgba(198, 244, 50, 0.16);
+      color: var(--accent);
+    }
+
+    &--ocean {
+      background: rgba(87, 184, 255, 0.16);
+      color: var(--color-info);
+    }
+
+    &--orange {
+      background: rgba(255, 122, 26, 0.16);
+      color: var(--color-neon-orange);
+    }
+
+    &--danger {
+      background: rgba(255, 84, 112, 0.16);
+      color: var(--color-danger);
+    }
+  }
+
+  &_title {
+    flex: 1;
+    font-size: var(--font-sm);
+    font-weight: var(--weight-semibold);
+    @include truncate(1);
+  }
+
+  &_body {
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+    line-height: 1.45;
+  }
+}

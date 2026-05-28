@@ -1,0 +1,86 @@
+.flow {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-7) var(--space-5) var(--space-6);
+  padding-top: calc(var(--space-7) + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
+  max-width: $content-max;
+  margin: 0 auto;
+  overflow: hidden;
+
+  &_glow {
+    position: absolute;
+    inset: 0;
+    background:
+      var(--gradient-mesh),
+      var(--surface-base);
+    pointer-events: none;
+  }
+
+  &_progress {
+    position: relative;
+    display: flex;
+    gap: var(--space-2);
+    margin-bottom: var(--space-9);
+  }
+
+  &_dot {
+    flex: 1;
+    height: 4px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-input);
+    transition: background var(--dur-base) var(--ease-smooth);
+
+    &--on {
+      background: var(--gradient-lime);
+    }
+  }
+
+  &_step {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &_icon {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-xl);
+    background: var(--surface-card-solid);
+    border: 1px solid var(--border-glass);
+    color: var(--accent);
+    box-shadow: var(--shadow-glow-lime);
+    margin-bottom: var(--space-5);
+  }
+
+  &_title {
+    font-size: var(--font-3xl);
+    margin-bottom: var(--space-2);
+  }
+
+  &_subtitle {
+    font-size: var(--font-md);
+    color: var(--text-secondary);
+    max-width: 340px;
+  }
+
+  &_body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-top: var(--space-7);
+  }
+
+  &_actions {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-top: var(--space-6);
+  }
+}

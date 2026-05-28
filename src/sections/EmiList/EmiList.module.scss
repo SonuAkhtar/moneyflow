@@ -1,0 +1,69 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+
+  &_head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  &_icon {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    background: rgba(87, 184, 255, 0.16);
+    color: var(--color-info);
+    flex-shrink: 0;
+  }
+
+  &_info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &_name {
+    display: block;
+    font-size: var(--font-sm);
+    font-weight: var(--weight-semibold);
+    @include truncate(1);
+  }
+
+  &_sub {
+    font-size: var(--font-xs);
+    color: var(--text-tertiary);
+  }
+
+  &_amount {
+    font-size: var(--font-md);
+    font-weight: var(--weight-bold);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+  }
+
+  &_per {
+    font-size: var(--font-xs);
+    font-weight: var(--weight-regular);
+    color: var(--text-tertiary);
+  }
+
+  &_foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &_remaining {
+    font-size: var(--font-xs);
+    color: var(--text-secondary);
+  }
+}

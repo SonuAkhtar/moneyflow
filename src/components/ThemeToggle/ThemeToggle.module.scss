@@ -1,0 +1,36 @@
+.toggle {
+  position: relative;
+  width: 58px;
+  height: 32px;
+  border-radius: var(--radius-pill);
+  padding: 3px;
+  background: var(--surface-input);
+  border: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+  transition: background var(--dur-base) var(--ease-smooth);
+
+  &--dark {
+    background: rgba(120, 130, 255, 0.16);
+  }
+
+  &_knob {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: var(--radius-pill);
+    background: var(--gradient-lime);
+    color: var(--text-inverse);
+    box-shadow: var(--shadow-soft);
+  }
+
+  &--dark &_knob {
+    background: linear-gradient(135deg, #9b8cff 0%, #57b8ff 100%);
+    color: #0a0b0d;
+  }
+
+  &_iconWrap {
+    display: grid;
+    place-items: center;
+  }
+}

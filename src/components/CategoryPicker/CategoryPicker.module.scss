@@ -1,0 +1,40 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+
+.chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--surface-input);
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  transition:
+    background var(--dur-fast) var(--ease-smooth),
+    border-color var(--dur-fast) var(--ease-smooth);
+
+  &--active {
+    background: var(--surface-card-solid);
+  }
+
+  &_icon {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-sm);
+  }
+
+  &_label {
+    font-size: var(--font-2xs);
+    font-weight: var(--weight-medium);
+    text-align: center;
+    @include truncate(1);
+    max-width: 100%;
+  }
+}

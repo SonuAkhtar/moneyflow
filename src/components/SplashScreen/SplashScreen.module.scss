@@ -1,0 +1,45 @@
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: z("max");
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  background:
+    var(--gradient-hero),
+    var(--surface-base);
+
+  &_mark {
+    display: grid;
+    place-items: center;
+    width: 76px;
+    height: 76px;
+    border-radius: var(--radius-xl);
+    background: var(--gradient-lime);
+    color: var(--text-inverse);
+    box-shadow: var(--shadow-glow-lime);
+  }
+
+  &_label {
+    font-size: var(--font-xl);
+    font-weight: var(--weight-bold);
+    letter-spacing: -0.02em;
+  }
+
+  &_loader {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 3px solid var(--surface-input);
+    border-top-color: var(--accent);
+    animation: splash-spin 0.8s linear infinite;
+  }
+}
+
+@keyframes splash-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

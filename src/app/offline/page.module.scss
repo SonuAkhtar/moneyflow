@@ -1,0 +1,36 @@
+.offline {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--space-4);
+  padding: var(--space-7);
+  background:
+    var(--gradient-mesh),
+    var(--surface-base);
+
+  &_orb {
+    display: grid;
+    place-items: center;
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-2xl);
+    background: var(--surface-card-solid);
+    border: 1px solid var(--border-glass);
+    color: var(--color-neon-orange);
+    box-shadow: var(--shadow-glow-orange);
+  }
+
+  &_title {
+    font-size: var(--font-2xl);
+  }
+
+  &_text {
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+    max-width: 320px;
+    line-height: 1.5;
+  }
+}
