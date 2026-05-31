@@ -6,30 +6,32 @@
   width: 100%;
   max-width: $content-max;
   z-index: z("nav");
-  padding: 0 var(--space-3);
-  padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
+  padding: 0 var(--space-4) var(--space-4);
+  padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
   pointer-events: none;
 
   &_bar {
-    position: relative;
     display: flex;
-    align-items: center;
-    justify-content: space-around;
-    height: 66px;
-    padding: 0 var(--space-3);
+    align-items: stretch;
+    justify-content: space-between;
+    gap: var(--space-1);
+    padding: var(--space-2);
     border-radius: var(--radius-2xl);
     @include glass(28px, var(--surface-chrome));
-    @include glass-elevation(0.5);
+    @include glass-elevation(0.5, $ring: true);
     pointer-events: auto;
   }
 
   &_item {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var(--space-1);
+    gap: 3px;
     flex: 1;
+    padding: var(--space-2) var(--space-1);
+    border-radius: var(--radius-lg);
     color: var(--text-tertiary);
     transition: color var(--dur-base) var(--ease-smooth);
     @include tap-highlight-none;
@@ -39,31 +41,14 @@
     }
   }
 
-  &_iconZone {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: 44px;
-    height: 40px;
-  }
-
-  &_orb {
+  // Sliding accent-tinted pill behind the active icon + label.
+  &_pill {
     position: absolute;
-    top: -14px;
-    left: 0;
-    width: 44px;
-    height: 44px;
-    border-radius: var(--radius-pill);
-    background: var(--accent);
-    box-shadow:
-      0 8px 18px -4px rgba(109, 78, 214, 0.55),
-      inset 0 1px 0 rgba(255, 255, 255, 0.3);
-
-    :global(:root[data-theme="dark"]) & {
-      box-shadow:
-        0 8px 18px -4px rgba(78, 206, 110, 0.5),
-        inset 0 1px 0 rgba(255, 255, 255, 0.25);
-    }
+    inset: 0;
+    z-index: 0;
+    border-radius: var(--radius-lg);
+    background: var(--accent-bg);
+    box-shadow: inset 0 0 0 1px var(--border-lime);
   }
 
   &_icon {
@@ -72,16 +57,15 @@
     display: grid;
     place-items: center;
     will-change: transform;
-
-    .nav_item--active & {
-      color: #fff;
-    }
   }
 
   &_label {
+    position: relative;
+    z-index: 1;
     font-size: var(--font-2xs);
     font-weight: var(--weight-medium);
     letter-spacing: 0.01em;
+    line-height: 1;
     transition: font-weight var(--dur-fast) var(--ease-smooth);
 
     .nav_item--active & {

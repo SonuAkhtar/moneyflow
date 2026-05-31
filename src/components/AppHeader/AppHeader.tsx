@@ -1,19 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar/Avatar";
 import { ProfileMenu } from "@/components/ProfileMenu/ProfileMenu";
 import { useFinanceStore } from "@/store/financeStore";
+import { cn } from "@/utils";
 import { ROUTES } from "@/constants";
 import styles from "./AppHeader.module.scss";
 
 export const AppHeader = () => {
   const profile = useFinanceStore((s) => s.profile);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  // Collapse the header into a slimmer bar once the page is scrolled.
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
-    <header className={styles.header}>
+    <header className={cn(styles.header, scrolled && styles["header--scrolled"])}>
       <Link
         href={ROUTES.home}
         className={styles.header_logo}

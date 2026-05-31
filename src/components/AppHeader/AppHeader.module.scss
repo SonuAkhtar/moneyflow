@@ -16,6 +16,26 @@
   box-shadow:
     var(--shadow-soft),
     inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  transition:
+    padding var(--dur-base) var(--ease-smooth),
+    box-shadow var(--dur-base) var(--ease-smooth);
+
+  // Slimmer bar once scrolled — tighter padding, smaller wordmark + avatar.
+  &--scrolled {
+    padding-top: calc(var(--space-2) + env(safe-area-inset-top, 0px));
+    padding-bottom: var(--space-2);
+    box-shadow:
+      var(--shadow-card),
+      inset 0 1px 0 rgba(255, 255, 255, 0.07);
+
+    .header_word {
+      font-size: var(--font-xl);
+    }
+
+    .header_avatar {
+      transform: scale(0.86);
+    }
+  }
 
   &_logo {
     display: flex;
@@ -31,6 +51,7 @@
     letter-spacing: -0.045em;
     line-height: 1;
     color: var(--text-primary);
+    transition: font-size var(--dur-base) var(--ease-smooth);
   }
 
   &_wordAccent {
@@ -43,5 +64,7 @@
 
   &_avatar {
     position: relative;
+    transform-origin: right center;
+    transition: transform var(--dur-base) var(--ease-smooth);
   }
 }

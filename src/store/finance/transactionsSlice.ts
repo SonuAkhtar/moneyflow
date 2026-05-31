@@ -157,6 +157,9 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
     );
   },
 
+  // Salary is an income RECORD only — it is intentionally NOT credited to any
+  // account balance (it doesn't inflate banks/savings). It still counts as
+  // monthly income; the balance trail excludes it (see useBalanceTrail).
   setSalary: (month, amount) => {
     const s = get();
     const existing = s.transactions.find(
@@ -166,20 +169,12 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
         monthKey(t.occurredAt) === month,
     );
     if (existing) {
-      const delta = amount - existing.amount;
       const transactions = s.transactions.map((t) =>
         t.id === existing.id ? { ...t, amount } : t,
       );
-      const accounts = applyBalance(s.accounts, existing.accountId, delta);
-      set({ transactions, accounts });
+      set({ transactions });
       const updatedTxn = transactions.find((t) => t.id === existing.id);
-      const account = accounts.find((a) => a.id === existing.accountId);
-      sync(() =>
-        Promise.all([
-          ...(updatedTxn ? [transactionRepo.save(updatedTxn)] : []),
-          ...(account ? [accountRepo.save(account)] : []),
-        ]).then(() => undefined),
-      );
+      if (updatedTxn) sync(() => transactionRepo.save(updatedTxn));
       return;
     }
     const base = s.accounts.find((a) => a.isPrimary) ?? s.accounts[0];
@@ -199,14 +194,7 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
       occurredAt,
       createdAt: isoNow(),
     };
-    const accounts = applyBalance(s.accounts, base.id, amount);
-    set({ transactions: [txn, ...s.transactions], accounts });
-    const account = accounts.find((a) => a.id === base.id);
-    sync(() =>
-      Promise.all([
-        transactionRepo.save(txn),
-        ...(account ? [accountRepo.save(account)] : []),
-      ]).then(() => undefined),
-    );
+    set({ transactions: [txn, ...s.transactions] });
+    sync(() => transactionRepo.save(txn));
   },
 });
