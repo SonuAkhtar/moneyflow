@@ -22,6 +22,14 @@ const NOT_CONFIGURED: AuthResult = {
 
 const isEmail = (value: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value.trim());
 
+// Base URL for auth email redirect links (verify / reset). These calls run in
+// the browser, so prefer the live origin — this keeps links pointing at the
+// host the user is actually on (prod, preview, or local) even if the build-time
+// NEXT_PUBLIC_APP_URL is missing or wrong. Falls back to the configured value
+// for any non-browser execution.
+const authRedirectBase = (): string =>
+  typeof window !== "undefined" ? window.location.origin : env.appUrl;
+
 export const authService = {
   isRemote(): boolean {
     return getBrowserSupabase() !== null;
@@ -46,7 +54,7 @@ export const authService = {
       password: input.password,
       options: {
         data: { full_name: input.fullName, username },
-        emailRedirectTo: `${env.appUrl}/verify`,
+        emailRedirectTo: `${authRedirectBase()}/verify`,
       },
     });
     if (error) return { ok: false, message: error.message };
@@ -99,7 +107,7 @@ export const authService = {
     const supabase = getBrowserSupabase();
     if (!supabase) return NOT_CONFIGURED;
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${env.appUrl}/reset-password`,
+      redirectTo: `${authRedirectBase()}/reset-password`,
     });
     if (error) return { ok: false, message: error.message };
     return { ok: true, email };
