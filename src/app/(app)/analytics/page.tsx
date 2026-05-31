@@ -1,19 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { motion } from "framer-motion";
-import { BarChart3 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { BarChart3, ChevronDown } from "lucide-react";
 import { PageIntro } from "@/components/PageIntro/PageIntro";
 import { Card } from "@/components/Card/Card";
+import { Select } from "@/components/Select/Select";
 import { SegmentedControl } from "@/components/SegmentedControl/SegmentedControl";
 import { SectionHeader } from "@/components/SectionHeader/SectionHeader";
 import { EmptyState } from "@/components/EmptyState/EmptyState";
 import { Skeleton } from "@/components/Skeleton/Skeleton";
-import { useAnalytics, currentMonthTitle } from "@/hooks/useAnalytics";
+import { TransactionItem } from "@/components/TransactionItem/TransactionItem";
+import { EditTransactionSheet } from "@/sections/EditTransactionSheet/EditTransactionSheet";
+import { useAnalytics } from "@/hooks/useAnalytics";
+import { useFinanceMetrics } from "@/hooks/useFinanceMetrics";
 import { useFinanceStore } from "@/store/financeStore";
-import { formatCurrency, formatPercent } from "@/utils";
+import {
+  currentMonthKey,
+  formatCurrency,
+  formatPercent,
+  lastNMonthKeys,
+  monthKey,
+  monthLabel,
+} from "@/utils";
 import { staggerContainer, listItem } from "@/themes/animations";
+import type { Transaction } from "@/types";
 import styles from "./page.module.scss";
 
 function ChartFallback() {
@@ -36,10 +48,65 @@ const SpendBarChart = dynamic(
 type View = "overview" | "categories" | "daily";
 
 export default function AnalyticsPage() {
-  const { categoryBreakdown, monthlyTrend, dailySpend, topMerchants } = useAnalytics();
+  const [month, setMonth] = useState<string>(currentMonthKey());
+  const { categoryBreakdown, monthlyTrend, dailySpend, topMerchants } =
+    useAnalytics(month);
+  const metrics = useFinanceMetrics(month);
+  const transactions = useFinanceStore((s) => s.transactions);
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
   const [view, setView] = useState<View>("overview");
+  const [editing, setEditing] = useState<Transaction | null>(null);
   const totalSpend = categoryBreakdown.reduce((acc, c) => acc + c.value, 0);
+
+  const fmt = (n: number) => formatCurrency(n, currency, { compact: true });
+  const maxSaved = Math.max(1, ...monthlyTrend.map((t) => Math.max(0, t.saved)));
+
+  const monthOptions = useMemo(
+    () =>
+      lastNMonthKeys(12)
+        .slice()
+        .reverse()
+        .map((key) => ({ label: monthLabel(key), value: key })),
+    [],
+  );
+
+  const groups = useMemo(() => {
+    const inMonth = transactions
+      .filter((t) => monthKey(t.occurredAt) === month)
+      .sort((a, b) => +new Date(b.occurredAt) - +new Date(a.occurredAt));
+    return {
+      savings: inMonth.filter((t) => t.type === "income"),
+      major: inMonth.filter((t) => t.type === "expense" && t.isBigExpense),
+      daily: inMonth.filter((t) => t.type === "expense" && !t.isBigExpense),
+    };
+  }, [transactions, month]);
+
+  const kpis = [
+    {
+      key: "income",
+      label: "Income",
+      value: formatCurrency(metrics.monthIncome, currency, { compact: true }),
+      tone: "in" as const,
+    },
+    {
+      key: "spent",
+      label: "Spent",
+      value: formatCurrency(metrics.monthExpenses, currency, { compact: true }),
+      tone: "out" as const,
+    },
+    {
+      key: "saved",
+      label: "Saved",
+      value: formatCurrency(metrics.monthSaved, currency, { compact: true }),
+      tone: "save" as const,
+    },
+    {
+      key: "rate",
+      label: "Savings rate",
+      value: `${metrics.savingsRate}%`,
+      tone: "rate" as const,
+    },
+  ];
 
   return (
     <motion.div
@@ -49,7 +116,14 @@ export default function AnalyticsPage() {
       animate="visible"
     >
       <motion.div variants={listItem}>
-        <PageIntro title="Analytics" subtitle={currentMonthTitle()} />
+        <PageIntro title="Analytics" />
+        <Select
+          aria-label="Select month"
+          className={styles.monthSelect}
+          value={month}
+          onChange={(e) => setMonth(e.target.value)}
+          options={monthOptions}
+        />
         <SegmentedControl<View>
           segments={[
             { label: "Overview", value: "overview" },
@@ -59,6 +133,17 @@ export default function AnalyticsPage() {
           value={view}
           onChange={setView}
         />
+      </motion.div>
+
+      <motion.div className={styles.kpis} variants={listItem}>
+        {kpis.map((kpi) => (
+          <Card key={kpi.key} surface="solid" className={styles.kpi}>
+            <span className={styles.kpi_label}>{kpi.label}</span>
+            <span className={`${styles.kpi_value} ${styles[`kpi_value--${kpi.tone}`]}`}>
+              {kpi.value}
+            </span>
+          </Card>
+        ))}
       </motion.div>
 
       {view === "overview" && (
@@ -75,6 +160,32 @@ export default function AnalyticsPage() {
                 <span className={`${styles.legend_dot} ${styles["legend_dot--orange"]}`} />
                 Expenses
               </span>
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
+      {view === "overview" && (
+        <motion.div variants={listItem}>
+          <Card surface="solid" className={styles.trend}>
+            <SectionHeader title="6-month saving trend" caption="Saved per month" />
+            <div className={styles.trend_bars}>
+              {monthlyTrend.map((t, i) => (
+                <div key={i} className={styles.trend_col}>
+                  <span className={styles.trend_amt}>
+                    {t.saved > 0 ? fmt(t.saved) : "—"}
+                  </span>
+                  <span className={styles.trend_barWrap}>
+                    <span
+                      className={styles.trend_bar}
+                      style={{
+                        height: `${Math.max(4, (Math.max(0, t.saved) / maxSaved) * 100)}%`,
+                      }}
+                    />
+                  </span>
+                  <span className={styles.trend_label}>{t.label}</span>
+                </div>
+              ))}
             </div>
           </Card>
         </motion.div>
@@ -106,6 +217,12 @@ export default function AnalyticsPage() {
                   </li>
                 ))}
               </ul>
+              <div className={styles.catsFoot}>
+                <span>Daily average {fmt(metrics.dailyAverage)}</span>
+                {metrics.bigExpenseTotal > 0 && (
+                  <span>Big spends {fmt(metrics.bigExpenseTotal)}</span>
+                )}
+              </div>
             </Card>
           )}
         </motion.div>
@@ -114,7 +231,7 @@ export default function AnalyticsPage() {
       {view === "daily" && (
         <motion.div variants={listItem}>
           <Card surface="solid">
-            <SectionHeader title="Daily spending" caption={currentMonthTitle()} />
+            <SectionHeader title="Daily spending" caption={monthLabel(month)} />
             {dailySpend.length === 0 ? (
               <EmptyState
                 icon={BarChart3}
@@ -129,7 +246,7 @@ export default function AnalyticsPage() {
       )}
 
       <motion.div variants={listItem}>
-        <SectionHeader title="Top merchants" caption="This month" />
+        <SectionHeader title="Top merchants" caption={monthLabel(month)} />
         <Card surface="solid" padded={false} className={styles.merchants}>
           {topMerchants.length === 0 ? (
             <EmptyState icon={BarChart3} title="No merchants yet" />
@@ -147,6 +264,105 @@ export default function AnalyticsPage() {
           )}
         </Card>
       </motion.div>
+
+      <motion.div className={styles.groups} variants={listItem}>
+        <MonthGroup
+          title="Total savings"
+          items={groups.savings}
+          currency={currency}
+          onEdit={setEditing}
+          tone="in"
+        />
+        <MonthGroup
+          title="Major expenses"
+          items={groups.major}
+          currency={currency}
+          onEdit={setEditing}
+          tone="out"
+        />
+        <MonthGroup
+          title="Daily expenses"
+          items={groups.daily}
+          currency={currency}
+          onEdit={setEditing}
+          tone="out"
+        />
+      </motion.div>
+
+      <EditTransactionSheet
+        transaction={editing}
+        open={editing !== null}
+        onClose={() => setEditing(null)}
+      />
     </motion.div>
+  );
+}
+
+interface MonthGroupProps {
+  title: string;
+  items: Transaction[];
+  currency: string;
+  tone: "in" | "out";
+  onEdit: (transaction: Transaction) => void;
+}
+
+function MonthGroup({ title, items, currency, tone, onEdit }: MonthGroupProps) {
+  const [open, setOpen] = useState(false);
+  const total = items.reduce((acc, t) => acc + t.amount, 0);
+
+  return (
+    <Card surface="solid" padded={false} className={styles.group}>
+      <button
+        type="button"
+        className={styles.group_head}
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+      >
+        <span className={styles.group_titles}>
+          <span className={styles.group_title}>{title}</span>
+          <span className={styles.group_count}>{items.length} entries</span>
+        </span>
+        <span
+          className={`${styles.group_total} ${styles[`group_total--${tone}`]}`}
+        >
+          {tone === "out" && total > 0 ? "-" : ""}
+          {formatCurrency(total, currency)}
+        </span>
+        <motion.span
+          className={styles.group_chevron}
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <ChevronDown size={18} />
+        </motion.span>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            className={styles.group_body}
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <div className={styles.group_list}>
+              {items.length === 0 ? (
+                <p className={styles.group_empty}>Nothing recorded this month.</p>
+              ) : (
+                items.map((transaction) => (
+                  <TransactionItem
+                    key={transaction.id}
+                    transaction={transaction}
+                    currency={currency}
+                    onClick={onEdit}
+                  />
+                ))
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Card>
   );
 }

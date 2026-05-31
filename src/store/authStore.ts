@@ -1,47 +1,32 @@
 "use client";
 
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import { APP } from "@/constants";
 
-interface SessionUser {
+export interface SessionUser {
   id: string;
   email: string;
   fullName: string;
+  username: string | null;
 }
+
+// "loading" until the Supabase session is resolved on mount; then authed/anon.
+export type AuthStatus = "loading" | "authed" | "anon";
 
 interface AuthState {
   user: SessionUser | null;
-  isAuthenticated: boolean;
-  hasHydrated: boolean;
-  setUser: (user: SessionUser) => void;
+  status: AuthStatus;
+  setUser: (user: SessionUser | null) => void;
   updateName: (fullName: string) => void;
   clear: () => void;
-  setHydrated: (value: boolean) => void;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      isAuthenticated: false,
-      hasHydrated: false,
-      setUser: (user) => set({ user, isAuthenticated: true }),
-      updateName: (fullName) =>
-        set((state) => ({
-          user: state.user ? { ...state.user, fullName } : state.user,
-        })),
-      clear: () => set({ user: null, isAuthenticated: false }),
-      setHydrated: (value) => set({ hasHydrated: value }),
-    }),
-    {
-      name: `${APP.storageKeys.settings}-auth`,
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        user: state.user,
-        isAuthenticated: state.isAuthenticated,
-      }),
-      onRehydrateStorage: () => (state) => state?.setHydrated(true),
-    },
-  ),
-);
+export const useAuthStore = create<AuthState>((set) => ({
+  user: null,
+  status: "loading",
+  setUser: (user) => set({ user, status: user ? "authed" : "anon" }),
+  updateName: (fullName) =>
+    set((state) => ({
+      user: state.user ? { ...state.user, fullName } : state.user,
+    })),
+  clear: () => set({ user: null, status: "anon" }),
+}));

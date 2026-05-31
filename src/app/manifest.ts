@@ -3,15 +3,15 @@ import { siteConfig } from "@/config";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: `${siteConfig.name} — ${siteConfig.description}`,
+    name: `${siteConfig.name} - ${siteConfig.description}`,
     short_name: siteConfig.name,
     description: siteConfig.description,
     start_url: "/",
     scope: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#0a0b0d",
-    theme_color: "#0a0b0d",
+    background_color: "#0b0c0e",
+    theme_color: "#0b0c0e",
     categories: ["finance", "productivity"],
     icons: [
       {

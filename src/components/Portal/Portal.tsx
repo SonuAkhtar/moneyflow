@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
+const subscribe = () => () => {};
+
 export const Portal = ({ children }: { children: ReactNode }) => {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useSyncExternalStore(
+    subscribe,
+    () => true,
+    () => false,
+  );
   if (!mounted) return null;
   return createPortal(children, document.body);
 };

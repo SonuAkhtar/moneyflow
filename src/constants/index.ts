@@ -1,48 +1,31 @@
-import {
-  LayoutDashboard,
-  PieChart,
-  Plus,
-  Sparkles,
-  Wallet,
-} from "lucide-react";
+import { ChartPie, CreditCard, LayoutGrid, UserRound } from "lucide-react";
 import type { NavItem } from "@/types";
 
 export const ROUTES = {
   home: "/",
   analytics: "/analytics",
-  add: "/add",
-  wallets: "/wallets",
-  insights: "/insights",
+  emi: "/emi",
   profile: "/profile",
-  goals: "/goals",
-  subscriptions: "/subscriptions",
-  calendar: "/calendar",
   onboarding: "/onboarding",
   login: "/login",
   signup: "/signup",
   forgotPassword: "/forgot-password",
+  resetPassword: "/reset-password",
   verify: "/verify",
   offline: "/offline",
 } as const;
 
 export const BOTTOM_NAV: NavItem[] = [
-  { href: ROUTES.home, label: "Home", icon: LayoutDashboard },
-  { href: ROUTES.analytics, label: "Analytics", icon: PieChart },
-  { href: ROUTES.add, label: "Add", icon: Plus, isAction: true },
-  { href: ROUTES.wallets, label: "Wallets", icon: Wallet },
-  { href: ROUTES.insights, label: "AI", icon: Sparkles },
+  { href: ROUTES.home, label: "Home", icon: LayoutGrid },
+  { href: ROUTES.analytics, label: "Analytics", icon: ChartPie },
+  { href: ROUTES.emi, label: "EMI", icon: CreditCard },
+  { href: ROUTES.profile, label: "Profile", icon: UserRound },
 ];
 
 export const CURRENCY = {
   code: "INR",
   symbol: "₹",
   locale: "en-IN",
-} as const;
-
-export const DEMO_USER = {
-  id: "local-user",
-  email: "you@moneyflow.app",
-  fullName: "Jordan Avery",
 } as const;
 
 export const BIG_EXPENSE_THRESHOLD = 6000;
@@ -61,12 +44,12 @@ export const APP = {
 } as const;
 
 export const ACCOUNT_COLOR_TAGS = [
-  "#c6f432",
-  "#2bff95",
-  "#ff7a1a",
-  "#57b8ff",
+  "#4ece6e",
+  "#2bd4c4",
+  "#f5803c",
+  "#3d8bff",
   "#9b8cff",
-  "#ff5470",
+  "#e4574d",
 ] as const;
 
 export const HEALTH_THRESHOLDS = {
@@ -101,6 +84,7 @@ export const ONBOARDING_STEPS = [
 export {
   CATEGORY_META,
   EXPENSE_CATEGORIES,
+  QUICK_EXPENSE_CATEGORIES,
   INCOME_CATEGORIES,
   getCategoryMeta,
 } from "./categories";

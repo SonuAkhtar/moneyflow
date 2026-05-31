@@ -10,8 +10,17 @@ export interface AuthResult {
   needsVerification?: boolean;
   userId?: string;
   email?: string;
+  username?: string | null;
   fullName?: string;
 }
+
+const NOT_CONFIGURED: AuthResult = {
+  ok: false,
+  message:
+    "Supabase isn't configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local and restart.",
+};
+
+const isEmail = (value: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value.trim());
 
 export const authService = {
   isRemote(): boolean {
@@ -20,20 +29,23 @@ export const authService = {
 
   async signUp(input: SignUpInput): Promise<AuthResult> {
     const supabase = getBrowserSupabase();
-    if (!supabase) {
-      return {
-        ok: true,
-        needsVerification: false,
-        email: input.email,
-        fullName: input.fullName,
-        userId: `demo_${input.email}`,
-      };
-    }
+    if (!supabase) return NOT_CONFIGURED;
+
+    const username = input.username.trim().toLowerCase();
+
+    // Pre-check username availability (the unique index is the real guard).
+    const { data: available, error: rpcError } = await supabase.rpc(
+      "username_available",
+      { uname: username } as never,
+    );
+    if (rpcError) return { ok: false, message: rpcError.message };
+    if (available === false) return { ok: false, message: "That username is taken" };
+
     const { data, error } = await supabase.auth.signUp({
       email: input.email,
       password: input.password,
       options: {
-        data: { full_name: input.fullName },
+        data: { full_name: input.fullName, username },
         emailRedirectTo: `${env.appUrl}/verify`,
       },
     });
@@ -43,24 +55,37 @@ export const authService = {
       needsVerification: !data.session,
       userId: data.user?.id,
       email: input.email,
+      username,
       fullName: input.fullName,
     };
   },
 
   async signIn(input: SignInInput): Promise<AuthResult> {
     const supabase = getBrowserSupabase();
-    if (!supabase) {
-      return { ok: true, email: input.email, userId: `demo_${input.email}` };
+    if (!supabase) return NOT_CONFIGURED;
+
+    // Resolve a username to its email when the identifier isn't an email.
+    let email = input.identifier.trim();
+    if (!isEmail(email)) {
+      const { data, error } = await supabase.rpc(
+        "email_for_username",
+        { uname: email.toLowerCase() } as never,
+      );
+      if (error) return { ok: false, message: error.message };
+      if (!data) return { ok: false, message: "No account found for that username" };
+      email = data as string;
     }
+
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: input.email,
+      email,
       password: input.password,
     });
     if (error) return { ok: false, message: error.message };
     return {
       ok: true,
       userId: data.user?.id,
-      email: data.user?.email ?? input.email,
+      email: data.user?.email ?? email,
+      username: (data.user?.user_metadata?.username as string) ?? null,
       fullName: (data.user?.user_metadata?.full_name as string) ?? "",
     };
   },
@@ -72,12 +97,22 @@ export const authService = {
 
   async resetPassword(email: string): Promise<AuthResult> {
     const supabase = getBrowserSupabase();
-    if (!supabase) return { ok: true, email };
+    if (!supabase) return NOT_CONFIGURED;
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${env.appUrl}/login`,
+      redirectTo: `${env.appUrl}/reset-password`,
     });
     if (error) return { ok: false, message: error.message };
     return { ok: true, email };
+  },
+
+  // Completes the recovery flow: the email link opens /reset-password with a
+  // recovery session already established, then the user sets a new password.
+  async updatePassword(password: string): Promise<AuthResult> {
+    const supabase = getBrowserSupabase();
+    if (!supabase) return NOT_CONFIGURED;
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) return { ok: false, message: error.message };
+    return { ok: true };
   },
 
   async currentSession(): Promise<AuthResult | null> {
@@ -89,6 +124,7 @@ export const authService = {
       ok: true,
       userId: data.user.id,
       email: data.user.email ?? "",
+      username: (data.user.user_metadata?.username as string) ?? null,
       fullName: (data.user.user_metadata?.full_name as string) ?? "",
     };
   },

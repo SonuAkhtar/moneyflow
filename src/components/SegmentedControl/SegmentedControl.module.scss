@@ -6,6 +6,7 @@
   background: var(--surface-input);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-pill);
+  width: 100%;
 
   &--sm {
     height: 38px;
@@ -44,5 +45,6 @@
   &_label {
     position: relative;
     z-index: 1;
+    white-space: nowrap;
   }
 }

@@ -12,14 +12,22 @@
   padding: var(--space-3) var(--space-2);
   border-radius: var(--radius-md);
   background: var(--surface-input);
-  border: 1px solid transparent;
+  border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
   transition:
     background var(--dur-fast) var(--ease-smooth),
-    border-color var(--dur-fast) var(--ease-smooth);
+    border-color var(--dur-fast) var(--ease-smooth),
+    color var(--dur-fast) var(--ease-smooth);
 
   &--active {
-    background: var(--surface-card-solid);
+    background: var(--accent-bg);
+    border-color: var(--accent);
+    color: var(--accent);
+
+    .chip_icon {
+      background: var(--accent);
+      color: #fff;
+    }
   }
 
   &_icon {
@@ -28,11 +36,13 @@
     width: 38px;
     height: 38px;
     border-radius: var(--radius-sm);
+    background: var(--surface-card-solid);
+    color: var(--text-secondary);
   }
 
   &_label {
     font-size: var(--font-2xs);
-    font-weight: var(--weight-medium);
+    font-weight: var(--weight-semibold);
     text-align: center;
     @include truncate(1);
     max-width: 100%;

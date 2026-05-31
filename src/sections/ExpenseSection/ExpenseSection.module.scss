@@ -1,0 +1,140 @@
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.head_top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.head_title {
+  font-size: var(--font-lg);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.02em;
+}
+
+.head_total {
+  font-size: var(--font-lg);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-danger);
+  flex-shrink: 0;
+}
+
+.head_meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.bankchip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 5px var(--space-2) 5px var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--surface-input);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: var(--font-xs);
+  font-weight: var(--weight-medium);
+  transition: border-color var(--dur-fast) var(--ease-smooth);
+
+  svg:first-child {
+    color: var(--accent);
+  }
+
+  svg:last-child {
+    color: var(--text-tertiary);
+  }
+
+  &:hover {
+    border-color: var(--accent);
+  }
+
+  &_name {
+    @include truncate(1);
+    max-width: 140px;
+  }
+}
+
+.head_count {
+  font-size: var(--font-xs);
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+// Lavender "wallet" card. Light theme: lighter lavender with dark text (tokens
+// adapt). Dark theme: deeper lavender with light text. Used by both major and
+// daily expense lists; the red/green amounts stay.
+.list {
+  position: relative;
+  padding: var(--space-2);
+  color: var(--text-primary);
+  // Light theme: frosted lavender glass with a crisp top highlight.
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background:
+    radial-gradient(
+      130% 120% at 100% 0%,
+      rgba(236, 180, 168, 0.18) 0%,
+      transparent 56%
+    ),
+    rgba(236, 231, 247, 0.62);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  box-shadow:
+    var(--shadow-card),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+
+  :global(:root[data-theme="dark"]) & {
+    border-color: var(--border-glass);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    background:
+      radial-gradient(
+        58% 52% at 58% -10%,
+        rgba(220, 230, 138, 0.4) 0%,
+        rgba(180, 198, 112, 0.1) 32%,
+        transparent 58%
+      ),
+      radial-gradient(
+        120% 120% at 100% 100%,
+        rgba(70, 52, 82, 0.55) 0%,
+        transparent 55%
+      ),
+      linear-gradient(165deg, #534d68 0%, #403a52 48%, #2e2a3e 100%);
+  }
+}
+
+.scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* ~5 rows before scrolling */
+  max-height: 320px;
+  overflow-y: auto;
+  padding-bottom: var(--space-7);
+  @include scrollbar-hide;
+}
+
+.fab {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: #fff;
+  color: #1d1630;
+  font-size: var(--font-xs);
+  font-weight: var(--weight-bold);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}

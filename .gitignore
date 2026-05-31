@@ -33,6 +33,7 @@ yarn-error.log*
 .env*.local
 .env.development
 .env.production
+.env.example
 
 # vercel
 .vercel
@@ -44,6 +45,12 @@ next-env.d.ts
 # IDE
 .vscode/
 .idea/
+
+# Claude Code (local settings, secrets, agent state)
+.claude/
+.claude.json
+.claude.json.backup
+CLAUDE.local.md
 
 # PWA generated files
 /public/sw.js

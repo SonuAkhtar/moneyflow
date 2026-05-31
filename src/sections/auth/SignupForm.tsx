@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, ArrowRight, Lock, Mail, User } from "lucide-react";
+import { AlertCircle, ArrowRight, AtSign, Lock, Mail, User } from "lucide-react";
 import { Input } from "@/components/Input/Input";
 import { Button } from "@/components/Button/Button";
 import { authService } from "@/services/auth.service";
@@ -36,7 +36,13 @@ export const SignupForm = () => {
     formState: { errors, isSubmitting },
   } = useForm<SignUpValues>({
     resolver: zodResolver(signUpSchema),
-    defaultValues: { fullName: "", email: "", password: "", confirmPassword: "" },
+    defaultValues: {
+      fullName: "",
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
   });
 
   const strength = scorePassword(watch("password") ?? "");
@@ -56,6 +62,7 @@ export const SignupForm = () => {
       id: result.userId ?? "local",
       email: values.email,
       fullName: values.fullName,
+      username: result.username ?? values.username,
     });
     router.replace(ROUTES.onboarding);
   });
@@ -75,6 +82,15 @@ export const SignupForm = () => {
         autoComplete="name"
         error={errors.fullName?.message}
         {...register("fullName")}
+      />
+      <Input
+        label="Username"
+        placeholder="jordan_a"
+        icon={AtSign}
+        autoComplete="username"
+        autoCapitalize="none"
+        error={errors.username?.message}
+        {...register("username")}
       />
       <Input
         label="Email"

@@ -1,0 +1,33 @@
+.fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  text-align: center;
+  min-height: 100dvh;
+  padding: var(--space-6);
+
+  &_icon {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-lg);
+    background: rgba(255, 77, 109, 0.16);
+    color: var(--color-danger);
+    margin-bottom: var(--space-2);
+  }
+
+  &_title {
+    font-size: var(--font-xl);
+    font-weight: var(--weight-bold);
+  }
+
+  &_text {
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+    max-width: 32ch;
+    margin-bottom: var(--space-3);
+  }
+}

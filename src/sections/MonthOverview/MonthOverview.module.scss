@@ -1,0 +1,125 @@
+.card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  // Always-dark card surface so text stays legible in light and dark themes.
+  background:
+    radial-gradient(
+      130% 120% at 100% 0%,
+      rgba(236, 180, 168, 0.3) 0%,
+      rgba(200, 150, 150, 0.1) 32%,
+      transparent 56%
+    ),
+    linear-gradient(155deg, #362e52 0%, #28223c 48%, #19152a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--shadow-float);
+  color: #eef6ef;
+}
+
+.sheen {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.06) 45%,
+    transparent 60%
+  );
+  pointer-events: none;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.chip {
+  width: 34px;
+  height: 24px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #e9d27a, #b8923a);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  flex-shrink: 0;
+
+  // contact lines on the chip
+  background-image:
+    linear-gradient(135deg, #e9d27a, #b8923a),
+    repeating-linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.18) 0 1px,
+      transparent 1px 6px
+    );
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-logo), var(--font-inter), sans-serif;
+  font-size: var(--font-sm);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.02em;
+  color: rgba(244, 248, 238, 0.92);
+}
+
+.rate {
+  margin-left: auto;
+  font-size: var(--font-sm);
+  font-weight: var(--weight-semibold);
+  color: #0a0d07;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-lime);
+}
+
+.month {
+  font-size: var(--font-sm);
+  font-weight: var(--weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(244, 248, 238, 0.55);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+
+  &_label {
+    font-size: var(--font-2xs);
+    color: rgba(244, 248, 238, 0.55);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &_value {
+    font-size: var(--font-md);
+    font-weight: var(--weight-bold);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    @include truncate(1);
+
+    &--in,
+    &--save {
+      color: #6ee88a;
+    }
+
+    &--out {
+      color: #ff9166;
+    }
+  }
+}

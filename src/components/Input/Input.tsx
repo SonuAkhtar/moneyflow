@@ -47,7 +47,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               onClick={() => setReveal((v) => !v)}
               aria-label={reveal ? "Hide password" : "Show password"}
             >
-              {reveal ? <EyeOff size={18} /> : <Eye size={18} />}
+              {reveal ? <Eye size={18} /> : <EyeOff size={18} />}
             </button>
           )}
         </div>

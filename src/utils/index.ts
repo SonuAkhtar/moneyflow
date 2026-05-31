@@ -1,13 +1,41 @@
 import clsx, { type ClassValue } from "clsx";
-import {
-  format,
-  formatDistanceToNowStrict,
-  parseISO,
-  startOfMonth,
-  subMonths,
-} from "date-fns";
+import { format, parseISO, startOfMonth, subMonths } from "date-fns";
 import { CURRENCY, HEALTH_THRESHOLDS } from "@/constants";
-import type { HealthBand } from "@/types";
+import type { Emi, EmiKind, HealthBand, Transaction } from "@/types";
+
+// Marker notes for this-month bank movements — recorded as transfers (so they
+// don't inflate income). Deposits also count as saved in the insights.
+export const SAVINGS_DEPOSIT_NOTE = "Savings deposit";
+export const SAVINGS_WITHDRAWAL_NOTE = "Savings withdrawal";
+
+// Money added / taken from a bank in a given month. `savedTillLastMonth` is
+// then the account balance minus this month's net movement, so it stays fixed
+// within a month and rolls forward once the month changes.
+export const bankMonthFlow = (
+  accountId: string,
+  transactions: Transaction[],
+  month: string,
+): { added: number; taken: number; net: number } => {
+  let added = 0;
+  let taken = 0;
+  for (const t of transactions) {
+    if (t.type !== "transfer" || t.accountId !== accountId) continue;
+    if (monthKey(t.occurredAt) !== month) continue;
+    if (t.note === SAVINGS_DEPOSIT_NOTE) added += t.amount;
+    else if (t.note === SAVINGS_WITHDRAWAL_NOTE) taken += t.amount;
+  }
+  return { added, taken, net: added - taken };
+};
+
+// SIP/Mutual Funds are investments; everything else is a loan. Falls back to
+// the name for entries saved before `kind`/`paidMonths` existed.
+const SIP_NAMES = ["SIP", "Mutual Funds"];
+export const emiKind = (e: Emi): EmiKind =>
+  e.kind ?? (SIP_NAMES.includes(e.name) ? "sip" : "loan");
+export const emiPaidMonths = (e: Emi): number =>
+  e.paidMonths ?? Math.max(0, e.totalMonths - e.remainingMonths);
+export const emiStartMonth = (e: Emi): string =>
+  e.startMonth ?? monthKey(e.createdAt);
 
 export const cn = (...inputs: ClassValue[]): string => clsx(inputs);
 
@@ -43,6 +71,21 @@ export const formatCompact = (value: number): string =>
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(value);
+
+// Full grouped amount below 1 lakh (₹12,500); only abbreviate above that -
+// ₹1,25,000 → ₹1.25L, ₹2,00,00,000 → ₹2Cr. Used on dense rows like the
+// before → after balance trail where the full figure would be too wide.
+export const formatMoneyShort = (value: number): string => {
+  const abs = Math.abs(value);
+  const sign = value < 0 ? "-" : "";
+  const num = (n: number): string =>
+    new Intl.NumberFormat(CURRENCY.locale, { maximumFractionDigits: 2 }).format(
+      n,
+    );
+  if (abs >= 1e7) return `${sign}${CURRENCY.symbol}${num(abs / 1e7)}Cr`;
+  if (abs >= 1e5) return `${sign}${CURRENCY.symbol}${num(abs / 1e5)}L`;
+  return `${sign}${CURRENCY.symbol}${num(abs)}`;
+};
 
 export const formatPercent = (value: number, digits = 0): string =>
   `${value.toFixed(digits)}%`;
@@ -83,17 +126,15 @@ export const lastNMonthKeys = (n: number): string[] =>
     monthKey(subMonths(startOfMonth(new Date()), n - 1 - i)),
   );
 
-export const relativeTime = (date: string): string =>
-  formatDistanceToNowStrict(parseISO(date), { addSuffix: true });
-
 export const dayLabel = (date: string | Date): string => {
   const d = typeof date === "string" ? parseISO(date) : date;
   return format(d, "EEE, d MMM");
 };
 
-export const timeLabel = (date: string | Date): string => {
+// e.g. "5 May" - used on transaction rows instead of the time of day.
+export const dayShort = (date: string | Date): string => {
   const d = typeof date === "string" ? parseISO(date) : date;
-  return format(d, "h:mm a");
+  return format(d, "d MMM");
 };
 
 export const isoNow = (): string => new Date().toISOString();
@@ -101,16 +142,6 @@ export const isoNow = (): string => new Date().toISOString();
 export const savingsRate = (income: number, expenses: number): number => {
   if (income <= 0) return 0;
   return Math.max(0, Math.min(100, ((income - expenses) / income) * 100));
-};
-
-export const budgetUsage = (spent: number, limit: number): number => {
-  if (limit <= 0) return 0;
-  return Math.min(999, (spent / limit) * 100);
-};
-
-export const goalProgress = (saved: number, target: number): number => {
-  if (target <= 0) return 0;
-  return Math.min(100, (saved / target) * 100);
 };
 
 export interface HealthInput {

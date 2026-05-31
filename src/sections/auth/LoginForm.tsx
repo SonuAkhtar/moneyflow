@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, ArrowRight, Lock, Mail } from "lucide-react";
+import { AlertCircle, ArrowRight, Lock, User } from "lucide-react";
 import { Input } from "@/components/Input/Input";
 import { Button } from "@/components/Button/Button";
 import { authService } from "@/services/auth.service";
@@ -25,7 +25,7 @@ export const LoginForm = () => {
     formState: { errors, isSubmitting },
   } = useForm<SignInValues>({
     resolver: zodResolver(signInSchema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { identifier: "", password: "" },
   });
 
   const submit = handleSubmit(async (values) => {
@@ -37,8 +37,10 @@ export const LoginForm = () => {
     }
     setUser({
       id: result.userId ?? "local",
-      email: result.email ?? values.email,
-      fullName: result.fullName || values.email.split("@")[0] || "Member",
+      email: result.email ?? values.identifier,
+      fullName:
+        result.fullName || result.username || values.identifier || "Member",
+      username: result.username ?? null,
     });
     router.replace(ROUTES.home);
   });
@@ -52,13 +54,13 @@ export const LoginForm = () => {
         </div>
       )}
       <Input
-        label="Email"
-        type="email"
-        placeholder="you@example.com"
-        icon={Mail}
-        autoComplete="email"
-        error={errors.email?.message}
-        {...register("email")}
+        label="Email or username"
+        placeholder="you@example.com or jordan_a"
+        icon={User}
+        autoComplete="username"
+        autoCapitalize="none"
+        error={errors.identifier?.message}
+        {...register("identifier")}
       />
       <Input
         label="Password"

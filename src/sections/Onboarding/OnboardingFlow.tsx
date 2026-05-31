@@ -7,19 +7,18 @@ import { ArrowRight, Check, PiggyBank, Sparkles, Wallet } from "lucide-react";
 import { Input } from "@/components/Input/Input";
 import { Button } from "@/components/Button/Button";
 import { SplashScreen } from "@/components/SplashScreen/SplashScreen";
-import { useAuthStore } from "@/store/authStore";
-import { useFinanceStore } from "@/store/financeStore";
+import { authService } from "@/services/auth.service";
+import { accountRepo, profileRepo } from "@/services/repositories";
+import { useToast } from "@/hooks/useToast";
 import { ONBOARDING_STEPS, ROUTES } from "@/constants";
 import styles from "./OnboardingFlow.module.scss";
 
 export const OnboardingFlow = () => {
   const router = useRouter();
-  const hasHydrated = useAuthStore((s) => s.hasHydrated);
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const user = useAuthStore((s) => s.user);
-  const bootstrap = useFinanceStore((s) => s.bootstrap);
-  const updateProfile = useFinanceStore((s) => s.updateProfile);
-  const profile = useFinanceStore((s) => s.profile);
+  const toast = useToast();
+  const [userId, setUserId] = useState<string | null>(null);
+  const [resolved, setResolved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const [step, setStep] = useState(0);
   const [salary, setSalary] = useState("85000");
@@ -27,29 +26,60 @@ export const OnboardingFlow = () => {
   const [accountName, setAccountName] = useState("Everyday Savings");
   const [balance, setBalance] = useState("48000");
 
+  // Onboarding lives outside the app shell, so resolve the session directly.
   useEffect(() => {
-    if (hasHydrated && !isAuthenticated) router.replace(ROUTES.login);
-  }, [hasHydrated, isAuthenticated, router]);
+    let active = true;
+    authService.currentSession().then((session) => {
+      if (!active) return;
+      if (session?.userId) setUserId(session.userId);
+      else router.replace(ROUTES.login);
+      setResolved(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, [router]);
 
-  useEffect(() => {
-    if (isAuthenticated && user) bootstrap(user.id, user.fullName, user.email);
-  }, [isAuthenticated, user, bootstrap]);
-
-  if (!hasHydrated || !isAuthenticated || !profile) return <SplashScreen />;
+  if (!resolved || !userId) return <SplashScreen />;
 
   const isLast = step === ONBOARDING_STEPS.length - 1;
   const current = ONBOARDING_STEPS[step]!;
 
-  const finish = () => {
-    updateProfile({
-      monthlySalary: Number(salary) || 0,
-      savingsTarget: Number(target) || 0,
-      onboardingComplete: true,
-    });
-    router.replace(ROUTES.home);
+  const finish = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await profileRepo.update(userId, {
+        monthlySalary: Number(salary) || 0,
+        savingsTarget: Number(target) || 0,
+        onboardingComplete: true,
+      });
+      const name = accountName.trim();
+      if (name) {
+        await accountRepo.save({
+          id: crypto.randomUUID(),
+          userId,
+          name,
+          type: "bank",
+          balance: Number(balance) || 0,
+          institution: null,
+          colorTag: "#4ece6e",
+          isPrimary: true,
+          createdAt: new Date().toISOString(),
+        });
+      }
+      router.replace(ROUTES.home);
+    } catch (err) {
+      setSaving(false);
+      toast({
+        title: "Couldn't save",
+        description: err instanceof Error ? err.message : "Please try again",
+        variant: "error",
+      });
+    }
   };
 
-  const next = () => (isLast ? finish() : setStep((s) => s + 1));
+  const next = () => (isLast ? void finish() : setStep((s) => s + 1));
 
   return (
     <div className={styles.flow}>
@@ -125,13 +155,14 @@ export const OnboardingFlow = () => {
           size="lg"
           fullWidth
           onClick={next}
+          loading={isLast && saving}
           icon={isLast ? Check : undefined}
           iconRight={isLast ? undefined : ArrowRight}
         >
           {isLast ? "Enter moneyFlow" : "Continue"}
         </Button>
         {step > 0 && !isLast && (
-          <Button variant="ghost" fullWidth onClick={finish}>
+          <Button variant="ghost" fullWidth onClick={() => void finish()}>
             Skip personalization
           </Button>
         )}

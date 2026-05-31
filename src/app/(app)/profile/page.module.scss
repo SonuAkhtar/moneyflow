@@ -46,32 +46,79 @@
   }
 }
 
-.stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-3);
-}
-
-.stat {
+// Total savings overview — banks + SIPs.
+.savings {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--space-1);
-  text-align: center;
+  gap: var(--space-4);
 
-  &_icon {
-    color: var(--accent);
-    margin-bottom: var(--space-1);
-  }
-
-  &_value {
-    font-size: var(--font-xl);
-    font-weight: var(--weight-bold);
+  &_head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
 
   &_label {
     font-size: var(--font-xs);
+    font-weight: var(--weight-medium);
     color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  &_total {
+    font-size: var(--font-3xl);
+    font-weight: var(--weight-bold);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+  }
+
+  &_grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+  }
+
+  &_cell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+    background: var(--surface-input);
+    border: 1px solid var(--border-subtle);
+    min-width: 0;
+  }
+
+  &_cellHead {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--text-secondary);
+
+    svg {
+      color: var(--accent);
+    }
+  }
+
+  &_cellValue {
+    font-size: var(--font-lg);
+    font-weight: var(--weight-bold);
+    font-variant-numeric: tabular-nums;
+    @include truncate(1);
+  }
+
+  &_cellSub {
+    font-size: var(--font-xs);
+    color: var(--text-tertiary);
+    @include truncate(1);
+
+    &--up {
+      color: var(--color-success);
+      font-weight: var(--weight-medium);
+    }
   }
 }
 
@@ -103,77 +150,26 @@
   }
 }
 
-.menu {
-  display: flex;
-  flex-direction: column;
-  padding: var(--space-2);
-
-  &_item {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-3);
-    border-radius: var(--radius-md);
-    transition: background var(--dur-fast) var(--ease-smooth);
-
-    &:hover {
-      background: var(--surface-glass);
-    }
-  }
-
-  &_icon {
-    display: grid;
-    place-items: center;
-    width: 36px;
-    height: 36px;
-    border-radius: var(--radius-sm);
-    background: var(--accent-bg);
-    color: var(--accent);
-    flex-shrink: 0;
-  }
-
-  &_label {
-    flex: 1;
-    font-size: var(--font-sm);
-    font-weight: var(--weight-medium);
-  }
-
-  &_chevron {
-    color: var(--text-tertiary);
-  }
-}
-
-.appearance {
+.credit {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-3);
+  padding-top: var(--space-3);
 
-  &_icon {
-    display: grid;
-    place-items: center;
-    width: 40px;
-    height: 40px;
-    border-radius: var(--radius-sm);
-    background: rgba(120, 130, 255, 0.16);
-    color: #9b8cff;
-    flex-shrink: 0;
+  &_label {
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
   }
 
-  &_text {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  &_title {
+  &_link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     font-size: var(--font-sm);
     font-weight: var(--weight-semibold);
-  }
-
-  &_sub {
-    font-size: var(--font-xs);
-    color: var(--text-secondary);
+    color: var(--accent);
+    flex-shrink: 0;
   }
 }
 

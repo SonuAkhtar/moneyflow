@@ -2,10 +2,10 @@
 
 import { useMemo } from "react";
 import { useFinanceStore } from "@/store/financeStore";
-import { currentMonthKey, monthKey } from "@/utils";
+import { useMonthTransactions } from "./useMonthTransactions";
 import {
   computeHealthScore,
-  goalProgress,
+  currentMonthKey,
   healthBand,
   savingsRate,
   sumBy,
@@ -24,36 +24,33 @@ export interface FinanceMetrics {
   healthBand: HealthBand;
   budgetTotal: number;
   budgetSpent: number;
-  goalsFunded: number;
   bigExpenseTotal: number;
   dailyAverage: number;
 }
 
-export const useFinanceMetrics = (): FinanceMetrics => {
+const daysElapsed = (month: string): number => {
+  const current = currentMonthKey();
+  if (month === current) return new Date().getDate();
+  const [year, m] = month.split("-").map(Number);
+  return new Date(year ?? 0, m ?? 1, 0).getDate();
+};
+
+export const useFinanceMetrics = (month: string = currentMonthKey()): FinanceMetrics => {
   const accounts = useFinanceStore((s) => s.accounts);
-  const transactions = useFinanceStore((s) => s.transactions);
   const emis = useFinanceStore((s) => s.emis);
   const budgets = useFinanceStore((s) => s.budgets);
-  const goals = useFinanceStore((s) => s.goals);
   const summaries = useFinanceStore((s) => s.summaries);
+  const monthTxns = useMonthTransactions(month);
 
   return useMemo(() => {
-    const month = currentMonthKey();
-    const monthTxns = transactions.filter((t) => monthKey(t.occurredAt) === month);
-    const income = sumBy(
-      monthTxns.filter((t) => t.type === "income"),
-      (t) => t.amount,
-    );
-    const expenses = sumBy(
-      monthTxns.filter((t) => t.type === "expense"),
-      (t) => t.amount,
-    );
+    const { income, expenses, savingsDeposits } = monthTxns.totals;
     const emiBurden = sumBy(
       emis.filter((e) => e.status === "active"),
       (e) => e.monthlyAmount,
     );
     const totalBalance = sumBy(accounts, (a) => a.balance);
-    const saved = Math.max(0, income - expenses);
+    // Money explicitly added to savings this month also counts as saved.
+    const saved = Math.max(0, income - expenses) + savingsDeposits;
     const monthBudgets = budgets.filter((b) => b.month === month);
     const budgetTotal = sumBy(monthBudgets, (b) => b.limit);
     const budgetSpent = sumBy(monthBudgets, (b) => b.spent);
@@ -70,7 +67,6 @@ export const useFinanceMetrics = (): FinanceMetrics => {
       summaries.find((sum) => sum.month === month)?.carriedForward ??
       summaries[0]?.carriedForward ??
       0;
-    const dayOfMonth = new Date().getDate();
 
     return {
       totalBalance: Math.round(totalBalance * 100) / 100,
@@ -84,17 +80,12 @@ export const useFinanceMetrics = (): FinanceMetrics => {
       healthBand: healthBand(score),
       budgetTotal,
       budgetSpent: Math.round(budgetSpent * 100) / 100,
-      goalsFunded: goals.length
-        ? Math.round(
-            goals.reduce((acc, g) => acc + goalProgress(g.savedAmount, g.targetAmount), 0) /
-              goals.length,
-          )
-        : 0,
       bigExpenseTotal: sumBy(
-        monthTxns.filter((t) => t.type === "expense" && t.isBigExpense),
+        monthTxns.expenses.filter((t) => t.isBigExpense),
         (t) => t.amount,
       ),
-      dailyAverage: Math.round((expenses / Math.max(dayOfMonth, 1)) * 100) / 100,
+      dailyAverage:
+        Math.round((expenses / Math.max(daysElapsed(month), 1)) * 100) / 100,
     };
-  }, [accounts, transactions, emis, budgets, goals, summaries]);
+  }, [accounts, emis, budgets, summaries, month, monthTxns]);
 };

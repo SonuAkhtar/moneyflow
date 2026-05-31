@@ -1,42 +1,43 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { Bell, Wallet } from "lucide-react";
 import { Avatar } from "@/components/Avatar/Avatar";
+import { ProfileMenu } from "@/components/ProfileMenu/ProfileMenu";
 import { useFinanceStore } from "@/store/financeStore";
-import { useUiStore } from "@/store/uiStore";
 import { ROUTES } from "@/constants";
 import styles from "./AppHeader.module.scss";
 
 export const AppHeader = () => {
   const profile = useFinanceStore((s) => s.profile);
-  const notifications = useFinanceStore((s) => s.notifications);
-  const toggleNotifications = useUiStore((s) => s.toggleNotifications);
-  const unread = notifications.filter((n) => !n.read).length;
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <header className={styles.header}>
-      <Link href={ROUTES.home} className={styles.header_logo} aria-label="moneyFlow home">
-        <span className={styles.header_mark}>
-          <Wallet size={18} strokeWidth={2.4} />
-        </span>
+      <Link
+        href={ROUTES.home}
+        className={styles.header_logo}
+        aria-label="moneyFlow home"
+      >
         <span className={styles.header_word}>
-          money<span className={styles.header_wordAccent}>Flow</span>
+          MoneY<span className={styles.header_wordAccent}>Flow</span>
         </span>
       </Link>
 
-      <div className={styles.header_actions}>
+      <div className={styles.header_avatar}>
         <button
-          className={styles.header_bell}
-          onClick={() => toggleNotifications(true)}
-          aria-label="Notifications"
+          type="button"
+          onClick={() => setMenuOpen((v) => !v)}
+          aria-label="Account menu"
+          aria-expanded={menuOpen}
         >
-          <Bell size={19} />
-          {unread > 0 && <span className={styles.header_badge}>{unread}</span>}
+          <Avatar
+            name={profile?.fullName ?? "MF"}
+            src={profile?.avatarUrl}
+            size={42}
+          />
         </button>
-        <Link href={ROUTES.profile} aria-label="Open profile">
-          <Avatar name={profile?.fullName ?? "MF"} src={profile?.avatarUrl} size={42} />
-        </Link>
+        <ProfileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
       </div>
     </header>
   );

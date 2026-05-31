@@ -25,8 +25,6 @@ export const EditProfileSheet = ({ open, onClose }: EditProfileSheetProps) => {
   const [fullName, setFullName] = useState(profile?.fullName ?? "");
   const [email, setEmail] = useState(profile?.email ?? "");
   const [phone, setPhone] = useState(profile?.phone ?? "");
-  const [salary, setSalary] = useState(String(profile?.monthlySalary ?? 0));
-  const [target, setTarget] = useState(String(profile?.savingsTarget ?? 0));
   const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatarUrl ?? null);
 
   const onPickAvatar = (event: ChangeEvent<HTMLInputElement>) => {
@@ -47,8 +45,6 @@ export const EditProfileSheet = ({ open, onClose }: EditProfileSheetProps) => {
       email,
       phone: phone || null,
       avatarUrl,
-      monthlySalary: Number(salary) || 0,
-      savingsTarget: Number(target) || 0,
     });
     updateName(fullName);
     toast({ title: "Profile updated", variant: "success" });
@@ -84,20 +80,6 @@ export const EditProfileSheet = ({ open, onClose }: EditProfileSheetProps) => {
           placeholder="+91 90000 00000"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-        />
-        <Input
-          label="Monthly salary"
-          type="number"
-          inputMode="decimal"
-          value={salary}
-          onChange={(e) => setSalary(e.target.value)}
-        />
-        <Input
-          label="Savings target"
-          type="number"
-          inputMode="decimal"
-          value={target}
-          onChange={(e) => setTarget(e.target.value)}
         />
         <Button size="lg" fullWidth onClick={save}>
           Save changes

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, MailCheck, Mail } from "lucide-react";
+import { AlertCircle, ArrowRight, MailCheck, Mail } from "lucide-react";
 import { Input } from "@/components/Input/Input";
 import { Button } from "@/components/Button/Button";
 import { authService } from "@/services/auth.service";
@@ -14,6 +14,7 @@ import styles from "./auth.module.scss";
 
 export const ForgotPasswordForm = () => {
   const [sent, setSent] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const {
     register,
@@ -26,7 +27,12 @@ export const ForgotPasswordForm = () => {
   });
 
   const submit = handleSubmit(async (values) => {
-    await authService.resetPassword(values.email);
+    setServerError(null);
+    const result = await authService.resetPassword(values.email);
+    if (!result.ok) {
+      setServerError(result.message ?? "Unable to send reset link");
+      return;
+    }
     setSent(true);
   });
 
@@ -52,6 +58,12 @@ export const ForgotPasswordForm = () => {
 
   return (
     <form className={styles.form} onSubmit={submit}>
+      {serverError && (
+        <div className={styles.alert}>
+          <AlertCircle size={16} />
+          {serverError}
+        </div>
+      )}
       <Input
         label="Email"
         type="email"

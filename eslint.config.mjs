@@ -1,9 +1,10 @@
-import coreWebVitals from "eslint-config-next/core-web-vitals";
-import typescript from "eslint-config-next/typescript";
+import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
+import nextTypescript from "eslint-config-next/typescript";
 
 const config = [
-  ...coreWebVitals,
-  ...typescript,
+  { ignores: [".next/**", "out/**", "public/**", "node_modules/**"] },
+  ...nextCoreWebVitals,
+  ...nextTypescript,
   {
     rules: {
       "@typescript-eslint/no-unused-vars": [
@@ -11,6 +12,7 @@ const config = [
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
       "@next/next/no-img-element": "off",
+      "react-hooks/incompatible-library": "off",
     },
   },
 ];

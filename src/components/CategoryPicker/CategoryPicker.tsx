@@ -25,16 +25,8 @@ export const CategoryPicker = ({ categories, value, onChange }: CategoryPickerPr
           className={cn(styles.chip, active && styles["chip--active"])}
           onClick={() => onChange(id)}
           whileTap={{ scale: 0.94 }}
-          style={
-            active
-              ? { borderColor: meta.color, color: meta.color }
-              : undefined
-          }
         >
-          <span
-            className={styles.chip_icon}
-            style={{ background: `${meta.color}1f`, color: meta.color }}
-          >
+          <span className={styles.chip_icon}>
             <Icon size={18} />
           </span>
           <span className={styles.chip_label}>{meta.label}</span>

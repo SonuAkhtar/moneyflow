@@ -1,0 +1,129 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  // Always-dark surface keeps the red figure legible in both themes.
+  background:
+    radial-gradient(
+      120% 130% at 0% 0%,
+      rgba(228, 87, 77, 0.3),
+      transparent 55%
+    ),
+    linear-gradient(135deg, #241511 0%, #160d0a 60%, #0b0706 100%);
+  border: 1px solid rgba(228, 87, 77, 0.28);
+  box-shadow: var(--shadow-float);
+  color: #fbeeea;
+
+  &_glow {
+    position: absolute;
+    top: -40%;
+    right: -20%;
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      rgba(245, 128, 60, 0.24),
+      transparent 70%
+    );
+    pointer-events: none;
+  }
+
+  &_top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  &_badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--font-2xs);
+    font-weight: var(--weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: rgba(251, 238, 240, 0.82);
+  }
+
+  &_share {
+    font-size: var(--font-sm);
+    font-weight: var(--weight-semibold);
+    color: #ffd8c9;
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-pill);
+    background: rgba(228, 87, 77, 0.24);
+  }
+
+  &_value {
+    font-size: var(--font-3xl);
+    font-weight: var(--weight-bold);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+    color: #ff9170;
+  }
+
+  &_meta {
+    font-size: var(--font-xs);
+    color: rgba(251, 238, 240, 0.6);
+  }
+
+  &_progress {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+  }
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  padding: var(--space-3);
+
+  &_icon {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    margin-bottom: var(--space-1);
+    border-radius: var(--radius-sm);
+    background: var(--accent-bg);
+    color: var(--accent);
+  }
+
+  &_value {
+    font-size: var(--font-lg);
+    font-weight: var(--weight-bold);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+
+  &_label {
+    font-size: var(--font-2xs);
+    font-weight: var(--weight-medium);
+    color: var(--text-tertiary);
+    @include truncate(1);
+    max-width: 100%;
+  }
+}

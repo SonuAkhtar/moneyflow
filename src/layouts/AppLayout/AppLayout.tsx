@@ -1,36 +1,81 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, useRef, type ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import type { User } from "@supabase/supabase-js";
 import { AppHeader } from "@/components/AppHeader/AppHeader";
 import { BottomNav } from "@/components/BottomNav/BottomNav";
 import { SplashScreen } from "@/components/SplashScreen/SplashScreen";
-import { QuickAddSheet } from "@/sections/QuickAddSheet/QuickAddSheet";
-import { NotificationsDrawer } from "@/sections/NotificationsDrawer/NotificationsDrawer";
-import { useAuthStore } from "@/store/authStore";
+import { getBrowserSupabase } from "@/lib/supabase/client";
+import { useAuthStore, type SessionUser } from "@/store/authStore";
 import { useFinanceStore } from "@/store/financeStore";
-import { DEMO_USER } from "@/constants";
+import { ROUTES } from "@/constants";
 import styles from "./AppLayout.module.scss";
 
+const toSessionUser = (u: User): SessionUser => ({
+  id: u.id,
+  email: u.email ?? "",
+  fullName: (u.user_metadata?.full_name as string) ?? "",
+  username: (u.user_metadata?.username as string) ?? null,
+});
+
 export const AppLayout = ({ children }: { children: ReactNode }) => {
+  const router = useRouter();
   const pathname = usePathname();
-  const hasHydrated = useAuthStore((s) => s.hasHydrated);
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const status = useAuthStore((s) => s.status);
   const user = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
-  const bootstrap = useFinanceStore((s) => s.bootstrap);
+  const hydrate = useFinanceStore((s) => s.hydrate);
+  const resetAll = useFinanceStore((s) => s.resetAll);
   const profile = useFinanceStore((s) => s.profile);
+  const hasHydrated = useFinanceStore((s) => s.hasHydrated);
+  const hydratedFor = useRef<string | null>(null);
 
+  // Resolve the Supabase session on mount and keep it in sync. Status stays
+  // "loading" until the first result, so we never flash the login redirect.
   useEffect(() => {
-    if (hasHydrated && !isAuthenticated) setUser(DEMO_USER);
-  }, [hasHydrated, isAuthenticated, setUser]);
+    let active = true;
+    const supabase = getBrowserSupabase();
+    if (!supabase) {
+      setUser(null);
+      return;
+    }
+    const apply = (u: User | null) => {
+      if (!active) return;
+      setUser(u ? toSessionUser(u) : null);
+    };
+    supabase.auth.getSession().then(({ data }) => apply(data.session?.user ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!active) return;
+      if (event === "SIGNED_OUT") {
+        hydratedFor.current = null;
+        resetAll();
+        setUser(null);
+        return;
+      }
+      apply(session?.user ?? null);
+    });
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
+  }, [setUser, resetAll]);
 
+  // Hydrate finance data from Supabase once per signed-in user.
   useEffect(() => {
-    if (isAuthenticated && user) bootstrap(user.id, user.fullName, user.email);
-  }, [isAuthenticated, user, bootstrap]);
+    if (status === "authed" && user && hydratedFor.current !== user.id) {
+      hydratedFor.current = user.id;
+      void hydrate(user.id);
+    }
+  }, [status, user, hydrate]);
 
-  if (!hasHydrated || !isAuthenticated || !profile) {
+  // Backup client guard — the middleware already protects routes server-side.
+  useEffect(() => {
+    if (status === "anon") router.replace(ROUTES.login);
+  }, [status, router]);
+
+  if (status !== "authed" || !profile || !hasHydrated) {
     return <SplashScreen />;
   }
 
@@ -50,8 +95,6 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
         </motion.main>
       </div>
       <BottomNav />
-      <QuickAddSheet />
-      <NotificationsDrawer />
     </div>
   );
 };

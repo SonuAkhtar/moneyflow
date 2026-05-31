@@ -1,0 +1,38 @@
+.amount {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-4) 0 var(--space-2);
+
+  &_symbol {
+    font-size: var(--font-2xl);
+    font-weight: var(--weight-semibold);
+    color: var(--text-tertiary);
+  }
+
+  &_input {
+    width: auto;
+    max-width: 70%;
+    background: transparent;
+    border: none;
+    outline: none;
+    text-align: center;
+    font-size: var(--font-4xl);
+    font-weight: var(--weight-bold);
+    letter-spacing: -0.03em;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+    field-sizing: content;
+  }
+
+  &--success &_input,
+  &--success &_symbol {
+    color: var(--color-success);
+  }
+
+  &--danger &_input,
+  &--danger &_symbol {
+    color: var(--color-danger);
+  }
+}

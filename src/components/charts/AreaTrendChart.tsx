@@ -35,12 +35,12 @@ export const AreaTrendChart = ({
       <AreaChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: -18 }}>
         <defs>
           <linearGradient id="grad-income" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#c6f432" stopOpacity={0.5} />
-            <stop offset="100%" stopColor="#c6f432" stopOpacity={0} />
+            <stop offset="0%" stopColor="#4ece6e" stopOpacity={0.5} />
+            <stop offset="100%" stopColor="#4ece6e" stopOpacity={0} />
           </linearGradient>
           <linearGradient id="grad-expense" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#ff7a1a" stopOpacity={0.45} />
-            <stop offset="100%" stopColor="#ff7a1a" stopOpacity={0} />
+            <stop offset="0%" stopColor="#f5803c" stopOpacity={0.45} />
+            <stop offset="100%" stopColor="#f5803c" stopOpacity={0} />
           </linearGradient>
         </defs>
         <CartesianGrid
@@ -70,7 +70,7 @@ export const AreaTrendChart = ({
           type="monotone"
           dataKey="income"
           name="Income"
-          stroke="#c6f432"
+          stroke="#4ece6e"
           strokeWidth={2.5}
           fill="url(#grad-income)"
           animationDuration={900}
@@ -79,7 +79,7 @@ export const AreaTrendChart = ({
           type="monotone"
           dataKey="expenses"
           name="Expenses"
-          stroke="#ff7a1a"
+          stroke="#f5803c"
           strokeWidth={2.5}
           fill="url(#grad-expense)"
           animationDuration={900}

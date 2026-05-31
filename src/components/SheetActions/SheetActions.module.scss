@@ -1,0 +1,26 @@
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.delete {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--color-danger);
+  transition: background var(--dur-fast) var(--ease-smooth);
+
+  &:hover {
+    background: rgba(228, 87, 77, 0.12);
+  }
+}
+
+.save {
+  flex: 1;
+}

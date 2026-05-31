@@ -4,6 +4,126 @@
   gap: var(--space-5);
 }
 
+.monthSelect {
+  margin-bottom: var(--space-3);
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+}
+
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.group {
+  overflow: hidden;
+
+  &_head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+    padding: var(--space-4) var(--space-4);
+    text-align: left;
+  }
+
+  &_titles {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &_title {
+    font-size: var(--font-sm);
+    font-weight: var(--weight-semibold);
+  }
+
+  &_count {
+    font-size: var(--font-xs);
+    color: var(--text-tertiary);
+  }
+
+  &_total {
+    margin-left: auto;
+    font-size: var(--font-sm);
+    font-weight: var(--weight-bold);
+    font-variant-numeric: tabular-nums;
+
+    &--in {
+      color: var(--color-success);
+    }
+
+    &--out {
+      color: var(--color-danger);
+    }
+  }
+
+  &_chevron {
+    display: grid;
+    place-items: center;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+  }
+
+  &_body {
+    overflow: hidden;
+  }
+
+  &_list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 0 var(--space-2) var(--space-2);
+    border-top: 1px solid var(--border-subtle);
+    @include scrollbar-hide;
+  }
+
+  &_empty {
+    font-size: var(--font-sm);
+    color: var(--text-tertiary);
+    text-align: center;
+    padding: var(--space-4) 0;
+  }
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+
+  &_label {
+    font-size: var(--font-xs);
+    color: var(--text-tertiary);
+  }
+
+  &_value {
+    font-size: var(--font-lg);
+    font-weight: var(--weight-bold);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+
+    &--in,
+    &--save {
+      color: var(--color-success);
+    }
+
+    &--out {
+      color: var(--color-danger);
+    }
+
+    &--rate {
+      color: var(--accent);
+    }
+  }
+}
+
 .legend {
   display: flex;
   justify-content: center;
@@ -69,6 +189,69 @@
     min-width: 72px;
     text-align: right;
   }
+}
+
+.catsFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+  font-size: var(--font-xs);
+  color: var(--text-tertiary);
+}
+
+// Saving trend
+.trend {
+  display: flex;
+  flex-direction: column;
+}
+
+.trend_bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-2);
+  height: 132px;
+}
+
+.trend_col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  height: 100%;
+  min-width: 0;
+}
+
+.trend_amt {
+  font-size: var(--font-2xs);
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.trend_barWrap {
+  flex: 1;
+  width: 60%;
+  max-width: 26px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.trend_bar {
+  width: 100%;
+  border-radius: var(--radius-sm) var(--radius-sm) 4px 4px;
+  background: var(--gradient-lime);
+  min-height: 4px;
+}
+
+.trend_label {
+  font-size: var(--font-2xs);
+  color: var(--text-tertiary);
 }
 
 .merchants {

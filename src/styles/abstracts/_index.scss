@@ -43,6 +43,34 @@ $content-max: 520px;
   border: 1px solid $border;
 }
 
+// Float shadow + crisp top highlight (theme-aware), optional hairline ring.
+// Replaces the box-shadow block duplicated across BottomNav/AuthLayout/cards.
+@mixin glass-elevation($highlight: 0.5, $ring: false) {
+  @if $ring {
+    box-shadow:
+      var(--shadow-float),
+      inset 0 1px 0 rgba(255, 255, 255, $highlight),
+      0 0 0 1px var(--border-glass);
+  } @else {
+    box-shadow:
+      var(--shadow-float),
+      inset 0 1px 0 rgba(255, 255, 255, $highlight);
+  }
+
+  :global(:root[data-theme="dark"]) & {
+    @if $ring {
+      box-shadow:
+        var(--shadow-float),
+        inset 0 1px 0 rgba(255, 255, 255, $highlight * 0.14),
+        0 0 0 1px var(--border-glass);
+    } @else {
+      box-shadow:
+        var(--shadow-float),
+        inset 0 1px 0 rgba(255, 255, 255, $highlight * 0.14);
+    }
+  }
+}
+
 @mixin truncate($lines: 1) {
   @if $lines == 1 {
     overflow: hidden;

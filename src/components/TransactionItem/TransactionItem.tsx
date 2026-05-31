@@ -1,8 +1,9 @@
 "use client";
 
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { getCategoryMeta } from "@/constants/categories";
-import { formatCurrency, truncate, timeLabel, cn } from "@/utils";
+import { formatCurrency, truncate, dayShort, cn } from "@/utils";
 import type { Transaction } from "@/types";
 import styles from "./TransactionItem.module.scss";
 
@@ -12,11 +13,11 @@ interface TransactionItemProps {
   onClick?: (transaction: Transaction) => void;
 }
 
-export const TransactionItem = ({
+export const TransactionItem = memo(function TransactionItem({
   transaction,
   currency = "INR",
   onClick,
-}: TransactionItemProps) => {
+}: TransactionItemProps) {
   const meta = getCategoryMeta(transaction.category);
   const Icon = meta.icon;
   const isIncome = transaction.type === "income";
@@ -41,7 +42,7 @@ export const TransactionItem = ({
           {truncate(transaction.merchant ?? meta.label, 22)}
         </span>
         <span className={styles.item_meta}>
-          {meta.label} · {timeLabel(transaction.occurredAt)}
+          {meta.label} · {dayShort(transaction.occurredAt)}
         </span>
       </span>
       <span
@@ -55,4 +56,4 @@ export const TransactionItem = ({
       </span>
     </motion.button>
   );
-};
+});

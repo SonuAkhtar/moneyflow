@@ -15,11 +15,12 @@
     display: flex;
     align-items: center;
     justify-content: space-around;
-    height: 64px;
+    height: 66px;
     padding: 0 var(--space-3);
     border-radius: var(--radius-2xl);
-    @include glass(24px);
-    box-shadow: var(--shadow-float);
+    @include glass(28px, var(--surface-chrome));
+    // Ambient float + crisp inner top highlight: one premium pane of glass.
+    @include glass-elevation(0.5);
     pointer-events: auto;
   }
 
@@ -27,10 +28,11 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 3px;
+    justify-content: center;
+    gap: var(--space-1);
     flex: 1;
     color: var(--text-tertiary);
-    transition: color var(--dur-fast) var(--ease-smooth);
+    transition: color var(--dur-base) var(--ease-smooth);
     @include tap-highlight-none;
 
     &--active {
@@ -38,38 +40,54 @@
     }
   }
 
-  &_iconWrap {
+  &_iconZone {
     position: relative;
     display: grid;
     place-items: center;
-    width: 40px;
-    height: 32px;
+    width: 44px;
+    height: 40px;
   }
 
-  &_glow {
+  // Raised, sliding orb that carries the active icon above the bar.
+  &_orb {
     position: absolute;
-    inset: 0;
+    top: -14px;
+    left: 0;
+    width: 44px;
+    height: 44px;
     border-radius: var(--radius-pill);
-    background: radial-gradient(circle, rgba(198, 244, 50, 0.22), transparent 70%);
+    background: var(--accent);
+    box-shadow:
+      0 8px 18px -4px rgba(109, 78, 214, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+
+    :global(:root[data-theme="dark"]) & {
+      box-shadow:
+        0 8px 18px -4px rgba(78, 206, 110, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    }
+  }
+
+  &_icon {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    will-change: transform;
+
+    .nav_item--active & {
+      color: #fff;
+    }
   }
 
   &_label {
     font-size: var(--font-2xs);
     font-weight: var(--weight-medium);
-  }
+    letter-spacing: 0.01em;
+    transition: font-weight var(--dur-fast) var(--ease-smooth);
 
-  &_action {
-    display: grid;
-    place-items: center;
-    width: 56px;
-    height: 56px;
-    margin-top: -28px;
-    border-radius: var(--radius-pill);
-    background: var(--gradient-lime);
-    color: var(--text-inverse);
-    box-shadow:
-      var(--shadow-glow-lime),
-      0 0 0 6px rgba(10, 11, 13, 0.6);
-    flex-shrink: 0;
+    .nav_item--active & {
+      font-weight: var(--weight-bold);
+    }
   }
 }

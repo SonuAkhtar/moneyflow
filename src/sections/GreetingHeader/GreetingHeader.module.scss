@@ -1,0 +1,28 @@
+.greeting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+
+  &_hello {
+    font-size: var(--font-xl);
+    font-weight: var(--weight-bold);
+    letter-spacing: -0.02em;
+    color: var(--text-secondary);
+
+    span {
+      color: var(--text-primary);
+    }
+  }
+
+  &_date {
+    flex-shrink: 0;
+    font-size: var(--font-xs);
+    font-weight: var(--weight-medium);
+    color: var(--text-secondary);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-pill);
+    background: var(--surface-card-solid);
+    border: 1px solid var(--border-subtle);
+  }
+}

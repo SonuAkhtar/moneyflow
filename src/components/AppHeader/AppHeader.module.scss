@@ -9,10 +9,13 @@
   margin: 0 calc(var(--space-5) * -1) var(--space-5);
   padding: var(--space-3) var(--space-5);
   padding-top: calc(var(--space-3) + env(safe-area-inset-top, 0px));
-  background: var(--surface-glass);
-  backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  background: var(--surface-chrome);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
   border-bottom: 1px solid var(--border-glass);
+  box-shadow:
+    var(--shadow-soft),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
 
   &_logo {
     display: flex;
@@ -21,70 +24,24 @@
     @include tap-highlight-none;
   }
 
-  &_mark {
-    display: grid;
-    place-items: center;
-    width: 34px;
-    height: 34px;
-    border-radius: var(--radius-sm);
-    background: var(--gradient-lime);
-    color: var(--text-inverse);
-    box-shadow: var(--shadow-glow-lime);
-    flex-shrink: 0;
-  }
-
   &_word {
     font-family: var(--font-logo), var(--font-inter), sans-serif;
-    font-weight: var(--weight-bold);
-    font-size: var(--font-xl);
-    letter-spacing: -0.04em;
+    font-weight: var(--weight-medium);
+    font-size: var(--font-2xl);
+    letter-spacing: -0.045em;
+    line-height: 1;
     color: var(--text-primary);
   }
 
   &_wordAccent {
+    font-weight: var(--weight-bold);
     background: linear-gradient(120deg, var(--accent), var(--color-neon-green));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
 
-  &_actions {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-  }
-
-  &_bell {
+  &_avatar {
     position: relative;
-    display: grid;
-    place-items: center;
-    width: 42px;
-    height: 42px;
-    border-radius: var(--radius-md);
-    background: var(--surface-card-solid);
-    border: 1px solid var(--border-subtle);
-    color: var(--text-secondary);
-    transition: color var(--dur-fast) var(--ease-smooth);
-
-    &:hover {
-      color: var(--text-primary);
-    }
-  }
-
-  &_badge {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    min-width: 16px;
-    height: 16px;
-    padding: 0 4px;
-    display: grid;
-    place-items: center;
-    border-radius: var(--radius-pill);
-    background: var(--color-neon-orange);
-    color: #fff;
-    font-size: 9px;
-    font-weight: var(--weight-bold);
-    border: 2px solid var(--surface-base);
   }
 }

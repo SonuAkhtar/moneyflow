@@ -1,0 +1,109 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  text-align: left;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  transition: background var(--dur-fast) var(--ease-smooth);
+
+  &:hover {
+    background: var(--surface-glass);
+  }
+
+  &_icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+  }
+
+  &_main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  &_title {
+    font-size: var(--font-sm);
+    font-weight: var(--weight-semibold);
+    @include truncate(1);
+  }
+
+  &_meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+    font-size: var(--font-xs);
+    color: var(--text-tertiary);
+  }
+
+  &_cat {
+    @include truncate(1);
+  }
+
+  &_date {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    padding: 1px 8px 1px 6px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-input);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    font-size: var(--font-2xs);
+    font-weight: var(--weight-medium);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  &_dateIcon {
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  &_right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    flex-shrink: 0;
+  }
+
+  &_amount {
+    font-size: var(--font-sm);
+    font-weight: var(--weight-semibold);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-danger);
+  }
+
+  // before (green) → after (red), beneath the amount to keep the card compact
+  &_bal {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: var(--font-2xs);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &_before {
+    color: var(--color-success);
+  }
+
+  &_arrow {
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+  }
+
+  &_after {
+    color: var(--color-danger);
+    font-weight: var(--weight-semibold);
+  }
+}

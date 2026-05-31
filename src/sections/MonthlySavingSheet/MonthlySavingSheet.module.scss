@@ -1,0 +1,141 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+}
+
+// Locked bank — shown, not selectable.
+.bank {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface-input);
+  border: 1px solid var(--border-subtle);
+
+  &_logo {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-card-solid);
+    border: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+  }
+
+  &_info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &_name {
+    font-size: var(--font-md);
+    font-weight: var(--weight-semibold);
+    @include truncate(1);
+  }
+
+  &_sub {
+    font-size: var(--font-xs);
+    color: var(--text-tertiary);
+  }
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--accent-bg);
+
+  &_row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+
+    &--total {
+      padding-top: var(--space-2);
+      border-top: 1px solid var(--border-subtle);
+    }
+  }
+
+  &_label {
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+  }
+
+  &_value {
+    font-size: var(--font-md);
+    font-weight: var(--weight-bold);
+    font-variant-numeric: tabular-nums;
+
+    &--in {
+      color: var(--color-success);
+    }
+
+    &--out {
+      color: var(--color-danger);
+    }
+  }
+}
+
+.toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  padding: var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--surface-input);
+  border: 1px solid var(--border-subtle);
+
+  &_btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    height: 42px;
+    border-radius: var(--radius-pill);
+    color: var(--text-secondary);
+    font-size: var(--font-sm);
+    font-weight: var(--weight-semibold);
+    transition:
+      background var(--dur-fast) var(--ease-smooth),
+      color var(--dur-fast) var(--ease-smooth);
+
+    &--add {
+      background: var(--color-success);
+      color: #fff;
+    }
+
+    &--take {
+      background: var(--color-danger);
+      color: #fff;
+    }
+  }
+}
+
+.preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-strong);
+
+  &_label {
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+  }
+
+  &_value {
+    font-size: var(--font-lg);
+    font-weight: var(--weight-bold);
+    font-variant-numeric: tabular-nums;
+  }
+}

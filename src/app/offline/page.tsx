@@ -12,8 +12,8 @@ export default function OfflinePage() {
       </span>
       <h1 className={styles.offline_title}>You&apos;re offline</h1>
       <p className={styles.offline_text}>
-        moneyFlow needs a connection for this view. Your cached data is still safe — reconnect
-        to pick up where you left off.
+        moneyFlow needs a connection for this view. Your cached data is still
+        safe - reconnect to pick up where you left off.
       </p>
     </div>
   );

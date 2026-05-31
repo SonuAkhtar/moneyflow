@@ -1,0 +1,46 @@
+.dialog {
+  position: fixed;
+  inset: 0;
+  z-index: z("modal");
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+
+  &_backdrop {
+    position: absolute;
+    inset: 0;
+    background: var(--surface-overlay);
+    backdrop-filter: blur(8px);
+  }
+
+  &_panel {
+    position: relative;
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-6);
+    border-radius: var(--radius-xl);
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-glass);
+    box-shadow: var(--shadow-float);
+  }
+
+  &_title {
+    font-size: var(--font-lg);
+  }
+
+  &_message {
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  &_actions {
+    display: flex;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+  }
+}

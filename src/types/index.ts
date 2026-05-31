@@ -21,33 +21,16 @@ export type CategoryId =
   | "transfer"
   | "other";
 
-export type GoalStatus = "active" | "completed" | "paused";
 export type EmiStatus = "active" | "closed" | "overdue";
-export type SubscriptionCycle = "weekly" | "monthly" | "quarterly" | "yearly";
 
-export type InsightType =
-  | "saving"
-  | "overspending"
-  | "budgeting"
-  | "prediction"
-  | "optimization"
-  | "alert"
-  | "summary";
-
-export type InsightSeverity = "positive" | "neutral" | "warning" | "critical";
-
-export type NotificationType =
-  | "alert"
-  | "reminder"
-  | "achievement"
-  | "digest"
-  | "system";
+export type EmiKind = "loan" | "sip";
 
 export type HealthBand = "excellent" | "good" | "fair" | "poor";
 
 export interface Profile {
   id: string;
   email: string;
+  username: string | null;
   fullName: string;
   phone: string | null;
   avatarUrl: string | null;
@@ -57,6 +40,7 @@ export interface Profile {
   onboardingComplete: boolean;
   streakCount: number;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface Account {
@@ -90,14 +74,25 @@ export interface Emi {
   userId: string;
   accountId: string | null;
   name: string;
+  kind: EmiKind;
+  startMonth: string;
   principal: number;
   monthlyAmount: number;
   remainingMonths: number;
   totalMonths: number;
+  paidMonths: number;
   interestRate: number;
   dueDay: number;
   status: EmiStatus;
+  payments: EmiPayment[];
   createdAt: string;
+}
+
+// A single month's payment logged under an EMI / SIP.
+export interface EmiPayment {
+  id: string;
+  month: string;
+  amount: number;
 }
 
 export interface Budget {
@@ -107,30 +102,6 @@ export interface Budget {
   limit: number;
   spent: number;
   month: string;
-  createdAt: string;
-}
-
-export interface SavingGoal {
-  id: string;
-  userId: string;
-  title: string;
-  targetAmount: number;
-  savedAmount: number;
-  deadline: string | null;
-  status: GoalStatus;
-  colorTag: string;
-  createdAt: string;
-}
-
-export interface Subscription {
-  id: string;
-  userId: string;
-  name: string;
-  amount: number;
-  cycle: SubscriptionCycle;
-  category: CategoryId;
-  nextChargeAt: string;
-  isActive: boolean;
   createdAt: string;
 }
 
@@ -147,25 +118,17 @@ export interface MonthlySummary {
   createdAt: string;
 }
 
-export interface AppNotification {
-  id: string;
-  userId: string;
-  type: NotificationType;
-  title: string;
-  body: string;
-  read: boolean;
-  createdAt: string;
-}
 
 export interface SignUpInput {
   fullName: string;
+  username: string;
   email: string;
   password: string;
   confirmPassword: string;
 }
 
 export interface SignInInput {
-  email: string;
+  identifier: string;
   password: string;
 }
 
@@ -189,59 +152,23 @@ export interface AccountInput {
   isPrimary?: boolean;
 }
 
-export interface GoalInput {
-  title: string;
-  targetAmount: number;
-  savedAmount?: number;
-  deadline?: string;
-  colorTag: string;
+export interface EmiInput {
+  name: string;
+  kind: EmiKind;
+  startMonth: string;
+  principal: number;
+  monthlyAmount: number;
+  totalMonths: number;
+  remainingMonths: number;
+  paidMonths: number;
+  interestRate: number;
+  dueDay: number;
 }
 
 export interface BudgetInput {
   category: CategoryId;
   limit: number;
   month: string;
-}
-
-export interface SubscriptionInput {
-  name: string;
-  amount: number;
-  cycle: SubscriptionCycle;
-  category: CategoryId;
-  nextChargeAt: string;
-}
-
-export interface AiGeneratedInsight {
-  type: InsightType;
-  severity: InsightSeverity;
-  title: string;
-  body: string;
-  metric: number | null;
-}
-
-export interface AiFinancialSnapshot {
-  monthlySalary: number;
-  totalBalance: number;
-  monthIncome: number;
-  monthExpenses: number;
-  monthSaved: number;
-  carriedForward: number;
-  topCategories: { category: string; amount: number }[];
-  activeEmis: { name: string; monthlyAmount: number; remainingMonths: number }[];
-  goals: { title: string; progress: number }[];
-  healthScore: number;
-}
-
-export interface AiChatMessage {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  createdAt: string;
-}
-
-export interface AiInsightResponse {
-  insights: AiGeneratedInsight[];
-  summary: string;
 }
 
 export type Variant = "primary" | "secondary" | "ghost" | "danger" | "glass";
@@ -251,7 +178,6 @@ export interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
-  isAction?: boolean;
 }
 
 export interface ToastMessage {

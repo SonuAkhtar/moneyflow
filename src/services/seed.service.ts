@@ -1,16 +1,16 @@
 import { subDays, subMonths } from "date-fns";
-import { createId, monthKey, computeHealthScore, healthBand } from "@/utils";
+import { monthKey, computeHealthScore, healthBand } from "@/utils";
 import { BIG_EXPENSE_THRESHOLD, CURRENCY } from "@/constants";
+
+// Demo rows are written to Supabase, so every id must be a real uuid.
+const createId = (_prefix?: string) => crypto.randomUUID();
 import type {
   Account,
-  AppNotification,
   Budget,
   CategoryId,
   Emi,
   MonthlySummary,
   Profile,
-  SavingGoal,
-  Subscription,
   Transaction,
 } from "@/types";
 
@@ -20,9 +20,6 @@ export interface SeedData {
   transactions: Transaction[];
   emis: Emi[];
   budgets: Budget[];
-  goals: SavingGoal[];
-  subscriptions: Subscription[];
-  notifications: AppNotification[];
   summaries: MonthlySummary[];
 }
 
@@ -64,7 +61,7 @@ export const generateSeed = (
       type: "bank",
       balance: 64200,
       institution: "HDFC Bank",
-      colorTag: "#c6f432",
+      colorTag: "#4ece6e",
       isPrimary: true,
       createdAt: iso(subMonths(now, 8)),
     },
@@ -75,7 +72,7 @@ export const generateSeed = (
       type: "savings",
       balance: 235000,
       institution: "HDFC Bank",
-      colorTag: "#2bff95",
+      colorTag: "#2bd4c4",
       isPrimary: false,
       createdAt: iso(subMonths(now, 8)),
     },
@@ -86,7 +83,7 @@ export const generateSeed = (
       type: "wallet",
       balance: 6400,
       institution: null,
-      colorTag: "#ff7a1a",
+      colorTag: "#f5803c",
       isPrimary: false,
       createdAt: iso(subMonths(now, 5)),
     },
@@ -137,14 +134,21 @@ export const generateSeed = (
       id: createId("emi"),
       userId,
       accountId: primaryId,
-      name: "MacBook Pro",
+      name: "Laptop Loan",
+      kind: "loan",
+      startMonth: monthKey(subMonths(now, 5)),
       principal: 95000,
       monthlyAmount: 8500,
       remainingMonths: 7,
       totalMonths: 12,
+      paidMonths: 5,
       interestRate: 12.5,
       dueDay: 5,
       status: "active",
+      payments: [
+        { id: createId("pay"), month: monthKey(now), amount: 8500 },
+        { id: createId("pay"), month: monthKey(subMonths(now, 1)), amount: 8500 },
+      ],
       createdAt: iso(subMonths(now, 5)),
     },
     {
@@ -152,14 +156,36 @@ export const generateSeed = (
       userId,
       accountId: primaryId,
       name: "Car Loan",
+      kind: "loan",
+      startMonth: monthKey(subMonths(now, 20)),
       principal: 720000,
       monthlyAmount: 17000,
       remainingMonths: 28,
       totalMonths: 48,
+      paidMonths: 20,
       interestRate: 9.2,
       dueDay: 12,
       status: "active",
+      payments: [],
       createdAt: iso(subMonths(now, 20)),
+    },
+    {
+      id: createId("emi"),
+      userId,
+      accountId: primaryId,
+      name: "SIP",
+      kind: "sip",
+      startMonth: monthKey(subMonths(now, 8)),
+      principal: 0,
+      monthlyAmount: 5000,
+      remainingMonths: 0,
+      totalMonths: 0,
+      paidMonths: 8,
+      interestRate: 0,
+      dueDay: 1,
+      status: "active",
+      payments: [{ id: createId("pay"), month: monthKey(now), amount: 5000 }],
+      createdAt: iso(subMonths(now, 8)),
     },
   ];
 
@@ -191,119 +217,6 @@ export const generateSeed = (
       createdAt: iso(subDays(now, 20)),
     };
   });
-
-  const goals: SavingGoal[] = [
-    {
-      id: createId("goal"),
-      userId,
-      title: "Iceland Trip",
-      targetAmount: 300000,
-      savedAmount: 182000,
-      deadline: iso(subMonths(now, -5)),
-      status: "active",
-      colorTag: "#57b8ff",
-      createdAt: iso(subMonths(now, 3)),
-    },
-    {
-      id: createId("goal"),
-      userId,
-      title: "Emergency Fund",
-      targetAmount: 600000,
-      savedAmount: 420000,
-      deadline: null,
-      status: "active",
-      colorTag: "#2bff95",
-      createdAt: iso(subMonths(now, 6)),
-    },
-    {
-      id: createId("goal"),
-      userId,
-      title: "New Camera",
-      targetAmount: 120000,
-      savedAmount: 120000,
-      deadline: iso(subMonths(now, -1)),
-      status: "completed",
-      colorTag: "#ff7a1a",
-      createdAt: iso(subMonths(now, 4)),
-    },
-  ];
-
-  const subscriptions: Subscription[] = [
-    {
-      id: createId("sub"),
-      userId,
-      name: "Spotify",
-      amount: 119,
-      cycle: "monthly",
-      category: "entertainment",
-      nextChargeAt: iso(subDays(now, -4)),
-      isActive: true,
-      createdAt: iso(subMonths(now, 7)),
-    },
-    {
-      id: createId("sub"),
-      userId,
-      name: "Netflix",
-      amount: 499,
-      cycle: "monthly",
-      category: "entertainment",
-      nextChargeAt: iso(subDays(now, -9)),
-      isActive: true,
-      createdAt: iso(subMonths(now, 9)),
-    },
-    {
-      id: createId("sub"),
-      userId,
-      name: "iCloud+",
-      amount: 75,
-      cycle: "monthly",
-      category: "bills",
-      nextChargeAt: iso(subDays(now, -2)),
-      isActive: true,
-      createdAt: iso(subMonths(now, 12)),
-    },
-    {
-      id: createId("sub"),
-      userId,
-      name: "Notion",
-      amount: 6000,
-      cycle: "yearly",
-      category: "subscriptions",
-      nextChargeAt: iso(subDays(now, -120)),
-      isActive: true,
-      createdAt: iso(subMonths(now, 6)),
-    },
-  ];
-
-  const notifications: AppNotification[] = [
-    {
-      id: createId("ntf"),
-      userId,
-      type: "achievement",
-      title: "Goal reached!",
-      body: "New Camera fund is fully funded. Time to treat yourself.",
-      read: false,
-      createdAt: iso(subDays(now, 1)),
-    },
-    {
-      id: createId("ntf"),
-      userId,
-      type: "alert",
-      title: "Food budget at 82%",
-      body: "You're close to your dining limit this month.",
-      read: false,
-      createdAt: iso(subDays(now, 2)),
-    },
-    {
-      id: createId("ntf"),
-      userId,
-      type: "reminder",
-      title: "Car loan due in 3 days",
-      body: "₹17,000 due on the 12th from Everyday Savings.",
-      read: true,
-      createdAt: iso(subDays(now, 3)),
-    },
-  ];
 
   const summaries: MonthlySummary[] = [0, 1, 2].map((m) => {
     const key = monthKey(subMonths(now, m));
@@ -337,6 +250,7 @@ export const generateSeed = (
   const profile: Profile = {
     id: userId,
     email,
+    username: null,
     fullName: fullName || "Jordan Avery",
     phone: "+91 98765 43210",
     avatarUrl: null,
@@ -346,17 +260,16 @@ export const generateSeed = (
     onboardingComplete: true,
     streakCount: 12,
     createdAt: iso(subMonths(now, 8)),
+    updatedAt: iso(now),
   };
 
   return {
     profile,
+    // Accounts are returned so demo transactions/EMIs satisfy their FKs.
     accounts,
     transactions,
     emis,
     budgets,
-    goals,
-    subscriptions,
-    notifications,
     summaries,
   };
 };

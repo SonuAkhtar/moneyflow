@@ -1,28 +1,26 @@
 import Link from "next/link";
-import { Compass } from "lucide-react";
+import { ArrowLeft, Compass } from "lucide-react";
 import { ROUTES } from "@/constants";
-import styles from "./offline/page.module.scss";
+import styles from "./not-found.module.scss";
 
 export default function NotFound() {
   return (
-    <div className={styles.offline}>
-      <span className={styles.offline_orb}>
-        <Compass size={30} />
-      </span>
-      <h1 className={styles.offline_title}>Page not found</h1>
-      <p className={styles.offline_text}>
-        This route drifted off the map. Head back to your dashboard to keep things flowing.
-      </p>
-      <Link
-        href={ROUTES.home}
-        style={{
-          color: "var(--color-lime)",
-          fontWeight: 600,
-          fontSize: "var(--font-sm)",
-        }}
-      >
-        Back to home
-      </Link>
+    <div className={styles.notfound}>
+      <div className={styles.notfound_glow} aria-hidden />
+      <div className={styles.notfound_card}>
+        <span className={styles.notfound_eyebrow}>
+          <Compass size={14} /> Error 404
+        </span>
+        <span className={styles.notfound_code}>404</span>
+        <h1 className={styles.notfound_title}>This page drifted off the map</h1>
+        <p className={styles.notfound_text}>
+          The link may be broken, or the page may have moved. Let&apos;s get your
+          money flowing again.
+        </p>
+        <Link href={ROUTES.home} className={styles.notfound_cta}>
+          <ArrowLeft size={16} /> Back to dashboard
+        </Link>
+      </div>
     </div>
   );
 }

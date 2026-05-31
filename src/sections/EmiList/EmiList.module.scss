@@ -1,7 +1,127 @@
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+
+  &_text {
+    min-width: 0;
+  }
+
+  &_title {
+    font-size: var(--font-lg);
+    letter-spacing: -0.01em;
+  }
+
+  &_caption {
+    font-size: var(--font-xs);
+    color: var(--text-tertiary);
+    margin-top: 2px;
+  }
+
+  // Total paid / invested — big, ghost-like figure on the title line.
+  &_paid {
+    font-size: var(--font-xl);
+    font-weight: var(--weight-bold);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: var(--color-danger);
+    opacity: 0.8;
+    flex-shrink: 0;
+
+    &--sip {
+      color: var(--color-success);
+    }
+  }
+}
+
 .list {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+}
+
+// Compact, tappable empty card — the whole row opens the add sheet.
+.empty {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--gradient-card);
+  border: 1px solid var(--border-glass);
+  box-shadow: var(--shadow-soft);
+  transition:
+    border-color var(--dur-fast) var(--ease-smooth),
+    transform var(--dur-fast) var(--ease-smooth);
+
+  &:hover {
+    border-color: var(--accent);
+  }
+
+  &:active {
+    transform: scale(0.99);
+  }
+
+  &_icon {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-md);
+    background: var(--accent-bg);
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  &_text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  &_title {
+    font-size: var(--font-sm);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.01em;
+    @include truncate(1);
+  }
+
+  &_desc {
+    font-size: var(--font-xs);
+    color: var(--text-tertiary);
+    @include truncate(1);
+  }
+
+  &_add {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-pill);
+    background: var(--accent);
+    color: #fff;
+    flex-shrink: 0;
+  }
+}
+
+.add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--border-strong);
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  font-weight: var(--weight-medium);
 }
 
 .item {
@@ -15,13 +135,23 @@
     gap: var(--space-3);
   }
 
+  // Tap target for editing the parent EMI/SIP (name + icon).
+  &_main {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+  }
+
   &_icon {
     display: grid;
     place-items: center;
     width: 40px;
     height: 40px;
     border-radius: var(--radius-sm);
-    background: rgba(87, 184, 255, 0.16);
+    background: rgba(61, 139, 255, 0.16);
     color: var(--color-info);
     flex-shrink: 0;
   }
@@ -29,6 +159,23 @@
   &_info {
     flex: 1;
     min-width: 0;
+  }
+
+  // Arrow that opens the children accordion.
+  &_arrow {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-pill);
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+    transition: background var(--dur-fast) var(--ease-smooth);
+
+    &:hover {
+      background: var(--surface-glass);
+      color: var(--text-secondary);
+    }
   }
 
   &_name {
@@ -41,6 +188,7 @@
   &_sub {
     font-size: var(--font-xs);
     color: var(--text-tertiary);
+    @include truncate(1);
   }
 
   &_amount {
@@ -48,6 +196,11 @@
     font-weight: var(--weight-bold);
     font-variant-numeric: tabular-nums;
     flex-shrink: 0;
+    color: var(--color-danger);
+
+    &--sip {
+      color: var(--color-success);
+    }
   }
 
   &_per {
@@ -66,4 +219,64 @@
     font-size: var(--font-xs);
     color: var(--text-secondary);
   }
+}
+
+// Children accordion — monthly payment entries logged under a parent.
+.children {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  overflow: hidden;
+  margin-top: var(--space-1);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  text-align: left;
+  padding: var(--space-3) var(--space-3);
+  border-radius: var(--radius-sm);
+  transition: background var(--dur-fast) var(--ease-smooth);
+
+  &:hover {
+    background: var(--surface-glass);
+  }
+
+  &_month {
+    font-size: var(--font-sm);
+    font-weight: var(--weight-medium);
+    @include truncate(1);
+  }
+
+  &_amount {
+    font-size: var(--font-sm);
+    font-weight: var(--weight-semibold);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+  }
+
+  &_empty {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--font-xs);
+    color: var(--text-tertiary);
+  }
+}
+
+.childAdd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border-strong);
+  color: var(--accent);
+  font-size: var(--font-sm);
+  font-weight: var(--weight-medium);
 }

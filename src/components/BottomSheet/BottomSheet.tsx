@@ -13,6 +13,7 @@ interface BottomSheetProps {
   title?: string;
   description?: string;
   children: ReactNode;
+  footer?: ReactNode;
   showHandle?: boolean;
   className?: string;
 }
@@ -23,6 +24,7 @@ export const BottomSheet = ({
   title,
   description,
   children,
+  footer,
   showHandle = true,
   className,
 }: BottomSheetProps) => {
@@ -30,10 +32,15 @@ export const BottomSheet = ({
     if (!open) return;
     const original = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = original;
+      window.removeEventListener("keydown", onKey);
     };
-  }, [open]);
+  }, [open, onClose]);
 
   return (
     <Portal>
@@ -52,7 +59,7 @@ export const BottomSheet = ({
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              transition={{ type: "spring", stiffness: 320, damping: 32 }}
+              transition={{ duration: 0.36, ease: [0.32, 0.72, 0, 1] }}
               drag="y"
               dragConstraints={{ top: 0, bottom: 0 }}
               dragElastic={{ top: 0, bottom: 0.4 }}
@@ -81,6 +88,7 @@ export const BottomSheet = ({
                 </header>
               )}
               <div className={styles.sheet_body}>{children}</div>
+              {footer && <div className={styles.sheet_footer}>{footer}</div>}
             </motion.div>
           </div>
         )}

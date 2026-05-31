@@ -3,6 +3,8 @@
 import { useEffect, type ReactNode } from "react";
 import { MotionConfig } from "framer-motion";
 import { Toaster } from "@/components/Toaster/Toaster";
+import { ServiceWorker } from "@/components/ServiceWorker/ServiceWorker";
+import { ErrorBoundary } from "@/components/ErrorBoundary/ErrorBoundary";
 import { useThemeStore } from "@/store/themeStore";
 
 export const Providers = ({ children }: { children: ReactNode }) => {
@@ -14,8 +16,9 @@ export const Providers = ({ children }: { children: ReactNode }) => {
 
   return (
     <MotionConfig reducedMotion="user">
-      {children}
+      <ErrorBoundary>{children}</ErrorBoundary>
       <Toaster />
+      <ServiceWorker />
     </MotionConfig>
   );
 };

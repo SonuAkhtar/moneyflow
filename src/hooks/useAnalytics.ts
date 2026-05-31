@@ -2,8 +2,17 @@
 
 import { useMemo } from "react";
 import { useFinanceStore } from "@/store/financeStore";
+import { useMonthTransactions } from "./useMonthTransactions";
 import { getCategoryMeta } from "@/constants/categories";
-import { currentMonthKey, monthKey, shortMonthLabel, groupSum, lastNMonthKeys, monthLabel } from "@/utils";
+import {
+  currentMonthKey,
+  monthKey,
+  shortMonthLabel,
+  groupSum,
+  lastNMonthKeys,
+  monthLabel,
+  SAVINGS_DEPOSIT_NOTE,
+} from "@/utils";
 import type { CategoryId } from "@/types";
 
 export interface CategorySlice {
@@ -28,14 +37,13 @@ export interface AnalyticsData {
   topMerchants: { name: string; value: number; count: number }[];
 }
 
-export const useAnalytics = (): AnalyticsData => {
+export const useAnalytics = (month: string = currentMonthKey()): AnalyticsData => {
   const transactions = useFinanceStore((s) => s.transactions);
+  const monthTxns = useMonthTransactions(month);
 
   return useMemo(() => {
-    const month = currentMonthKey();
-    const monthExpenses = transactions.filter(
-      (t) => t.type === "expense" && monthKey(t.occurredAt) === month,
-    );
+    // This month's expenses come pre-filtered from the shared hook.
+    const monthExpenses = monthTxns.expenses;
 
     const byCategory = groupSum(
       monthExpenses,
@@ -63,11 +71,19 @@ export const useAnalytics = (): AnalyticsData => {
       const expenses = transactions
         .filter((t) => t.type === "expense" && monthKey(t.occurredAt) === key)
         .reduce((a, t) => a + t.amount, 0);
+      const deposits = transactions
+        .filter(
+          (t) =>
+            t.type === "transfer" &&
+            t.note === SAVINGS_DEPOSIT_NOTE &&
+            monthKey(t.occurredAt) === key,
+        )
+        .reduce((a, t) => a + t.amount, 0);
       return {
         label: shortMonthLabel(`${key}-01`),
         income: Math.round(income),
         expenses: Math.round(expenses),
-        saved: Math.round(Math.max(0, income - expenses)),
+        saved: Math.round(Math.max(0, income - expenses) + deposits),
       };
     });
 
@@ -94,7 +110,7 @@ export const useAnalytics = (): AnalyticsData => {
       .slice(0, 5);
 
     return { categoryBreakdown, monthlyTrend, dailySpend, topMerchants };
-  }, [transactions]);
+  }, [transactions, monthTxns]);
 };
 
 export const currentMonthTitle = (): string => monthLabel(currentMonthKey());

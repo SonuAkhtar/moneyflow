@@ -44,7 +44,7 @@ export const SpendBarChart = ({ data, height = 180, currency }: SpendBarChartPro
             {data.map((entry, index) => (
               <Cell
                 key={index}
-                fill={entry.value >= max * 0.8 ? "#ff7a1a" : "#c6f432"}
+                fill={entry.value >= max * 0.8 ? "#f5803c" : "#4ece6e"}
               />
             ))}
           </Bar>

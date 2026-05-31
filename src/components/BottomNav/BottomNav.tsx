@@ -4,36 +4,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { BOTTOM_NAV } from "@/constants";
-import { useUiStore } from "@/store/uiStore";
 import { cn } from "@/utils";
 import styles from "./BottomNav.module.scss";
 
+const SPRING = { type: "spring" as const, stiffness: 500, damping: 38, mass: 0.7 };
+
 export const BottomNav = () => {
   const pathname = usePathname();
-  const openQuickAdd = useUiStore((s) => s.openQuickAdd);
 
   return (
     <nav className={styles.nav}>
       <div className={styles.nav_bar}>
         {BOTTOM_NAV.map((item) => {
           const Icon = item.icon;
-
-          if (item.isAction) {
-            return (
-              <motion.button
-                key={item.href}
-                type="button"
-                className={styles.nav_action}
-                onClick={openQuickAdd}
-                whileTap={{ scale: 0.9 }}
-                transition={{ type: "spring", stiffness: 500, damping: 28 }}
-                aria-label="Add transaction"
-              >
-                <Icon size={24} strokeWidth={2.4} />
-              </motion.button>
-            );
-          }
-
           const active =
             item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
 
@@ -42,16 +25,24 @@ export const BottomNav = () => {
               key={item.href}
               href={item.href}
               className={cn(styles.nav_item, active && styles["nav_item--active"])}
+              aria-current={active ? "page" : undefined}
             >
-              <span className={styles.nav_iconWrap}>
+              <span className={styles.nav_iconZone}>
                 {active && (
                   <motion.span
                     layoutId="nav-active"
-                    className={styles.nav_glow}
-                    transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                    className={styles.nav_orb}
+                    transition={SPRING}
                   />
                 )}
-                <Icon size={22} strokeWidth={active ? 2.4 : 2} />
+                <motion.span
+                  className={styles.nav_icon}
+                  animate={{ y: active ? -12 : 0, scale: active ? 1.04 : 1 }}
+                  whileTap={{ scale: 0.84 }}
+                  transition={SPRING}
+                >
+                  <Icon size={22} strokeWidth={active ? 2.4 : 2} />
+                </motion.span>
               </span>
               <span className={styles.nav_label}>{item.label}</span>
             </Link>

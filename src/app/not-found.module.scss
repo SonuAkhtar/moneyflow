@@ -1,0 +1,96 @@
+.notfound {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  overflow: hidden;
+  text-align: center;
+
+  &_glow {
+    position: absolute;
+    inset: 0;
+    background:
+      var(--gradient-mesh),
+      var(--surface-base);
+    pointer-events: none;
+  }
+
+  &_card {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+    max-width: 440px;
+  }
+
+  &_eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 6px var(--space-3);
+    border-radius: var(--radius-pill);
+    background: var(--surface-glass);
+    border: 1px solid var(--border-glass);
+    font-size: var(--font-xs);
+    font-weight: var(--weight-semibold);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  // The hero — oversized gradient "404".
+  &_code {
+    font-family: var(--font-logo), var(--font-inter), sans-serif;
+    font-size: clamp(104px, 30vw, 184px);
+    font-weight: var(--weight-bold);
+    line-height: 0.85;
+    letter-spacing: -0.05em;
+    background: var(--gradient-lime);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 16px 44px rgba(170, 210, 70, 0.35));
+  }
+
+  &_title {
+    font-size: var(--font-2xl);
+    font-weight: var(--weight-bold);
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+  }
+
+  &_text {
+    font-size: var(--font-md);
+    line-height: 1.6;
+    color: var(--text-secondary);
+    max-width: 36ch;
+  }
+
+  &_cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+    height: 50px;
+    padding: 0 var(--space-5);
+    border-radius: var(--radius-pill);
+    background: var(--gradient-lime);
+    color: var(--text-inverse);
+    font-size: var(--font-sm);
+    font-weight: var(--weight-semibold);
+    box-shadow:
+      var(--shadow-glow-lime),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    transition:
+      transform var(--dur-fast) var(--ease-smooth),
+      box-shadow var(--dur-fast) var(--ease-smooth);
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+  }
+}
