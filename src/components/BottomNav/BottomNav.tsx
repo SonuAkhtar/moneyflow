@@ -51,20 +51,22 @@ export const BottomNav = () => {
               className={cn(styles.nav_item, active && styles["nav_item--active"])}
               aria-current={active ? "page" : undefined}
             >
-              {active && (
+              <span className={styles.nav_iconWrap}>
+                {active && (
+                  <motion.span
+                    layoutId="nav-pill"
+                    className={styles.nav_pill}
+                    transition={SPRING}
+                  />
+                )}
                 <motion.span
-                  layoutId="nav-pill"
-                  className={styles.nav_pill}
+                  className={styles.nav_icon}
+                  whileTap={{ scale: 0.86 }}
                   transition={SPRING}
-                />
-              )}
-              <motion.span
-                className={styles.nav_icon}
-                whileTap={{ scale: 0.86 }}
-                transition={SPRING}
-              >
-                <Icon size={21} strokeWidth={active ? 2.4 : 2} />
-              </motion.span>
+                >
+                  <Icon size={21} strokeWidth={active ? 2.4 : 2} />
+                </motion.span>
+              </span>
               <span className={styles.nav_label}>{item.label}</span>
             </Link>
           );

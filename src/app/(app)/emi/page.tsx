@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { CreditCard, CheckCircle2, Hourglass, Wallet } from "lucide-react";
+import { CreditCard } from "lucide-react";
 import { Card } from "@/components/Card/Card";
 import { ProgressBar } from "@/components/ProgressBar/ProgressBar";
 import { EmiList } from "@/sections/EmiList/EmiList";
@@ -35,19 +35,16 @@ export default function EmiPage() {
   const stats = [
     {
       key: "monthly",
-      icon: Wallet,
       value: formatCurrency(loanMonthly, currency, { compact: true }),
       label: "Per month",
     },
     {
       key: "paid",
-      icon: CheckCircle2,
       value: formatCurrency(paidSoFar, currency, { compact: true }),
       label: "Paid so far",
     },
     {
       key: "remaining",
-      icon: Hourglass,
       value: formatCurrency(loanRemaining, currency, { compact: true }),
       label: "Loan left",
     },
@@ -96,9 +93,6 @@ export default function EmiPage() {
             padded={false}
             className={styles.stat}
           >
-            <span className={styles.stat_icon}>
-              <stat.icon size={15} />
-            </span>
             <span className={styles.stat_value}>{stat.value}</span>
             <span className={styles.stat_label}>{stat.label}</span>
           </Card>
