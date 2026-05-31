@@ -1,12 +1,8 @@
 import { BIG_EXPENSE_THRESHOLD } from "@/constants";
-import {
-  accountRepo,
-  budgetRepo,
-  transactionRepo,
-} from "@/services/repositories";
-import { currentMonthKey, isoNow, monthKey } from "@/utils";
+import { accountRepo, transactionRepo } from "@/services/repositories";
+import { isoNow, monthKey } from "@/utils";
 import type { Account, Transaction } from "@/types";
-import { applyBalance, changedFrom, newId } from "./helpers";
+import { applyBalance, newId } from "./helpers";
 import type { FinanceState, SliceCreator } from "./types";
 
 type TransactionsSlice = Pick<
@@ -36,26 +32,13 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
     };
     const delta = input.type === "income" ? input.amount : -input.amount;
     const accounts = applyBalance(s.accounts, input.accountId, delta);
-    const budgets =
-      input.type === "expense"
-        ? s.budgets.map((b) =>
-            b.category === input.category && b.month === currentMonthKey()
-              ? {
-                  ...b,
-                  spent: Math.round((b.spent + input.amount) * 100) / 100,
-                }
-              : b,
-          )
-        : s.budgets;
-    set({ transactions: [txn, ...s.transactions], accounts, budgets });
+    set({ transactions: [txn, ...s.transactions], accounts });
 
     const account = accounts.find((a) => a.id === input.accountId);
-    const dirtyBudgets = changedFrom(budgets, s.budgets);
     sync(() =>
       Promise.all([
         transactionRepo.save(txn),
         ...(account ? [accountRepo.save(account)] : []),
-        ...dirtyBudgets.map((b) => budgetRepo.save(b)),
       ]).then(() => undefined),
     );
   },
@@ -66,33 +49,16 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
     if (!txn) return;
     const delta = txn.type === "income" ? -txn.amount : txn.amount;
     const accounts = applyBalance(s.accounts, txn.accountId, delta);
-    const budgets =
-      txn.type === "expense"
-        ? s.budgets.map((b) =>
-            b.category === txn.category && b.month === monthKey(txn.occurredAt)
-              ? {
-                  ...b,
-                  spent: Math.max(
-                    0,
-                    Math.round((b.spent - txn.amount) * 100) / 100,
-                  ),
-                }
-              : b,
-          )
-        : s.budgets;
     set({
       transactions: s.transactions.filter((t) => t.id !== id),
       accounts,
-      budgets,
     });
 
     const account = accounts.find((a) => a.id === txn.accountId);
-    const dirtyBudgets = changedFrom(budgets, s.budgets);
     sync(() =>
       Promise.all([
         transactionRepo.remove(id),
         ...(account ? [accountRepo.save(account)] : []),
-        ...dirtyBudgets.map((b) => budgetRepo.save(b)),
       ]).then(() => undefined),
     );
   },
@@ -106,27 +72,6 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
     let accounts = applyBalance(s.accounts, old.accountId, -oldDelta);
     const newDelta = input.type === "income" ? input.amount : -input.amount;
     accounts = applyBalance(accounts, input.accountId, newDelta);
-
-    const budgets = s.budgets.map((b) => {
-      let spent = b.spent;
-      if (
-        old.type === "expense" &&
-        b.category === old.category &&
-        b.month === monthKey(old.occurredAt)
-      ) {
-        spent = Math.max(0, spent - old.amount);
-      }
-      if (
-        input.type === "expense" &&
-        b.category === input.category &&
-        b.month === monthKey(input.occurredAt)
-      ) {
-        spent = spent + input.amount;
-      }
-      return spent === b.spent
-        ? b
-        : { ...b, spent: Math.round(spent * 100) / 100 };
-    });
 
     const updated: Transaction = {
       ...old,
@@ -143,10 +88,8 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
     set({
       transactions: s.transactions.map((t) => (t.id === id ? updated : t)),
       accounts,
-      budgets,
     });
 
-    const dirtyBudgets = changedFrom(budgets, s.budgets);
     const dirtyAccounts = [old.accountId, input.accountId]
       .filter((v, i, arr) => arr.indexOf(v) === i)
       .map((aid) => accounts.find((a) => a.id === aid))
@@ -155,7 +98,6 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
       Promise.all([
         transactionRepo.save(updated),
         ...dirtyAccounts.map((a) => accountRepo.save(a)),
-        ...dirtyBudgets.map((b) => budgetRepo.save(b)),
       ]).then(() => undefined),
     );
   },

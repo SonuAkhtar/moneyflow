@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { CreditCard, CheckCircle2, Hourglass, Wallet } from "lucide-react";
-import { PageIntro } from "@/components/PageIntro/PageIntro";
 import { Card } from "@/components/Card/Card";
 import { ProgressBar } from "@/components/ProgressBar/ProgressBar";
 import { EmiList } from "@/sections/EmiList/EmiList";
@@ -16,19 +15,18 @@ import styles from "./page.module.scss";
 export default function EmiPage() {
   const emis = useFinanceStore((s) => s.emis);
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
-  const { monthIncome, emiBurden } = useFinanceMetrics();
+  const { monthIncome } = useFinanceMetrics();
 
-  const active = emis.filter((e) => e.status === "active");
+  const loans = emis.filter((e) => e.status === "active" && emiKind(e) === "loan");
+  const loanMonthly = sumBy(loans, (e) => e.monthlyAmount);
   const burdenShare =
-    monthIncome > 0 ? Math.round((emiBurden / monthIncome) * 100) : 0;
+    monthIncome > 0 ? Math.round((loanMonthly / monthIncome) * 100) : 0;
+  const paidSoFar = sumBy(loans, emiPaidAmount);
 
-  const paidSoFar = sumBy(active, emiPaidAmount);
-  const loans = active.filter(
-    (e) => emiKind(e) === "loan" && e.totalMonths > 0,
-  );
-  const loanTotal = sumBy(loans, (e) => e.totalMonths * e.monthlyAmount);
+  const scheduled = loans.filter((e) => e.totalMonths > 0);
+  const loanTotal = sumBy(scheduled, (e) => e.totalMonths * e.monthlyAmount);
   const loanPaid = sumBy(
-    loans,
+    scheduled,
     (e) => Math.min(emiPaidMonths(e), e.totalMonths) * e.monthlyAmount,
   );
   const loanRemaining = Math.max(0, loanTotal - loanPaid);
@@ -38,7 +36,7 @@ export default function EmiPage() {
     {
       key: "monthly",
       icon: Wallet,
-      value: formatCurrency(emiBurden, currency, { compact: true }),
+      value: formatCurrency(loanMonthly, currency, { compact: true }),
       label: "Per month",
     },
     {
@@ -63,10 +61,6 @@ export default function EmiPage() {
       animate="visible"
     >
       <motion.div variants={listItem}>
-        <PageIntro
-          title="Loan EMIs & SIPs"
-          subtitle="Track and manage your repayments"
-        />
         <div className={styles.hero}>
           <span className={styles.hero_glow} aria-hidden />
           <div className={styles.hero_top}>
@@ -77,10 +71,10 @@ export default function EmiPage() {
             <span className={styles.hero_share}>{burdenShare}% of income</span>
           </div>
           <span className={styles.hero_value}>
-            {formatCurrency(emiBurden, currency)}
+            {formatCurrency(loanMonthly, currency)}
           </span>
           <span className={styles.hero_meta}>
-            across {active.length} active EMI{active.length === 1 ? "" : "s"} & SIPs
+            across {loans.length} active EMI{loans.length === 1 ? "" : "s"}
           </span>
           {loanTotal > 0 && (
             <div className={styles.hero_progress}>
@@ -113,10 +107,6 @@ export default function EmiPage() {
 
       <motion.div variants={listItem}>
         <EmiList kind="loan" />
-      </motion.div>
-
-      <motion.div variants={listItem}>
-        <EmiList kind="sip" />
       </motion.div>
 
       <motion.div variants={listItem}>

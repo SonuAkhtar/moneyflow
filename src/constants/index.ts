@@ -1,8 +1,15 @@
-import { ChartPie, CreditCard, LayoutGrid, UserRound } from "lucide-react";
+import {
+  ChartPie,
+  CreditCard,
+  LayoutGrid,
+  Landmark,
+  UserRound,
+} from "lucide-react";
 import type { NavItem } from "@/types";
 
 export const ROUTES = {
   home: "/",
+  savings: "/savings",
   analytics: "/analytics",
   emi: "/emi",
   profile: "/profile",
@@ -16,8 +23,9 @@ export const ROUTES = {
 } as const;
 
 export const BOTTOM_NAV: NavItem[] = [
-  { href: ROUTES.home, label: "Home", icon: LayoutGrid },
+  { href: ROUTES.savings, label: "Savings", icon: Landmark },
   { href: ROUTES.analytics, label: "Analytics", icon: ChartPie },
+  { href: ROUTES.home, label: "Home", icon: LayoutGrid },
   { href: ROUTES.emi, label: "EMI", icon: CreditCard },
   { href: ROUTES.profile, label: "Profile", icon: UserRound },
 ];
@@ -34,7 +42,7 @@ export const APP = {
   name: "moneyFlow",
   tagline: "Money that moves with you",
   description:
-    "A premium fintech companion for tracking salary, savings, EMIs and smart AI-driven budgets.",
+    "A premium fintech companion for tracking salary, savings, EMIs and spending.",
   defaultCurrency: CURRENCY.code,
   storageKeys: {
     finance: "moneyflow-finance",

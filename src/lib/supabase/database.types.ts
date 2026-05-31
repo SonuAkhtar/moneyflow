@@ -162,28 +162,6 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["emi_payments"]["Insert"]>;
         Relationships: [];
       };
-      budgets: {
-        Row: {
-          id: string;
-          user_id: string;
-          category: string;
-          limit: number;
-          spent: number;
-          month: string;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          category: string;
-          limit?: number;
-          spent?: number;
-          month: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["budgets"]["Insert"]>;
-        Relationships: [];
-      };
       borrowings: {
         Row: {
           id: string;

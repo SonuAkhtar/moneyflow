@@ -41,7 +41,6 @@ describe("computeHealthScore", () => {
       expenses: 600,
       savings: 400,
       emiBurden: 100,
-      budgetAdherence: 80,
     });
     expect(score).toBeGreaterThanOrEqual(0);
     expect(score).toBeLessThanOrEqual(100);

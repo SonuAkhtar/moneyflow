@@ -2,7 +2,6 @@ import type {
   Account,
   Borrowing,
   BorrowingPayment,
-  Budget,
   CategoryId,
   Emi,
   EmiPayment,
@@ -172,24 +171,6 @@ export const emiPaymentToRow = (
   amount: p.amount,
 });
 
-export const rowToBudget = (r: Tables<"budgets">): Budget => ({
-  id: r.id,
-  userId: r.user_id,
-  category: r.category as CategoryId,
-  limit: n(r.limit),
-  spent: n(r.spent),
-  month: r.month,
-  createdAt: r.created_at,
-});
-
-export const budgetToRow = (b: Budget): TablesInsert<"budgets"> => ({
-  id: b.id,
-  user_id: b.userId,
-  category: b.category,
-  limit: b.limit,
-  spent: b.spent,
-  month: b.month,
-});
 
 export const rowToBorrowing = (
   r: Tables<"borrowings">,

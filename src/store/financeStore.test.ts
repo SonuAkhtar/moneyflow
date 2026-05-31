@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { currentMonthKey } from "@/utils";
-import type { Account, Budget, Profile } from "@/types";
+import type { Account, Profile } from "@/types";
 
 vi.mock("@/services/repositories", () => {
   const ok = () => Promise.resolve();
@@ -12,7 +12,6 @@ vi.mock("@/services/repositories", () => {
   return {
     accountRepo: repo(),
     transactionRepo: repo(),
-    budgetRepo: repo(),
     emiRepo: {
       save: vi.fn(ok),
       remove: vi.fn(ok),
@@ -28,7 +27,7 @@ vi.mock("@/services/repositories", () => {
         accounts: [],
         transactions: [],
         emis: [],
-        budgets: [],
+        borrowings: [],
       }),
     ),
   };
@@ -72,8 +71,6 @@ const seed = (
     accounts: [account(1000)],
     transactions: [],
     emis: [],
-    budgets: [],
-    summaries: [],
     hasHydrated: true,
     initialized: true,
     ...over,
@@ -82,19 +79,7 @@ const seed = (
 beforeEach(() => seed());
 
 describe("financeStore mutations (optimistic reducer)", () => {
-  it("addTransaction(expense) decrements balance and bumps the matching budget", () => {
-    const month = currentMonthKey();
-    const budget: Budget = {
-      id: "b1",
-      userId: "u1",
-      category: "food",
-      limit: 5000,
-      spent: 100,
-      month,
-      createdAt: "",
-    };
-    seed({ budgets: [budget] });
-
+  it("addTransaction(expense) decrements the account balance", () => {
     useFinanceStore.getState().addTransaction({
       accountId: "acc1",
       type: "expense",
@@ -106,24 +91,9 @@ describe("financeStore mutations (optimistic reducer)", () => {
     const s = useFinanceStore.getState();
     expect(s.transactions).toHaveLength(1);
     expect(s.accounts[0]!.balance).toBe(800);
-    expect(s.budgets[0]!.spent).toBe(300);
   });
 
-  it("deleteTransaction reverses the balance + budget effect", () => {
-    const month = currentMonthKey();
-    seed({
-      budgets: [
-        {
-          id: "b1",
-          userId: "u1",
-          category: "food",
-          limit: 5000,
-          spent: 100,
-          month,
-          createdAt: "",
-        },
-      ],
-    });
+  it("deleteTransaction reverses the balance effect", () => {
     const store = useFinanceStore.getState();
     store.addTransaction({
       accountId: "acc1",
@@ -138,7 +108,6 @@ describe("financeStore mutations (optimistic reducer)", () => {
     const s = useFinanceStore.getState();
     expect(s.transactions).toHaveLength(0);
     expect(s.accounts[0]!.balance).toBe(1000);
-    expect(s.budgets[0]!.spent).toBe(100);
   });
 
   it("addTransaction(income) increases balance", () => {
@@ -172,21 +141,7 @@ describe("financeStore mutations (optimistic reducer)", () => {
     expect(s.transactions[0]!.type).toBe("transfer");
   });
 
-  it("updateTransaction re-bases balance + budget by the delta", () => {
-    const month = currentMonthKey();
-    seed({
-      budgets: [
-        {
-          id: "b1",
-          userId: "u1",
-          category: "food",
-          limit: 5000,
-          spent: 100,
-          month,
-          createdAt: "",
-        },
-      ],
-    });
+  it("updateTransaction re-bases the balance by the delta", () => {
     const store = useFinanceStore.getState();
     store.addTransaction({
       accountId: "acc1",
@@ -205,7 +160,6 @@ describe("financeStore mutations (optimistic reducer)", () => {
     });
     const s = useFinanceStore.getState();
     expect(s.accounts[0]!.balance).toBe(700);
-    expect(s.budgets[0]!.spent).toBe(400);
   });
 
   it("addEmi + addEmiPayment nests the payment under the EMI", () => {

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronRight, Landmark, PiggyBank } from "lucide-react";
+import { ChevronRight, Landmark, Wallet } from "lucide-react";
 import { Card } from "@/components/Card/Card";
 import { MonthlySavingSheet } from "@/sections/MonthlySavingSheet/MonthlySavingSheet";
 import { useFinanceStore } from "@/store/financeStore";
@@ -37,7 +37,7 @@ export const SavingsAccordion = () => {
         aria-expanded={open}
       >
         <span className={styles.accordion_icon}>
-          <PiggyBank size={22} />
+          <Wallet size={22} />
         </span>
         <span className={styles.accordion_main}>
           <span className={styles.accordion_row}>

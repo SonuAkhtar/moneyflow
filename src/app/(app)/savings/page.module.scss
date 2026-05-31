@@ -1,0 +1,99 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+// Savings summary hero — always dark with light text (matches the home
+// overview / EMI hero), so it reads the same in both themes.
+.hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(
+      130% 120% at 100% 0%,
+      rgba(43, 212, 196, 0.22) 0%,
+      transparent 55%
+    ),
+    linear-gradient(155deg, #16352b 0%, #112a22 48%, #0c1c16 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--shadow-float);
+  color: #eef6ef;
+
+  &_head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &_label {
+    font-size: var(--font-xs);
+    font-weight: var(--weight-medium);
+    color: rgba(238, 246, 239, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  &_total {
+    font-size: var(--font-3xl);
+    font-weight: var(--weight-bold);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+    color: #6ee88a;
+  }
+
+  &_grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+  }
+
+  &_cell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    min-width: 0;
+  }
+
+  &_cellHead {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-xs);
+    font-weight: var(--weight-semibold);
+    color: rgba(238, 246, 239, 0.72);
+
+    svg {
+      color: rgba(238, 246, 239, 0.72);
+    }
+  }
+
+  &_cellValue {
+    font-size: var(--font-lg);
+    font-weight: var(--weight-bold);
+    font-variant-numeric: tabular-nums;
+    color: #eef6ef;
+    @include truncate(1);
+  }
+
+  &_cellSub {
+    font-size: var(--font-xs);
+    color: rgba(238, 246, 239, 0.5);
+    @include truncate(1);
+
+    &--up {
+      color: #6ee88a;
+      font-weight: var(--weight-medium);
+    }
+  }
+}

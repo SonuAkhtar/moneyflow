@@ -94,29 +94,6 @@ export interface EmiPayment {
   amount: number;
 }
 
-export interface Budget {
-  id: string;
-  userId: string;
-  category: CategoryId;
-  limit: number;
-  spent: number;
-  month: string;
-  createdAt: string;
-}
-
-export interface MonthlySummary {
-  id: string;
-  userId: string;
-  month: string;
-  income: number;
-  expenses: number;
-  saved: number;
-  carriedForward: number;
-  healthScore: number;
-  healthBand: HealthBand;
-  createdAt: string;
-}
-
 export interface Borrowing {
   id: string;
   userId: string;
@@ -190,12 +167,6 @@ export interface EmiInput {
   paidMonths: number;
   interestRate: number;
   dueDay: number;
-}
-
-export interface BudgetInput {
-  category: CategoryId;
-  limit: number;
-  month: string;
 }
 
 export type Variant = "primary" | "secondary" | "ghost" | "danger" | "glass";

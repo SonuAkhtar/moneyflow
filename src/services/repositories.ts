@@ -6,14 +6,12 @@ import {
   accountToRow,
   borrowingPaymentToRow,
   borrowingToRow,
-  budgetToRow,
   emiPaymentToRow,
   emiToRow,
   profileToUpdate,
   rowToAccount,
   rowToBorrowing,
   rowToBorrowingPayment,
-  rowToBudget,
   rowToEmi,
   rowToEmiPayment,
   rowToProfile,
@@ -25,7 +23,6 @@ import type {
   Account,
   Borrowing,
   BorrowingPayment,
-  Budget,
   Emi,
   EmiPayment,
   Profile,
@@ -99,8 +96,6 @@ export const transactionRepo = makeRepo<Transaction>(
   { column: "occurred_at", ascending: false },
 );
 
-export const budgetRepo = makeRepo<Budget>("budgets", budgetToRow, rowToBudget);
-
 export const emiRepo = {
   async save(emi: Emi): Promise<void> {
     const { error } = await sb().from("emis").upsert(emiToRow(emi));
@@ -157,7 +152,6 @@ export interface FinanceSnapshot {
   accounts: Account[];
   transactions: Transaction[];
   emis: Emi[];
-  budgets: Budget[];
   borrowings: Borrowing[];
 }
 
@@ -169,7 +163,6 @@ export async function fetchSnapshot(userId: string): Promise<FinanceSnapshot> {
     transactions,
     emiRows,
     emiPaymentRows,
-    budgets,
     borrowingRows,
     borrowingPaymentRows,
   ] = await Promise.all([
@@ -178,7 +171,6 @@ export async function fetchSnapshot(userId: string): Promise<FinanceSnapshot> {
     transactionRepo.list(userId),
     client.from("emis").select("*").eq("user_id", userId),
     client.from("emi_payments").select("*").eq("user_id", userId),
-    budgetRepo.list(userId),
     client.from("borrowings").select("*").eq("user_id", userId),
     client.from("borrowing_payments").select("*").eq("user_id", userId),
   ]);
@@ -216,7 +208,6 @@ export async function fetchSnapshot(userId: string): Promise<FinanceSnapshot> {
     accounts,
     transactions,
     emis,
-    budgets,
     borrowings,
   };
 }

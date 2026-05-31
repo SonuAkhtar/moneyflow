@@ -1,15 +1,11 @@
 import type { StoreApi } from "zustand";
-import { currentMonthKey } from "@/utils";
 import type {
   Account,
   AccountInput,
   Borrowing,
   BorrowingInput,
-  Budget,
-  BudgetInput,
   Emi,
   EmiInput,
-  MonthlySummary,
   Profile,
   Transaction,
   TransactionInput,
@@ -18,16 +14,13 @@ import type {
 export interface FinanceState {
   initialized: boolean;
   hasHydrated: boolean;
-  activeMonth: string;
   majorAccountId: string | null;
   dailyAccountId: string | null;
   profile: Profile | null;
   accounts: Account[];
   transactions: Transaction[];
   emis: Emi[];
-  budgets: Budget[];
   borrowings: Borrowing[];
-  summaries: MonthlySummary[];
 
   hydrate: (userId: string) => Promise<void>;
   resetAll: () => void;
@@ -45,9 +38,6 @@ export interface FinanceState {
   deleteAccount: (id: string) => void;
   addSavingDeposit: (accountId: string, amount: number) => void;
   addSavingWithdrawal: (accountId: string, amount: number) => void;
-
-  upsertBudget: (input: BudgetInput) => void;
-  deleteBudget: (id: string) => void;
 
   setSalary: (month: string, amount: number) => void;
 
@@ -78,22 +68,17 @@ export interface FinanceState {
     patch: { amount?: number; paidOn?: string; note?: string | null },
   ) => void;
   deleteBorrowingPayment: (borrowingId: string, paymentId: string) => void;
-
-  runMonthlyRollover: () => void;
 }
 
 export const emptyState = {
   initialized: false,
-  activeMonth: currentMonthKey(),
   majorAccountId: null,
   dailyAccountId: null,
   profile: null,
   accounts: [],
   transactions: [],
   emis: [],
-  budgets: [],
   borrowings: [],
-  summaries: [],
 } satisfies Partial<FinanceState>;
 
 export type FinanceSet = StoreApi<FinanceState>["setState"];

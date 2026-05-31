@@ -143,24 +143,20 @@ export interface HealthInput {
   expenses: number;
   savings: number;
   emiBurden: number;
-  budgetAdherence: number;
 }
 
+// Score = savings health (60) + low-EMI-burden health (40).
 export const computeHealthScore = ({
   income,
   expenses,
   savings,
   emiBurden,
-  budgetAdherence,
 }: HealthInput): number => {
   const rate = savingsRate(income, expenses);
-  const savingsScore = Math.min(40, (savings > 0 ? rate : 0) * 0.4);
+  const savingsScore = Math.min(60, (savings > 0 ? rate : 0) * 0.6);
   const emiRatio = income > 0 ? Math.min(1, emiBurden / income) : 1;
-  const emiScore = (1 - emiRatio) * 30;
-  const adherenceScore = Math.min(30, budgetAdherence * 0.3);
-  return Math.round(
-    Math.max(0, Math.min(100, savingsScore + emiScore + adherenceScore)),
-  );
+  const emiScore = (1 - emiRatio) * 40;
+  return Math.round(Math.max(0, Math.min(100, savingsScore + emiScore)));
 };
 
 export const healthBand = (score: number): HealthBand => {

@@ -7,7 +7,6 @@ import { emptyState, type FinanceState } from "./finance/types";
 import { createCoreSlice } from "./finance/coreSlice";
 import { createTransactionsSlice } from "./finance/transactionsSlice";
 import { createAccountsSlice } from "./finance/accountsSlice";
-import { createBudgetsSlice } from "./finance/budgetsSlice";
 import { createEmisSlice } from "./finance/emisSlice";
 import { createBorrowingsSlice } from "./finance/borrowingsSlice";
 
@@ -27,7 +26,6 @@ export const useFinanceStore = create<FinanceState>()(
         ...createCoreSlice(set, get, helpers),
         ...createTransactionsSlice(set, get, helpers),
         ...createAccountsSlice(set, get, helpers),
-        ...createBudgetsSlice(set, get, helpers),
         ...createEmisSlice(set, get, helpers),
         ...createBorrowingsSlice(set, get, helpers),
       };
@@ -40,16 +38,13 @@ export const useFinanceStore = create<FinanceState>()(
         typeof window !== "undefined" ? window.localStorage : noopStorage,
       ),
       partialize: (s) => ({
-        activeMonth: s.activeMonth,
         majorAccountId: s.majorAccountId,
         dailyAccountId: s.dailyAccountId,
         profile: s.profile,
         accounts: s.accounts,
         transactions: s.transactions,
         emis: s.emis,
-        budgets: s.budgets,
         borrowings: s.borrowings,
-        summaries: s.summaries,
       }),
       onRehydrateStorage: () => (state) => {
         if (state?.profile) useFinanceStore.setState({ hasHydrated: true });

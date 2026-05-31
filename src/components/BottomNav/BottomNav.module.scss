@@ -7,18 +7,19 @@
   max-width: $content-max;
   z-index: z("nav");
   padding: 0 var(--space-4) var(--space-4);
-  padding-bottom: calc(var(--space-1) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
   pointer-events: none;
 
   &_bar {
+    position: relative;
     display: flex;
-    align-items: stretch;
+    align-items: center;
     justify-content: space-between;
     gap: var(--space-1);
-    padding: var(--space-2);
+    padding: var(--space-2) var(--space-3);
     border-radius: var(--radius-2xl);
-    @include glass(28px, var(--surface-chrome));
-    @include glass-elevation(0.5, $ring: true);
+    @include glass(30px, var(--surface-chrome));
+    @include glass-elevation(0.55, $ring: true);
     pointer-events: auto;
   }
 
@@ -31,7 +32,7 @@
     gap: 3px;
     flex: 1;
     padding: var(--space-2) var(--space-1);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     color: var(--text-tertiary);
     transition: color var(--dur-base) var(--ease-smooth);
     @include tap-highlight-none;
@@ -41,12 +42,12 @@
     }
   }
 
-  // Sliding accent-tinted pill behind the active icon + label.
+  // Sliding accent-tinted pill behind the active (non-home) icon + label.
   &_pill {
     position: absolute;
-    inset: 0;
+    inset: 4px 0;
     z-index: 0;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     background: var(--accent-bg);
     box-shadow: inset 0 0 0 1px var(--border-lime);
   }
@@ -56,7 +57,6 @@
     z-index: 1;
     display: grid;
     place-items: center;
-    will-change: transform;
   }
 
   &_label {
@@ -66,10 +66,56 @@
     font-weight: var(--weight-medium);
     letter-spacing: 0.01em;
     line-height: 1;
-    transition: font-weight var(--dur-fast) var(--ease-smooth);
+  }
 
-    .nav_item--active & {
-      font-weight: var(--weight-bold);
+  // Centre "Home" tab — a raised, glowing orb punching through the bar.
+  &_home {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex: 1;
+    color: var(--text-secondary);
+    transition: color var(--dur-base) var(--ease-smooth);
+    @include tap-highlight-none;
+
+    &--active {
+      color: var(--accent);
     }
+  }
+
+  &_orb {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    margin-top: -24px;
+    border-radius: var(--radius-pill);
+    // Inactive: a neutral, raised button with an accent-tinted home icon.
+    background: var(--surface-card-solid);
+    color: var(--accent);
+    border: 4px solid var(--surface-chrome);
+    box-shadow:
+      var(--shadow-card),
+      inset 0 0 0 1px var(--border-subtle);
+    transition:
+      background var(--dur-base) var(--ease-smooth),
+      color var(--dur-base) var(--ease-smooth),
+      box-shadow var(--dur-base) var(--ease-smooth),
+      transform var(--dur-base) var(--ease-spring);
+    will-change: transform;
+  }
+
+  // Active: filled, glowing lime orb that lifts and scales up.
+  &_home--active &_orb {
+    background: var(--gradient-lime);
+    color: var(--text-inverse);
+    transform: translateY(-2px) scale(1.06);
+    box-shadow:
+      0 0 0 4px var(--accent-bg),
+      var(--shadow-glow-lime),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
   }
 }

@@ -107,7 +107,7 @@ export const ExpenseSection = ({ variant }: ExpenseSectionProps) => {
             description={
               isMajor
                 ? "Log a big purchase to keep an eye on it."
-                : "Track everyday spends to stay on budget."
+                : "Track everyday spends to stay in control."
             }
           />
         ) : (

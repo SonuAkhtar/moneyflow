@@ -19,11 +19,8 @@ export interface FinanceMetrics {
   monthSaved: number;
   savingsRate: number;
   emiBurden: number;
-  carriedForward: number;
   healthScore: number;
   healthBand: HealthBand;
-  budgetTotal: number;
-  budgetSpent: number;
   bigExpenseTotal: number;
   dailyAverage: number;
 }
@@ -38,8 +35,6 @@ const daysElapsed = (month: string): number => {
 export const useFinanceMetrics = (month: string = currentMonthKey()): FinanceMetrics => {
   const accounts = useFinanceStore((s) => s.accounts);
   const emis = useFinanceStore((s) => s.emis);
-  const budgets = useFinanceStore((s) => s.budgets);
-  const summaries = useFinanceStore((s) => s.summaries);
   const monthTxns = useMonthTransactions(month);
 
   return useMemo(() => {
@@ -63,22 +58,12 @@ export const useFinanceMetrics = (month: string = currentMonthKey()): FinanceMet
     // "Spent" = expenses + EMIs paid this month; "Saved" = income − that.
     const totalSpent = expenses + emiPaid;
     const saved = Math.max(0, income - totalSpent);
-    const monthBudgets = budgets.filter((b) => b.month === month);
-    const budgetTotal = sumBy(monthBudgets, (b) => b.limit);
-    const budgetSpent = sumBy(monthBudgets, (b) => b.spent);
-    const adherence =
-      budgetTotal > 0 ? Math.max(0, 100 - (budgetSpent / budgetTotal) * 100) : 60;
     const score = computeHealthScore({
       income: income || 1,
       expenses,
       savings: saved,
       emiBurden,
-      budgetAdherence: adherence,
     });
-    const carriedForward =
-      summaries.find((sum) => sum.month === month)?.carriedForward ??
-      summaries[0]?.carriedForward ??
-      0;
 
     return {
       totalBalance: Math.round(totalBalance * 100) / 100,
@@ -90,11 +75,8 @@ export const useFinanceMetrics = (month: string = currentMonthKey()): FinanceMet
           ? Math.round(Math.max(0, Math.min(100, (saved / income) * 100)))
           : 0,
       emiBurden: Math.round(emiBurden * 100) / 100,
-      carriedForward,
       healthScore: score,
       healthBand: healthBand(score),
-      budgetTotal,
-      budgetSpent: Math.round(budgetSpent * 100) / 100,
       bigExpenseTotal: sumBy(
         monthTxns.expenses.filter((t) => t.isBigExpense),
         (t) => t.amount,
@@ -102,5 +84,5 @@ export const useFinanceMetrics = (month: string = currentMonthKey()): FinanceMet
       dailyAverage:
         Math.round((expenses / Math.max(daysElapsed(month), 1)) * 100) / 100,
     };
-  }, [accounts, emis, budgets, summaries, month, monthTxns]);
+  }, [accounts, emis, month, monthTxns]);
 };

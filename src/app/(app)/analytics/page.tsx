@@ -5,7 +5,6 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { BarChart3, ChevronDown, Plus } from "lucide-react";
-import { PageIntro } from "@/components/PageIntro/PageIntro";
 import { Card } from "@/components/Card/Card";
 import { Button } from "@/components/Button/Button";
 import { Select } from "@/components/Select/Select";
@@ -129,7 +128,6 @@ export default function AnalyticsPage() {
       animate="visible"
     >
       <motion.div variants={listItem}>
-        <PageIntro title="Analytics" />
         <Select
           aria-label="Select month"
           className={styles.monthSelect}

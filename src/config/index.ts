@@ -17,7 +17,6 @@ export const siteConfig = {
   accentColor: "#4ece6e",
   keywords: [
     "finance",
-    "budget",
     "expense tracker",
     "savings",
     "fintech",
