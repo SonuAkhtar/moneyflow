@@ -4,7 +4,11 @@ import type { Account, Budget, Profile } from "@/types";
 
 vi.mock("@/services/repositories", () => {
   const ok = () => Promise.resolve();
-  const repo = () => ({ list: () => Promise.resolve([]), save: vi.fn(ok), remove: vi.fn(ok) });
+  const repo = () => ({
+    list: () => Promise.resolve([]),
+    save: vi.fn(ok),
+    remove: vi.fn(ok),
+  });
   return {
     accountRepo: repo(),
     transactionRepo: repo(),
@@ -60,7 +64,9 @@ const account = (balance: number): Account => ({
   createdAt: "",
 });
 
-const seed = (over: Partial<Parameters<typeof useFinanceStore.setState>[0]> = {}) =>
+const seed = (
+  over: Partial<Parameters<typeof useFinanceStore.setState>[0]> = {},
+) =>
   useFinanceStore.setState({
     profile,
     accounts: [account(1000)],
@@ -107,7 +113,15 @@ describe("financeStore mutations (optimistic reducer)", () => {
     const month = currentMonthKey();
     seed({
       budgets: [
-        { id: "b1", userId: "u1", category: "food", limit: 5000, spent: 100, month, createdAt: "" },
+        {
+          id: "b1",
+          userId: "u1",
+          category: "food",
+          limit: 5000,
+          spent: 100,
+          month,
+          createdAt: "",
+        },
       ],
     });
     const store = useFinanceStore.getState();
@@ -146,7 +160,7 @@ describe("financeStore mutations (optimistic reducer)", () => {
     expect(
       s.transactions.some((t) => t.category === "salary" && t.amount === 5000),
     ).toBe(true);
-    // Salary is a separate record — it must not credit any bank/savings balance.
+    // Salary is a separate record - it must not credit any bank/savings balance.
     expect(s.accounts[0]!.balance).toBe(0);
   });
 
@@ -162,7 +176,15 @@ describe("financeStore mutations (optimistic reducer)", () => {
     const month = currentMonthKey();
     seed({
       budgets: [
-        { id: "b1", userId: "u1", category: "food", limit: 5000, spent: 100, month, createdAt: "" },
+        {
+          id: "b1",
+          userId: "u1",
+          category: "food",
+          limit: 5000,
+          spent: 100,
+          month,
+          createdAt: "",
+        },
       ],
     });
     const store = useFinanceStore.getState();

@@ -8,6 +8,12 @@
   margin-bottom: var(--space-3);
 }
 
+// Full-width Overview / Categories / Daily switcher on this page only.
+// Doubled class beats the component's default 50% width regardless of CSS order.
+.segments.segments {
+  width: 100%;
+}
+
 .kpis {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

@@ -87,7 +87,7 @@ export const AddBorrowingPaymentSheet = ({
       }
     >
       <div className={styles.body}>
-        <AmountField value={amount} onChange={setAmount} autoFocus />
+        <AmountField value={amount} onChange={setAmount} />
         {!isEdit && outstanding > 0 && (
           <button
             type="button"

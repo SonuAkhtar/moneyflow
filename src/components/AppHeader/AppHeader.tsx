@@ -23,15 +23,21 @@ export const AppHeader = () => {
   }, []);
 
   return (
-    <header className={cn(styles.header, scrolled && styles["header--scrolled"])}>
+    <header
+      className={cn(styles.header, scrolled && styles["header--scrolled"])}
+    >
       <Link
         href={ROUTES.home}
         className={styles.header_logo}
         aria-label="moneyFlow home"
       >
-        <span className={styles.header_word}>
-          MoneY<span className={styles.header_wordAccent}>Flow</span>
-        </span>
+        <img
+          src="/icons/moneyflow-logo.png"
+          alt="moneyFlow"
+          width={38}
+          height={38}
+          className={styles.header_logoImg}
+        />
       </Link>
 
       <div className={styles.header_avatar}>

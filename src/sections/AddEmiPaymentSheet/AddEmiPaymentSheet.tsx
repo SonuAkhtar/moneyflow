@@ -79,7 +79,7 @@ export const AddEmiPaymentSheet = ({
       }
     >
       <div className={styles.body}>
-        <AmountField value={amount} onChange={setAmount} autoFocus />
+        <AmountField value={amount} onChange={setAmount} />
         <Input
           label="Month & Year"
           type="month"

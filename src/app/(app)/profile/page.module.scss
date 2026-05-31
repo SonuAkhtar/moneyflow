@@ -46,10 +46,26 @@
   }
 }
 
+// Premium "hero" surface matching the home overview / EMI hero cards — always
+// dark with light text, so it reads the same in both themes.
 .savings {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(
+      130% 120% at 100% 0%,
+      rgba(43, 212, 196, 0.22) 0%,
+      transparent 55%
+    ),
+    linear-gradient(155deg, #16352b 0%, #112a22 48%, #0c1c16 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--shadow-float);
+  color: #eef6ef;
 
   &_head {
     display: flex;
@@ -60,7 +76,7 @@
   &_label {
     font-size: var(--font-xs);
     font-weight: var(--weight-medium);
-    color: var(--text-tertiary);
+    color: rgba(238, 246, 239, 0.6);
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
@@ -70,6 +86,7 @@
     font-weight: var(--weight-bold);
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.03em;
+    color: #6ee88a;
   }
 
   &_grid {
@@ -84,8 +101,8 @@
     gap: 3px;
     padding: var(--space-3);
     border-radius: var(--radius-md);
-    background: var(--surface-input);
-    border: 1px solid var(--border-subtle);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     min-width: 0;
   }
 
@@ -95,10 +112,10 @@
     gap: var(--space-2);
     font-size: var(--font-xs);
     font-weight: var(--weight-semibold);
-    color: var(--text-secondary);
+    color: rgba(238, 246, 239, 0.72);
 
     svg {
-      color: var(--accent);
+      color: rgba(238, 246, 239, 0.72);
     }
   }
 
@@ -106,16 +123,17 @@
     font-size: var(--font-lg);
     font-weight: var(--weight-bold);
     font-variant-numeric: tabular-nums;
+    color: #eef6ef;
     @include truncate(1);
   }
 
   &_cellSub {
     font-size: var(--font-xs);
-    color: var(--text-tertiary);
+    color: rgba(238, 246, 239, 0.5);
     @include truncate(1);
 
     &--up {
-      color: var(--color-success);
+      color: #6ee88a;
       font-weight: var(--weight-medium);
     }
   }

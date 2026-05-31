@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import { GreetingHeader } from "@/sections/GreetingHeader/GreetingHeader";
 import { MonthOverview } from "@/sections/MonthOverview/MonthOverview";
+import { FinancialHealth } from "@/sections/FinancialHealth/FinancialHealth";
+import { ComingUp } from "@/sections/ComingUp/ComingUp";
 import { SavingsAccordion } from "@/sections/SavingsAccordion/SavingsAccordion";
 import { MajorSpends } from "@/sections/MajorSpends/MajorSpends";
 import { DailySpends } from "@/sections/DailySpends/DailySpends";
@@ -23,6 +25,14 @@ export default function HomePage() {
 
       <motion.div variants={listItem}>
         <MonthOverview />
+      </motion.div>
+
+      <motion.div variants={listItem}>
+        <FinancialHealth />
+      </motion.div>
+
+      <motion.div variants={listItem}>
+        <ComingUp />
       </motion.div>
 
       <motion.div variants={listItem}>

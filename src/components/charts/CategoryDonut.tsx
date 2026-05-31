@@ -5,6 +5,11 @@ import { ChartTooltip } from "./ChartTooltip";
 import { formatCurrency } from "@/utils";
 import styles from "./charts.module.scss";
 
+const REDUCED =
+  typeof window !== "undefined" &&
+  typeof window.matchMedia === "function" &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 interface DonutDatum {
   label: string;
   value: number;
@@ -36,7 +41,8 @@ export const CategoryDonut = ({
           outerRadius="92%"
           paddingAngle={3}
           stroke="none"
-          animationDuration={900}
+          isAnimationActive={!REDUCED}
+          animationDuration={320}
         >
           {data.map((entry) => (
             <Cell key={entry.label} fill={entry.color} />

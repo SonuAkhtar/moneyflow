@@ -7,6 +7,7 @@ import { Select } from "@/components/Select/Select";
 import { SegmentedControl } from "@/components/SegmentedControl/SegmentedControl";
 import { SheetActions } from "@/components/SheetActions/SheetActions";
 import { ConfirmDialog } from "@/components/ConfirmDialog/ConfirmDialog";
+import { FormStack } from "@/components/FormStack/FormStack";
 import { useFinanceStore } from "@/store/financeStore";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -66,6 +67,7 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
     emi ? emiStartMonth(emi) : currentMonthKey(),
   );
   const [tenure, setTenure] = useState(emi ? intStr(emi.totalMonths) : "");
+  const [dueDay, setDueDay] = useState(emi ? intStr(emi.dueDay) : "");
   const [paidMode, setPaidMode] = useState<PaidMode>("months");
   const [paid, setPaid] = useState(emi ? intStr(emiPaidMonths(emi)) : "");
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -129,11 +131,13 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
     if (!value || !resolvedName) return;
     const sched = schedule();
     const month = startMonth || currentMonthKey();
+    const due = Math.min(31, Math.max(1, Math.floor(Number(dueDay) || 1)));
     if (emi) {
       updateEmi(emi.id, {
         name: resolvedName,
         monthlyAmount: value,
         startMonth: month,
+        dueDay: due,
         ...sched,
       });
       toast({ title: "Updated", description: resolvedName, variant: "success" });
@@ -145,7 +149,7 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
         monthlyAmount: value,
         principal: 0,
         interestRate: 0,
-        dueDay: 1,
+        dueDay: due,
         ...sched,
       });
       toast({ title: "Added", description: resolvedName, variant: "success" });
@@ -154,6 +158,7 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
       setAmount("");
       setStartMonth(currentMonthKey());
       setTenure("");
+      setDueDay("");
       setPaid("");
       setPaidMode("months");
     }
@@ -174,46 +179,49 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
         />
       }
     >
-      <Select
-        label="Type"
-        value={type}
-        onChange={(e) => setType(e.target.value)}
-        options={planTypes.map((t) => ({ label: t, value: t }))}
-      />
+      <FormStack>
+        <Select
+          label="Type"
+          value={type}
+          onChange={(e) => setType(e.target.value)}
+          options={planTypes.map((t) => ({ label: t, value: t }))}
+        />
 
-      {type === "Other" && (
-        <>
-          <div style={{ height: "var(--space-4)" }} />
+        {type === "Other" && (
           <Input
             label="Name"
             placeholder={isLoan ? "e.g. Personal loan" : "e.g. Index fund"}
             value={customName}
             onChange={(e) => setCustomName(e.target.value)}
           />
-        </>
-      )}
+        )}
 
-      <div style={{ height: "var(--space-4)" }} />
-      <Input
-        label={`Monthly amount (${symbol})`}
-        type="number"
-        inputMode="decimal"
-        placeholder="0"
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-      />
+        <Input
+          label={`Monthly amount (${symbol})`}
+          type="number"
+          inputMode="decimal"
+          placeholder="0"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+        />
 
-      <div style={{ height: "var(--space-4)" }} />
-      <Input
-        label={isLoan ? "Started (month & year)" : "Investing since (month & year)"}
-        type="month"
-        value={startMonth}
-        onChange={(e) => setStartMonth(e.target.value)}
-      />
+        <Input
+          label={isLoan ? "Started (month & year)" : "Investing since (month & year)"}
+          type="month"
+          value={startMonth}
+          onChange={(e) => setStartMonth(e.target.value)}
+        />
 
-      {isLoan && (
-        <>
-          <div style={{ height: "var(--space-4)" }} />
+        <Input
+          label="Due day of month (1–31)"
+          type="number"
+          inputMode="numeric"
+          placeholder="e.g. 5"
+          value={dueDay}
+          onChange={(e) => setDueDay(e.target.value)}
+        />
+
+        {isLoan && (
           <Input
             label="Tenure (months)"
             type="number"
@@ -222,30 +230,31 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
             value={tenure}
             onChange={(e) => setTenure(e.target.value)}
           />
-        </>
-      )}
+        )}
 
-      <div style={{ height: "var(--space-4)" }} />
-      <div className={styles.paid}>
-        <span className={styles.paid_label}>
-          {isLoan ? "Paid so far" : "Invested so far"}
-        </span>
-        <SegmentedControl
-          size="sm"
-          segments={PAID_MODES}
-          value={paidMode}
-          onChange={switchPaidMode}
-        />
-        <Input
-          type="number"
-          inputMode={paidMode === "amount" ? "decimal" : "numeric"}
-          placeholder={
-            paidMode === "amount" ? `${symbol}0` : "Number of months"
-          }
-          value={paid}
-          onChange={(e) => setPaid(e.target.value)}
-        />
-      </div>
+        <div className={styles.paid}>
+          <div className={styles.paid_top}>
+            <span className={styles.paid_label}>
+              {isLoan ? "Paid so far" : "Invested so far"}
+            </span>
+            <SegmentedControl
+              size="sm"
+              segments={PAID_MODES}
+              value={paidMode}
+              onChange={switchPaidMode}
+            />
+          </div>
+          <Input
+            type="number"
+            inputMode={paidMode === "amount" ? "decimal" : "numeric"}
+            placeholder={
+              paidMode === "amount" ? `${symbol}0` : "Number of months"
+            }
+            value={paid}
+            onChange={(e) => setPaid(e.target.value)}
+          />
+        </div>
+      </FormStack>
 
       <ConfirmDialog
         open={confirmOpen}

@@ -8,6 +8,7 @@ import styles from "./Card.module.scss";
 interface CardProps extends Omit<HTMLMotionProps<"div">, "ref"> {
   surface?: "solid" | "glass" | "gradient";
   glow?: "lime" | "orange" | "none";
+  elevation?: "flat" | "raised";
   interactive?: boolean;
   padded?: boolean;
 }
@@ -17,6 +18,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     {
       surface = "solid",
       glow = "none",
+      elevation = "flat",
       interactive = false,
       padded = true,
       className,
@@ -31,6 +33,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         styles.card,
         styles[`card--${surface}`],
         glow !== "none" && styles[`card--glow-${glow}`],
+        elevation === "raised" && styles["card--raised"],
         interactive && styles["card--interactive"],
         padded && styles["card--padded"],
         className,

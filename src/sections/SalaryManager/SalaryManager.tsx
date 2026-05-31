@@ -25,7 +25,7 @@ export const SalaryManager = () => {
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
   const toast = useToast();
 
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const [editMonth, setEditMonth] = useState<string | null>(null);
   const [amount, setAmount] = useState("");
 
@@ -53,13 +53,18 @@ export const SalaryManager = () => {
     if (accounts.length === 0) {
       toast({
         title: "Add an account first",
-        description: "Salary is credited to an account — create one to track it.",
+        description:
+          "Salary is credited to an account - create one to track it.",
         variant: "error",
       });
       return;
     }
     setSalary(editMonth, Number(amount) || 0);
-    toast({ title: "Salary updated", description: monthLabel(editMonth), variant: "success" });
+    toast({
+      title: "Salary updated",
+      description: monthLabel(editMonth),
+      variant: "success",
+    });
     setEditMonth(null);
   };
 
@@ -73,11 +78,17 @@ export const SalaryManager = () => {
           monthKey(t.occurredAt) === editMonth,
       )
       .forEach((t) => deleteTransaction(t.id));
-    toast({ title: "Salary removed", description: monthLabel(editMonth), variant: "info" });
+    toast({
+      title: "Salary removed",
+      description: monthLabel(editMonth),
+      variant: "info",
+    });
     setEditMonth(null);
   };
 
-  const editorHasValue = editMonth ? (salaryByMonth[editMonth] ?? 0) > 0 : false;
+  const editorHasValue = editMonth
+    ? (salaryByMonth[editMonth] ?? 0) > 0
+    : false;
 
   return (
     <>
@@ -90,35 +101,33 @@ export const SalaryManager = () => {
         trailing={formatCurrency(salaryByMonth[current] ?? 0, currency)}
       >
         <div className={styles.list}>
-              {months.map((month) => {
-                const value = salaryByMonth[month] ?? 0;
-                const isCurrent = month === current;
-                return (
-                  <button
-                    key={month}
-                    type="button"
-                    className={styles.row}
-                    onClick={() => openEditor(month)}
-                  >
-                    <span className={styles.row_month}>
-                      {monthLabel(month)}
-                      {isCurrent && (
-                        <span className={styles.row_tag}>Current</span>
-                      )}
-                    </span>
-                    {value > 0 ? (
-                      <span className={styles.row_value}>
-                        {formatCurrency(value, currency)}
-                      </span>
-                    ) : (
-                      <span className={styles.row_add}>
-                        <Plus size={14} />
-                        Add
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+          {months.map((month) => {
+            const value = salaryByMonth[month] ?? 0;
+            const isCurrent = month === current;
+            return (
+              <button
+                key={month}
+                type="button"
+                className={styles.row}
+                onClick={() => openEditor(month)}
+              >
+                <span className={styles.row_month}>
+                  {monthLabel(month)}
+                  {isCurrent && <span className={styles.row_tag}>Current</span>}
+                </span>
+                {value > 0 ? (
+                  <span className={styles.row_value}>
+                    {formatCurrency(value, currency)}
+                  </span>
+                ) : (
+                  <span className={styles.row_add}>
+                    <Plus size={14} />
+                    Add
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </Collapsible>
 
@@ -130,7 +139,7 @@ export const SalaryManager = () => {
         }`}
       >
         <div className={styles.editor}>
-          <AmountField value={amount} onChange={setAmount} autoFocus />
+          <AmountField value={amount} onChange={setAmount} />
           <SheetActions
             onSave={save}
             onDelete={editorHasValue ? remove : undefined}

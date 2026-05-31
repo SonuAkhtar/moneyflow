@@ -7,8 +7,7 @@
   justify-content: space-between;
   gap: var(--space-3);
   margin: 0 calc(var(--space-5) * -1) var(--space-5);
-  padding: var(--space-3) var(--space-5);
-  padding-top: calc(var(--space-3) + env(safe-area-inset-top, 0px));
+  padding: var(--space-2) var(--space-3);
   background: var(--surface-chrome);
   backdrop-filter: blur(28px) saturate(180%);
   -webkit-backdrop-filter: blur(28px) saturate(180%);
@@ -20,7 +19,7 @@
     padding var(--dur-base) var(--ease-smooth),
     box-shadow var(--dur-base) var(--ease-smooth);
 
-  // Slimmer bar once scrolled — tighter padding, smaller wordmark + avatar.
+  // Slimmer bar once scrolled - tighter padding, smaller logo + avatar.
   &--scrolled {
     padding-top: calc(var(--space-2) + env(safe-area-inset-top, 0px));
     padding-bottom: var(--space-2);
@@ -28,8 +27,8 @@
       var(--shadow-card),
       inset 0 1px 0 rgba(255, 255, 255, 0.07);
 
-    .header_word {
-      font-size: var(--font-xl);
+    .header_logoImg {
+      height: 32px;
     }
 
     .header_avatar {
@@ -44,22 +43,11 @@
     @include tap-highlight-none;
   }
 
-  &_word {
-    font-family: var(--font-logo), var(--font-inter), sans-serif;
-    font-weight: var(--weight-medium);
-    font-size: var(--font-2xl);
-    letter-spacing: -0.045em;
-    line-height: 1;
-    color: var(--text-primary);
-    transition: font-size var(--dur-base) var(--ease-smooth);
-  }
-
-  &_wordAccent {
-    font-weight: var(--weight-bold);
-    background: linear-gradient(120deg, var(--accent), var(--color-neon-green));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+  &_logoImg {
+    height: 3rem;
+    width: auto;
+    display: block;
+    transition: height var(--dur-base) var(--ease-smooth);
   }
 
   &_avatar {

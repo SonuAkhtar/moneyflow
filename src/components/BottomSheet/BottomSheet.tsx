@@ -51,7 +51,7 @@ export const BottomSheet = ({
     <Portal>
       <AnimatePresence>
         {open && (
-          <div className={styles.sheet}>
+          <div key="sheet" className={styles.sheet}>
             <motion.div
               className={styles.sheet_backdrop}
               initial={{ opacity: 0 }}
@@ -68,14 +68,6 @@ export const BottomSheet = ({
             >
               <motion.div
                 className={cn(styles.sheet_panel, className)}
-                drag="y"
-                dragConstraints={{ top: 0, bottom: 0 }}
-                dragElastic={{ top: 0, bottom: 0.4 }}
-                dragSnapToOrigin
-                dragMomentum={false}
-                onDragEnd={(_, info) => {
-                  if (info.offset.y > 120 || info.velocity.y > 700) onClose();
-                }}
                 role="dialog"
                 aria-modal="true"
               >

@@ -43,8 +43,8 @@ export const metadata: Metadata = {
   },
   formatDetection: { telephone: false },
   icons: {
-    icon: [{ url: "/icons/icon.svg", type: "image/svg+xml" }],
-    apple: [{ url: "/icons/apple-icon.svg", type: "image/svg+xml" }],
+    icon: [{ url: "/icons/moneyflow-logo.png", type: "image/png" }],
+    apple: [{ url: "/icons/moneyflow-logo.png", type: "image/png" }],
   },
 };
 

@@ -2,10 +2,12 @@
 
 import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { BarChart3, ChevronDown } from "lucide-react";
+import { BarChart3, ChevronDown, Plus } from "lucide-react";
 import { PageIntro } from "@/components/PageIntro/PageIntro";
 import { Card } from "@/components/Card/Card";
+import { Button } from "@/components/Button/Button";
 import { Select } from "@/components/Select/Select";
 import { SegmentedControl } from "@/components/SegmentedControl/SegmentedControl";
 import { SectionHeader } from "@/components/SectionHeader/SectionHeader";
@@ -24,6 +26,7 @@ import {
   monthKey,
   monthLabel,
 } from "@/utils";
+import { ROUTES } from "@/constants";
 import { staggerContainer, listItem } from "@/themes/animations";
 import type { Transaction } from "@/types";
 import styles from "./page.module.scss";
@@ -48,6 +51,7 @@ const SpendBarChart = dynamic(
 type View = "overview" | "categories" | "daily";
 
 export default function AnalyticsPage() {
+  const router = useRouter();
   const [month, setMonth] = useState<string>(currentMonthKey());
   const { categoryBreakdown, monthlyTrend, dailySpend, topMerchants } =
     useAnalytics(month);
@@ -59,7 +63,16 @@ export default function AnalyticsPage() {
   const totalSpend = categoryBreakdown.reduce((acc, c) => acc + c.value, 0);
 
   const fmt = (n: number) => formatCurrency(n, currency, { compact: true });
-  const maxSaved = Math.max(1, ...monthlyTrend.map((t) => Math.max(0, t.saved)));
+
+  const logExpenseCta = (
+    <Button
+      variant="secondary"
+      icon={Plus}
+      onClick={() => router.push(ROUTES.home)}
+    >
+      Log an expense
+    </Button>
+  );
 
   const monthOptions = useMemo(
     () =>
@@ -125,6 +138,7 @@ export default function AnalyticsPage() {
           options={monthOptions}
         />
         <SegmentedControl<View>
+          className={styles.segments}
           segments={[
             { label: "Overview", value: "overview" },
             { label: "Categories", value: "categories" },
@@ -137,7 +151,7 @@ export default function AnalyticsPage() {
 
       <motion.div className={styles.kpis} variants={listItem}>
         {kpis.map((kpi) => (
-          <Card key={kpi.key} surface="solid" className={styles.kpi}>
+          <Card key={kpi.key} surface="solid" elevation="raised" className={styles.kpi}>
             <span className={styles.kpi_label}>{kpi.label}</span>
             <span className={`${styles.kpi_value} ${styles[`kpi_value--${kpi.tone}`]}`}>
               {kpi.value}
@@ -169,24 +183,14 @@ export default function AnalyticsPage() {
         <motion.div variants={listItem}>
           <Card surface="solid" className={styles.trend}>
             <SectionHeader title="6-month saving trend" caption="Saved per month" />
-            <div className={styles.trend_bars}>
-              {monthlyTrend.map((t, i) => (
-                <div key={i} className={styles.trend_col}>
-                  <span className={styles.trend_amt}>
-                    {t.saved > 0 ? fmt(t.saved) : "—"}
-                  </span>
-                  <span className={styles.trend_barWrap}>
-                    <span
-                      className={styles.trend_bar}
-                      style={{
-                        height: `${Math.max(4, (Math.max(0, t.saved) / maxSaved) * 100)}%`,
-                      }}
-                    />
-                  </span>
-                  <span className={styles.trend_label}>{t.label}</span>
-                </div>
-              ))}
-            </div>
+            <SpendBarChart
+              data={monthlyTrend.map((t) => ({
+                label: t.label,
+                value: Math.max(0, t.saved),
+              }))}
+              currency={currency}
+              uniformColor="var(--chart-saved)"
+            />
           </Card>
         </motion.div>
       )}
@@ -199,6 +203,7 @@ export default function AnalyticsPage() {
                 icon={BarChart3}
                 title="No spending yet"
                 description="Log expenses to unlock category analytics."
+                action={logExpenseCta}
               />
             </Card>
           ) : (
@@ -237,6 +242,7 @@ export default function AnalyticsPage() {
                 icon={BarChart3}
                 title="Nothing logged"
                 description="Your daily spend chart will appear here."
+                action={logExpenseCta}
               />
             ) : (
               <SpendBarChart data={dailySpend} currency={currency} />

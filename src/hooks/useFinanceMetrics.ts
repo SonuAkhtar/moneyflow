@@ -6,8 +6,8 @@ import { useMonthTransactions } from "./useMonthTransactions";
 import {
   computeHealthScore,
   currentMonthKey,
+  emiKind,
   healthBand,
-  savingsRate,
   sumBy,
 } from "@/utils";
 import type { HealthBand } from "@/types";
@@ -43,13 +43,26 @@ export const useFinanceMetrics = (month: string = currentMonthKey()): FinanceMet
   const monthTxns = useMonthTransactions(month);
 
   return useMemo(() => {
-    const { income, expenses, savingsDeposits } = monthTxns.totals;
+    const { income, expenses } = monthTxns.totals;
     const emiBurden = sumBy(
       emis.filter((e) => e.status === "active"),
       (e) => e.monthlyAmount,
     );
     const totalBalance = sumBy(accounts, (a) => a.balance);
-    const saved = Math.max(0, income - expenses) + savingsDeposits;
+    // EMI counts only once it's actually PAID — a payment logged on the EMI page
+    // for this month — not the full scheduled monthly amount. SIP contributions
+    // are excluded (they are savings, not spending).
+    const emiPaid = sumBy(
+      emis.filter((e) => emiKind(e) === "loan"),
+      (e) =>
+        sumBy(
+          (e.payments ?? []).filter((p) => p.month === month),
+          (p) => p.amount,
+        ),
+    );
+    // "Spent" = expenses + EMIs paid this month; "Saved" = income − that.
+    const totalSpent = expenses + emiPaid;
+    const saved = Math.max(0, income - totalSpent);
     const monthBudgets = budgets.filter((b) => b.month === month);
     const budgetTotal = sumBy(monthBudgets, (b) => b.limit);
     const budgetSpent = sumBy(monthBudgets, (b) => b.spent);
@@ -70,9 +83,12 @@ export const useFinanceMetrics = (month: string = currentMonthKey()): FinanceMet
     return {
       totalBalance: Math.round(totalBalance * 100) / 100,
       monthIncome: Math.round(income * 100) / 100,
-      monthExpenses: Math.round(expenses * 100) / 100,
+      monthExpenses: Math.round(totalSpent * 100) / 100,
       monthSaved: Math.round(saved * 100) / 100,
-      savingsRate: Math.round(savingsRate(income, expenses)),
+      savingsRate:
+        income > 0
+          ? Math.round(Math.max(0, Math.min(100, (saved / income) * 100)))
+          : 0,
       emiBurden: Math.round(emiBurden * 100) / 100,
       carriedForward,
       healthScore: score,

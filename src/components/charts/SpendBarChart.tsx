@@ -11,6 +11,11 @@ import {
 import { ChartTooltip } from "./ChartTooltip";
 import styles from "./charts.module.scss";
 
+const REDUCED =
+  typeof window !== "undefined" &&
+  typeof window.matchMedia === "function" &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 interface BarDatum {
   label: string;
   value: number;
@@ -20,9 +25,17 @@ interface SpendBarChartProps {
   data: BarDatum[];
   height?: number;
   currency?: string;
+  // When set, every bar uses this colour (e.g. a savings trend that's all
+  // positive); otherwise high values flag orange like a spending warning.
+  uniformColor?: string;
 }
 
-export const SpendBarChart = ({ data, height = 180, currency }: SpendBarChartProps) => {
+export const SpendBarChart = ({
+  data,
+  height = 180,
+  currency,
+  uniformColor,
+}: SpendBarChartProps) => {
   const max = Math.max(...data.map((d) => d.value), 1);
 
   return (
@@ -40,11 +53,22 @@ export const SpendBarChart = ({ data, height = 180, currency }: SpendBarChartPro
             content={<ChartTooltip currency={currency} />}
             cursor={{ fill: "var(--surface-input)" }}
           />
-          <Bar dataKey="value" name="Spent" radius={[6, 6, 6, 6]} animationDuration={800}>
+          <Bar
+            dataKey="value"
+            name="Spent"
+            radius={[6, 6, 6, 6]}
+            isAnimationActive={!REDUCED}
+            animationDuration={320}
+          >
             {data.map((entry, index) => (
               <Cell
                 key={index}
-                fill={entry.value >= max * 0.8 ? "#f5803c" : "#4ece6e"}
+                fill={
+                  uniformColor ??
+                  (entry.value >= max * 0.8
+                    ? "var(--chart-expense)"
+                    : "var(--chart-income)")
+                }
               />
             ))}
           </Bar>

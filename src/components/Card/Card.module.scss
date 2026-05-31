@@ -26,6 +26,13 @@
     backdrop-filter: blur(16px);
   }
 
+  // Elevation tier: lifts hero/KPI cards above the flat list cards.
+  &--raised {
+    box-shadow:
+      var(--shadow-float),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
   &--glow-lime::before,
   &--glow-orange::before {
     content: "";

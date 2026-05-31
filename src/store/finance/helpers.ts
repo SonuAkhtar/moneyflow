@@ -45,7 +45,7 @@ export const createMutationHelpers = (get: FinanceGet): MutationHelpers => {
       } catch (err) {
         logger.error("finance.sync", err);
         if (isAuthError(err)) {
-          toastError("Your session expired — please sign in again.");
+          toastError("Your session expired - please sign in again.");
           return;
         }
         toastError(err instanceof Error ? err.message : "Sync failed");

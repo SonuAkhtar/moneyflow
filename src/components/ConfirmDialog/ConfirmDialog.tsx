@@ -30,7 +30,7 @@ export const ConfirmDialog = ({
   <Portal>
     <AnimatePresence>
       {open && (
-        <div className={styles.dialog}>
+        <div key="dialog" className={styles.dialog}>
           <motion.div
             className={styles.dialog_backdrop}
             initial={{ opacity: 0 }}

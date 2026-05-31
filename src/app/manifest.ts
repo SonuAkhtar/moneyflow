@@ -15,15 +15,15 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ["finance", "productivity"],
     icons: [
       {
-        src: "/icons/icon.svg",
-        sizes: "any",
-        type: "image/svg+xml",
+        src: "/icons/moneyflow-logo.png",
+        sizes: "1024x1024",
+        type: "image/png",
         purpose: "any",
       },
       {
-        src: "/icons/maskable.svg",
-        sizes: "any",
-        type: "image/svg+xml",
+        src: "/icons/moneyflow-logo.png",
+        sizes: "1024x1024",
+        type: "image/png",
         purpose: "maskable",
       },
     ],

@@ -10,6 +10,11 @@
   --color-warning: #f5a623;
   --color-info: #3d8bff;
 
+  /* Chart series colours - theme-aware so they read on either surface. */
+  --chart-income: #16a34a;
+  --chart-saved: #16a34a;
+  --chart-expense: #ef7c2e;
+
   --text-inverse: #07120b;
 
   --gradient-lime: linear-gradient(135deg, #d7f27e 0%, #b9e34a 100%);
@@ -58,6 +63,7 @@
   --font-sm: 0.875rem;
   --font-md: 1rem;
   --font-lg: 1.125rem;
+  --font-subhead: 1.25rem;
   --font-xl: 1.375rem;
   --font-2xl: 1.75rem;
   --font-3xl: 2.25rem;
@@ -90,8 +96,8 @@
   --border-lime: rgba(124, 92, 240, 0.5);
 
   --text-primary: #1d1630;
-  --text-secondary: rgba(29, 22, 48, 0.62);
-  --text-tertiary: rgba(29, 22, 48, 0.42);
+  --text-secondary: rgba(29, 22, 48, 0.72);
+  --text-tertiary: rgba(29, 22, 48, 0.6);
 
   --accent: #6d4ed6;
   --accent-bg: rgba(124, 92, 240, 0.12);
@@ -159,8 +165,12 @@
   --border-lime: rgba(78, 206, 110, 0.38);
 
   --text-primary: #f3f5f4;
-  --text-secondary: rgba(243, 245, 244, 0.64);
-  --text-tertiary: rgba(243, 245, 244, 0.4);
+  --text-secondary: rgba(243, 245, 244, 0.74);
+  --text-tertiary: rgba(243, 245, 244, 0.6);
+
+  --chart-income: #4ece6e;
+  --chart-saved: #4ece6e;
+  --chart-expense: #f5803c;
 
   --accent: #4ece6e;
   --accent-bg: rgba(78, 206, 110, 0.15);

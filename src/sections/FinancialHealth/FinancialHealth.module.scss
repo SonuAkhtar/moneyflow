@@ -1,0 +1,117 @@
+.health {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+
+  &_title {
+    font-size: var(--font-subhead);
+    font-weight: var(--weight-bold);
+    letter-spacing: -0.02em;
+  }
+
+  &_band {
+    font-size: var(--font-xs);
+    font-weight: var(--weight-bold);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+}
+
+.body {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.ring {
+  position: relative;
+  width: 104px;
+  height: 104px;
+  flex-shrink: 0;
+
+  &_svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  &_track {
+    fill: none;
+    stroke: var(--surface-input);
+    stroke-width: 10;
+  }
+
+  &_fill {
+    fill: none;
+    stroke-width: 10;
+  }
+
+  &_center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  &_score {
+    font-size: var(--font-2xl);
+    font-weight: var(--weight-bold);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+  }
+
+  &_max {
+    font-size: var(--font-2xs);
+    color: var(--text-tertiary);
+    margin-top: 3px;
+  }
+}
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  flex: 1;
+
+  &_insight {
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  &_stats {
+    display: flex;
+    gap: var(--space-5);
+  }
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+
+  &_label {
+    font-size: var(--font-2xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-tertiary);
+  }
+
+  &_value {
+    font-size: var(--font-md);
+    font-weight: var(--weight-bold);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+}

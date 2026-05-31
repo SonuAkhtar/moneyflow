@@ -17,7 +17,7 @@ export const OtherIncomeManager = () => {
   const transactions = useFinanceStore((s) => s.transactions);
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
 
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
 

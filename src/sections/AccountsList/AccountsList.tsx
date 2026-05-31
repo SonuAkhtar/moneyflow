@@ -37,8 +37,6 @@ export const AccountsList = () => {
       <SectionHeader
         title="Bank savings"
         caption={`${banks.length} bank${banks.length === 1 ? "" : "s"}`}
-        actionLabel="Add"
-        onAction={() => setAddOpen(true)}
       />
 
       <Card surface="gradient" glow="lime" className={styles.total}>

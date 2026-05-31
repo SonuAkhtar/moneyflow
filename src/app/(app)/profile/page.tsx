@@ -14,6 +14,7 @@ import { Card } from "@/components/Card/Card";
 import { Avatar } from "@/components/Avatar/Avatar";
 import { Badge } from "@/components/Badge/Badge";
 import { Button } from "@/components/Button/Button";
+import { ThemeToggle } from "@/components/ThemeToggle/ThemeToggle";
 import { EditProfileSheet } from "@/sections/EditProfileSheet/EditProfileSheet";
 import { SalaryManager } from "@/sections/SalaryManager/SalaryManager";
 import { OtherIncomeManager } from "@/sections/OtherIncomeManager/OtherIncomeManager";
@@ -86,7 +87,7 @@ export default function ProfilePage() {
       </motion.div>
 
       <motion.div variants={listItem}>
-        <Card surface="solid" className={styles.savings}>
+        <div className={styles.savings}>
           <div className={styles.savings_head}>
             <span className={styles.savings_label}>Total savings</span>
             <span className={styles.savings_total}>
@@ -125,7 +126,11 @@ export default function ProfilePage() {
               </span>
             </div>
           </div>
-        </Card>
+        </div>
+      </motion.div>
+
+      <motion.div variants={listItem}>
+        <AccountsList />
       </motion.div>
 
       <motion.div variants={listItem}>
@@ -134,10 +139,6 @@ export default function ProfilePage() {
 
       <motion.div variants={listItem}>
         <OtherIncomeManager />
-      </motion.div>
-
-      <motion.div variants={listItem}>
-        <AccountsList />
       </motion.div>
 
       <motion.div className={styles.actions} variants={listItem}>
@@ -154,6 +155,14 @@ export default function ProfilePage() {
 
       <motion.div variants={listItem}>
         <Card surface="solid" className={styles.settings}>
+          <div className={styles.row}>
+            <span className={styles.row_label}>Dark mode</span>
+            <ThemeToggle />
+          </div>
+          <div className={styles.row}>
+            <span className={styles.row_label}>Currency</span>
+            <span className={styles.row_value}>{currency}</span>
+          </div>
           <div className={styles.row}>
             <span className={styles.row_label}>Member since</span>
             <span className={styles.row_value}>

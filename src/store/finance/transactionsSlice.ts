@@ -40,7 +40,10 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
       input.type === "expense"
         ? s.budgets.map((b) =>
             b.category === input.category && b.month === currentMonthKey()
-              ? { ...b, spent: Math.round((b.spent + input.amount) * 100) / 100 }
+              ? {
+                  ...b,
+                  spent: Math.round((b.spent + input.amount) * 100) / 100,
+                }
               : b,
           )
         : s.budgets;
@@ -157,7 +160,7 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
     );
   },
 
-  // Salary is an income RECORD only — it is intentionally NOT credited to any
+  // Salary is an income RECORD only - it is intentionally NOT credited to any
   // account balance (it doesn't inflate banks/savings). It still counts as
   // monthly income; the balance trail excludes it (see useBalanceTrail).
   setSalary: (month, amount) => {

@@ -46,6 +46,8 @@ export const AddExpenseSheet = ({
   const [merchant, setMerchant] = useState("");
   const [date, setDate] = useState(today());
 
+  const canSave = Number(amount) > 0 && Boolean(resolve(bankId));
+
   const submit = () => {
     const value = Number(amount);
     const account = resolve(bankId);
@@ -74,7 +76,7 @@ export const AddExpenseSheet = ({
       onClose={onClose}
       title={title}
       footer={
-        <Button size="lg" fullWidth onClick={submit}>
+        <Button size="lg" fullWidth onClick={submit} disabled={!canSave}>
           Add expense
         </Button>
       }
