@@ -19,6 +19,7 @@ import styles from "./SalaryManager.module.scss";
 
 export const SalaryManager = () => {
   const transactions = useFinanceStore((s) => s.transactions);
+  const accounts = useFinanceStore((s) => s.accounts);
   const setSalary = useFinanceStore((s) => s.setSalary);
   const deleteTransaction = useFinanceStore((s) => s.deleteTransaction);
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
@@ -49,6 +50,17 @@ export const SalaryManager = () => {
 
   const save = () => {
     if (!editMonth) return;
+    // Salary is recorded as an income transaction, which must attach to an
+    // account. Without one the store can't persist it — tell the user instead
+    // of flashing a misleading success toast.
+    if (accounts.length === 0) {
+      toast({
+        title: "Add an account first",
+        description: "Salary is credited to an account — create one to track it.",
+        variant: "error",
+      });
+      return;
+    }
     setSalary(editMonth, Number(amount) || 0);
     toast({ title: "Salary updated", description: monthLabel(editMonth), variant: "success" });
     setEditMonth(null);
