@@ -12,6 +12,8 @@ const nextConfig = {
   // requests to /_next/* dev resources like webpack-hmr.
   allowedDevOrigins: ["192.168.1.26", "192.168.1.*"],
   compiler: {
+    // Strip debug logs in production but keep error/warn so the logger and
+    // ErrorBoundary stay observable.
     removeConsole:
       process.env.NODE_ENV === "production"
         ? { exclude: ["error", "warn"] }
