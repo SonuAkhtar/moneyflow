@@ -128,7 +128,11 @@ export const BorrowingsList = () => {
                   </button>
                 </div>
 
-                <ProgressBar value={pct} tone={settled ? "lime" : "ocean"} size="sm" />
+                <ProgressBar
+                  value={pct}
+                  tone={settled ? "lime" : "ocean"}
+                  size="sm"
+                />
                 <div className={styles.item_foot}>
                   {settled ? (
                     <Badge tone="lime">
@@ -141,7 +145,9 @@ export const BorrowingsList = () => {
                   )}
                   <span className={styles.item_remaining}>
                     of {formatCurrency(b.amount, currency)}
-                    {b.dueDate && !settled ? ` · due ${dayShort(b.dueDate)}` : ""}
+                    {b.dueDate && !settled
+                      ? ` · due ${dayShort(b.dueDate)}`
+                      : ""}
                   </span>
                 </div>
 
@@ -186,6 +192,7 @@ export const BorrowingsList = () => {
                         <button
                           type="button"
                           className={styles.childAdd}
+                          aria-label="Record a repayment"
                           onClick={() =>
                             setChildTarget({
                               borrowingId: b.id,
@@ -195,7 +202,7 @@ export const BorrowingsList = () => {
                           }
                         >
                           <Plus size={15} />
-                          Record a repayment
+                          Add
                         </button>
                       )}
                     </motion.div>
@@ -206,7 +213,7 @@ export const BorrowingsList = () => {
           })}
           <button type="button" className={styles.add} onClick={openAdd}>
             <Plus size={18} />
-            Record borrowed money
+            Add New Record
           </button>
         </div>
       )}
@@ -219,7 +226,10 @@ export const BorrowingsList = () => {
       />
 
       <AddBorrowingPaymentSheet
-        key={childTarget?.payment?.id ?? `${childTarget?.borrowingId ?? "none"}-new`}
+        key={
+          childTarget?.payment?.id ??
+          `${childTarget?.borrowingId ?? "none"}-new`
+        }
         open={childTarget !== null}
         borrowingId={childTarget?.borrowingId ?? null}
         payment={childTarget?.payment ?? null}

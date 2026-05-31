@@ -28,32 +28,35 @@ export const AuthLayout = ({ children, title, subtitle }: AuthLayoutProps) => {
 
   return (
     <div className={styles.auth}>
-      <div className={styles.auth_glow} aria-hidden />
-      <motion.div
-        className={styles.auth_card}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <div className={styles.auth_brand}>
+      <div className={styles.auth_bg} aria-hidden />
+      <div className={styles.auth_inner}>
+        <motion.div
+          className={styles.auth_hero}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        >
           <span className={styles.auth_mark}>
-            <Wallet size={22} strokeWidth={2.4} />
+            <Wallet size={24} strokeWidth={2.4} />
           </span>
-          <span className={styles.auth_brandText}>
-            <span className={styles.auth_brandName}>{APP.name}</span>
-            <span className={styles.auth_tagline}>{APP.tagline}</span>
-          </span>
-        </div>
-        <div className={styles.auth_head}>
+          <span className={styles.auth_brand}>{APP.name}</span>
           <h1 className={styles.auth_title}>{title}</h1>
           {subtitle && <p className={styles.auth_subtitle}>{subtitle}</p>}
-        </div>
-        {children}
-        <div className={styles.auth_trust}>
-          <ShieldCheck size={13} />
-          Bank-grade encryption · Private by default
-        </div>
-      </motion.div>
+        </motion.div>
+
+        <motion.div
+          className={styles.auth_panel}
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+        >
+          {children}
+          <div className={styles.auth_trust}>
+            <ShieldCheck size={13} />
+            Bank-grade encryption · Private by default
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 };

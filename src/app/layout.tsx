@@ -19,10 +19,18 @@ const spaceGrotesk = Space_Grotesk({
 
 const themeScript = `(function(){try{var t=localStorage.getItem('mf-theme');if(t!=='light'&&t!=='dark'){t='light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();`;
 
+const supabaseOrigin = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").origin;
+  } catch {
+    return "";
+  }
+})();
+
 export const metadata: Metadata = {
   applicationName: siteConfig.name,
   title: {
-    default: siteConfig.title,
+    default: siteConfig.name,
     template: `%s · ${siteConfig.name}`,
   },
   description: siteConfig.description,
@@ -62,6 +70,14 @@ export default function RootLayout({
       className={`${inter.variable} ${spaceGrotesk.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        {supabaseOrigin && (
+          <>
+            <link rel="preconnect" href={supabaseOrigin} crossOrigin="anonymous" />
+            <link rel="dns-prefetch" href={supabaseOrigin} />
+          </>
+        )}
+      </head>
       <body>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <Providers>{children}</Providers>

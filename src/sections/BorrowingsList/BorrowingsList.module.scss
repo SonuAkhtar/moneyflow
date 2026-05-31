@@ -263,16 +263,17 @@
 }
 
 .childAdd {
+  align-self: flex-end;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: var(--space-1);
   margin-top: var(--space-1);
-  padding: var(--space-3);
-  border-radius: var(--radius-sm);
-  border: 1px dashed var(--border-strong);
-  color: var(--accent);
-  font-size: var(--font-sm);
-  font-weight: var(--weight-medium);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: #fff;
+  color: #1d1630;
+  font-size: var(--font-xs);
+  font-weight: var(--weight-bold);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
   touch-action: manipulation;
 }

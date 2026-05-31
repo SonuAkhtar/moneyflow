@@ -6,7 +6,8 @@
   width: 100%;
   max-width: $content-max;
   z-index: z("nav");
-  padding: 0 var(--space-1);
+  padding: 0 var(--space-3);
+  padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
   pointer-events: none;
 
   &_bar {
