@@ -9,7 +9,6 @@ export interface SessionUser {
   username: string | null;
 }
 
-// "loading" until the Supabase session is resolved on mount; then authed/anon.
 export type AuthStatus = "loading" | "authed" | "anon";
 
 interface AuthState {

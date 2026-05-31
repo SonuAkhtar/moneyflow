@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { persist, createJSONStorage, type StateStorage } from "zustand/middleware";
 import { createMutationHelpers } from "./finance/helpers";
 import { emptyState, type FinanceState } from "./finance/types";
 import { createCoreSlice } from "./finance/coreSlice";
@@ -8,20 +9,51 @@ import { createTransactionsSlice } from "./finance/transactionsSlice";
 import { createAccountsSlice } from "./finance/accountsSlice";
 import { createBudgetsSlice } from "./finance/budgetsSlice";
 import { createEmisSlice } from "./finance/emisSlice";
+import { createBorrowingsSlice } from "./finance/borrowingsSlice";
 
-// The store is composed from domain slices (transactions, accounts, budgets,
-// emis, core). Every slice shares one `set`/`get` over the full state and the
-// same mutation helpers, so cross-entity writes (e.g. a transaction updating an
-// account balance) work exactly as before. The public selector API is unchanged.
-export const useFinanceStore = create<FinanceState>()((set, get) => {
-  const helpers = createMutationHelpers(get);
-  return {
-    ...emptyState,
-    hasHydrated: false,
-    ...createCoreSlice(set, get, helpers),
-    ...createTransactionsSlice(set, get, helpers),
-    ...createAccountsSlice(set, get, helpers),
-    ...createBudgetsSlice(set, get, helpers),
-    ...createEmisSlice(set, get, helpers),
-  };
-});
+const noopStorage: StateStorage = {
+  getItem: () => null,
+  setItem: () => undefined,
+  removeItem: () => undefined,
+};
+
+export const useFinanceStore = create<FinanceState>()(
+  persist(
+    (set, get) => {
+      const helpers = createMutationHelpers(get);
+      return {
+        ...emptyState,
+        hasHydrated: false,
+        ...createCoreSlice(set, get, helpers),
+        ...createTransactionsSlice(set, get, helpers),
+        ...createAccountsSlice(set, get, helpers),
+        ...createBudgetsSlice(set, get, helpers),
+        ...createEmisSlice(set, get, helpers),
+        ...createBorrowingsSlice(set, get, helpers),
+      };
+    },
+    {
+      name: "mf-finance-cache",
+      version: 1,
+      skipHydration: true,
+      storage: createJSONStorage(() =>
+        typeof window !== "undefined" ? window.localStorage : noopStorage,
+      ),
+      partialize: (s) => ({
+        activeMonth: s.activeMonth,
+        majorAccountId: s.majorAccountId,
+        dailyAccountId: s.dailyAccountId,
+        profile: s.profile,
+        accounts: s.accounts,
+        transactions: s.transactions,
+        emis: s.emis,
+        budgets: s.budgets,
+        borrowings: s.borrowings,
+        summaries: s.summaries,
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (state?.profile) useFinanceStore.setState({ hasHydrated: true });
+      },
+    },
+  ),
+);

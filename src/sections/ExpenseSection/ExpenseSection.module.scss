@@ -70,14 +70,10 @@
   flex-shrink: 0;
 }
 
-// Lavender "wallet" card. Light theme: lighter lavender with dark text (tokens
-// adapt). Dark theme: deeper lavender with light text. Used by both major and
-// daily expense lists; the red/green amounts stay.
 .list {
   position: relative;
   padding: var(--space-2);
   color: var(--text-primary);
-  // Light theme: frosted lavender glass with a crisp top highlight.
   border: 1px solid rgba(255, 255, 255, 0.55);
   background:
     radial-gradient(
@@ -115,7 +111,6 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  /* ~5 rows before scrolling */
   max-height: 320px;
   overflow-y: auto;
   padding-bottom: var(--space-7);

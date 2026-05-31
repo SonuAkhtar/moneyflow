@@ -5,18 +5,26 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  pointer-events: none;
 
   &_backdrop {
     position: absolute;
     inset: 0;
     background: var(--surface-overlay);
     backdrop-filter: blur(6px);
+    pointer-events: auto;
+  }
+
+  &_slide {
+    position: relative;
+    width: 100%;
+    max-width: min($content-max, 100vw);
+    pointer-events: auto;
   }
 
   &_panel {
     position: relative;
     width: 100%;
-    max-width: min($content-max, 100vw);
     max-height: 88dvh;
     display: flex;
     flex-direction: column;
@@ -82,11 +90,6 @@
     border-top: 1px solid var(--border-subtle);
   }
 
-  // Modal CTAs: keep the brand fill, give the label bold weight. In the dark
-  // theme the fill is green, so the label is whitish; in light the fill is a
-  // pastel lime, so the button keeps its dark label (readable, like the
-  // reference pill). data-variant is set on every Button, so this catches them
-  // wherever they sit in a sheet (footer or body).
   [data-variant="primary"] {
     font-weight: var(--weight-bold);
   }

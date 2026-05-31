@@ -22,11 +22,6 @@ const NOT_CONFIGURED: AuthResult = {
 
 const isEmail = (value: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value.trim());
 
-// Base URL for auth email redirect links (verify / reset). These calls run in
-// the browser, so prefer the live origin — this keeps links pointing at the
-// host the user is actually on (prod, preview, or local) even if the build-time
-// NEXT_PUBLIC_APP_URL is missing or wrong. Falls back to the configured value
-// for any non-browser execution.
 const authRedirectBase = (): string =>
   typeof window !== "undefined" ? window.location.origin : env.appUrl;
 
@@ -41,7 +36,6 @@ export const authService = {
 
     const username = input.username.trim().toLowerCase();
 
-    // Pre-check username availability (the unique index is the real guard).
     const { data: available, error: rpcError } = await supabase.rpc(
       "username_available",
       { uname: username } as never,
@@ -72,7 +66,6 @@ export const authService = {
     const supabase = getBrowserSupabase();
     if (!supabase) return NOT_CONFIGURED;
 
-    // Resolve a username to its email when the identifier isn't an email.
     let email = input.identifier.trim();
     if (!isEmail(email)) {
       const { data, error } = await supabase.rpc(
@@ -113,8 +106,6 @@ export const authService = {
     return { ok: true, email };
   },
 
-  // Completes the recovery flow: the email link opens /reset-password with a
-  // recovery session already established, then the user sets a new password.
   async updatePassword(password: string): Promise<AuthResult> {
     const supabase = getBrowserSupabase();
     if (!supabase) return NOT_CONFIGURED;

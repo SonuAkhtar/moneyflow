@@ -5,8 +5,6 @@ import type { Database } from "./database.types";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
-// Server-side Supabase client for Server Components / Route Handlers.
-// Reads & writes the auth session cookies via next/headers.
 export const getServerSupabase = async () => {
   if (!isSupabaseConfigured) return null;
   const cookieStore = await cookies();
@@ -21,16 +19,12 @@ export const getServerSupabase = async () => {
           cookiesToSet.forEach(({ name, value, options }) =>
             cookieStore.set(name, value, options),
           );
-        } catch {
-          // Called from a Server Component (read-only cookies) — the middleware
-          // refreshes the session, so this is safe to ignore.
-        }
+        } catch {}
       },
     },
   });
 };
 
-// Current authenticated user on the server, or null.
 export const getServerUser = async () => {
   const supabase = await getServerSupabase();
   if (!supabase) return null;

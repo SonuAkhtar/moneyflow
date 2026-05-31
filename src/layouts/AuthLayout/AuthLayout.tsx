@@ -19,8 +19,6 @@ export const AuthLayout = ({ children, title, subtitle }: AuthLayoutProps) => {
   const pathname = usePathname();
   const status = useAuthStore((s) => s.status);
 
-  // Bounce signed-in users away from auth pages — except the recovery/verify
-  // pages, which a user reaches while holding a (recovery) session.
   const isRecovery =
     pathname.startsWith(ROUTES.resetPassword) || pathname.startsWith(ROUTES.verify);
 

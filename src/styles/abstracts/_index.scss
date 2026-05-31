@@ -43,8 +43,6 @@ $content-max: 520px;
   border: 1px solid $border;
 }
 
-// Float shadow + crisp top highlight (theme-aware), optional hairline ring.
-// Replaces the box-shadow block duplicated across BottomNav/AuthLayout/cards.
 @mixin glass-elevation($highlight: 0.5, $ring: false) {
   @if $ring {
     box-shadow:

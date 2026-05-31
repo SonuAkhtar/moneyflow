@@ -24,7 +24,6 @@ export class ErrorBoundary extends Component<
   }
 
   override componentDidCatch(error: Error, info: ErrorInfo) {
-    // Surface for debugging; the UI degrades gracefully instead of a blank crash.
     console.error("App error boundary caught:", error, info.componentStack);
   }
 

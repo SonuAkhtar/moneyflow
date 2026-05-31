@@ -26,7 +26,6 @@ export const OnboardingFlow = () => {
   const [accountName, setAccountName] = useState("Everyday Savings");
   const [balance, setBalance] = useState("48000");
 
-  // Onboarding lives outside the app shell, so resolve the session directly.
   useEffect(() => {
     let active = true;
     authService.currentSession().then((session) => {

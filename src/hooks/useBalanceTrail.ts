@@ -10,11 +10,6 @@ export interface BalancePoint {
 
 const round = (n: number) => Math.round(n * 100) / 100;
 
-/**
- * Reconstructs each account's running balance from its current balance and the
- * full transaction history, so any transaction row can show the account balance
- * before and after it was applied.
- */
 export const useBalanceTrail = (): Map<string, BalancePoint> => {
   const accounts = useFinanceStore((s) => s.accounts);
   const transactions = useFinanceStore((s) => s.transactions);

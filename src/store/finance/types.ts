@@ -3,6 +3,8 @@ import { currentMonthKey } from "@/utils";
 import type {
   Account,
   AccountInput,
+  Borrowing,
+  BorrowingInput,
   Budget,
   BudgetInput,
   Emi,
@@ -24,6 +26,7 @@ export interface FinanceState {
   transactions: Transaction[];
   emis: Emi[];
   budgets: Budget[];
+  borrowings: Borrowing[];
   summaries: MonthlySummary[];
 
   hydrate: (userId: string) => Promise<void>;
@@ -63,6 +66,20 @@ export interface FinanceState {
   ) => void;
   deleteEmiPayment: (emiId: string, paymentId: string) => void;
 
+  addBorrowing: (input: BorrowingInput) => void;
+  updateBorrowing: (id: string, patch: Partial<Borrowing>) => void;
+  deleteBorrowing: (id: string) => void;
+  addBorrowingPayment: (
+    borrowingId: string,
+    input: { amount: number; paidOn: string; note?: string },
+  ) => void;
+  updateBorrowingPayment: (
+    borrowingId: string,
+    paymentId: string,
+    patch: { amount?: number; paidOn?: string; note?: string | null },
+  ) => void;
+  deleteBorrowingPayment: (borrowingId: string, paymentId: string) => void;
+
   runMonthlyRollover: () => void;
 }
 
@@ -76,6 +93,7 @@ export const emptyState = {
   transactions: [],
   emis: [],
   budgets: [],
+  borrowings: [],
   summaries: [],
 } satisfies Partial<FinanceState>;
 
@@ -83,15 +101,11 @@ export type FinanceSet = StoreApi<FinanceState>["setState"];
 export type FinanceGet = StoreApi<FinanceState>["getState"];
 
 export interface MutationHelpers {
-  /** The current user id; throws if the profile isn't loaded yet. */
   ownerId: () => string;
-  /** Fire a write-through to Supabase; re-syncs from server on failure. */
   sync: (work: () => Promise<void>) => void;
   toastError: (message: string) => void;
 }
 
-// A domain slice: receives store set/get plus shared mutation helpers and
-// returns its portion of the store's actions.
 export type SliceCreator<T> = (
   set: FinanceSet,
   get: FinanceGet,

@@ -49,7 +49,6 @@ export const useFinanceMetrics = (month: string = currentMonthKey()): FinanceMet
       (e) => e.monthlyAmount,
     );
     const totalBalance = sumBy(accounts, (a) => a.balance);
-    // Money explicitly added to savings this month also counts as saved.
     const saved = Math.max(0, income - expenses) + savingsDeposits;
     const monthBudgets = budgets.filter((b) => b.month === month);
     const budgetTotal = sumBy(monthBudgets, (b) => b.limit);

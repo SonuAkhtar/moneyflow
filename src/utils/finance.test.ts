@@ -10,9 +10,6 @@ import {
 } from "@/utils";
 import type { Transaction } from "@/types";
 
-// Pure finance math — the highest-value, fastest unit tests to lock in.
-// Run with: npm test  (after `npm install`).
-
 describe("sumBy", () => {
   it("sums a selector over a list", () => {
     expect(sumBy([{ n: 2 }, { n: 3 }, { n: 5 }], (x) => x.n)).toBe(10);
@@ -71,8 +68,8 @@ describe("bankMonthFlow", () => {
     const txns = [
       tx({ amount: 1000, note: SAVINGS_DEPOSIT_NOTE }),
       tx({ amount: 300, note: SAVINGS_WITHDRAWAL_NOTE }),
-      tx({ amount: 999, note: SAVINGS_DEPOSIT_NOTE, accountId: "other" }), // other acct
-      tx({ amount: 999, note: SAVINGS_DEPOSIT_NOTE, occurredAt: "2026-04-10T09:00:00.000Z" }), // other month
+      tx({ amount: 999, note: SAVINGS_DEPOSIT_NOTE, accountId: "other" }),
+      tx({ amount: 999, note: SAVINGS_DEPOSIT_NOTE, occurredAt: "2026-04-10T09:00:00.000Z" }),
     ];
     expect(bankMonthFlow("acc-1", txns, "2026-05")).toEqual({
       added: 1000,

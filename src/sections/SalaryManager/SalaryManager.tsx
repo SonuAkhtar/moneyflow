@@ -50,9 +50,6 @@ export const SalaryManager = () => {
 
   const save = () => {
     if (!editMonth) return;
-    // Salary is recorded as an income transaction, which must attach to an
-    // account. Without one the store can't persist it — tell the user instead
-    // of flashing a misleading success toast.
     if (accounts.length === 0) {
       toast({
         title: "Add an account first",

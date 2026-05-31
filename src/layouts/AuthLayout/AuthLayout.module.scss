@@ -7,7 +7,6 @@
   padding: var(--space-5);
   overflow: hidden;
 
-  // Layered ambient light: soft accent + lime blooms over the mesh.
   &_glow {
     position: absolute;
     inset: 0;
@@ -30,7 +29,6 @@
     padding: var(--space-7) var(--space-6);
     border-radius: var(--radius-2xl);
     @include glass(28px);
-    // Float + crisp top highlight + hairline ring → one premium pane of glass.
     @include glass-elevation(0.55, $ring: true);
   }
 
@@ -91,7 +89,6 @@
     line-height: 1.55;
   }
 
-  // Trust footer — gives the page a credible, startup feel.
   &_trust {
     display: inline-flex;
     align-items: center;

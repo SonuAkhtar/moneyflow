@@ -3,17 +3,18 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+const buildId =
+  process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 8) ?? `${Date.now()}`;
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  // Allow loading the dev server from devices on the local network (e.g. your
-  // phone hitting the Mac's LAN IP). Without this, Next.js blocks cross-origin
-  // requests to /_next/* dev resources like webpack-hmr.
+  env: {
+    NEXT_PUBLIC_BUILD_ID: buildId,
+  },
   allowedDevOrigins: ["192.168.1.26", "192.168.1.*"],
   compiler: {
-    // Strip debug logs in production but keep error/warn so the logger and
-    // ErrorBoundary stay observable.
     removeConsole:
       process.env.NODE_ENV === "production"
         ? { exclude: ["error", "warn"] }

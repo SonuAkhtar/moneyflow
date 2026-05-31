@@ -21,7 +21,6 @@ export const OtherIncomeManager = () => {
   const [addOpen, setAddOpen] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
 
-  // Income that isn't salary (salary is handled in SalaryManager).
   const items = useMemo(
     () =>
       transactions

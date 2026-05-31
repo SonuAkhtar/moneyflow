@@ -1,9 +1,4 @@
 :root {
-  /* LIGHT THEME - "lavender glass": soft purple ambient, pastel-lime brand
-     fill and a violet functional accent, sampled from the crypto-wallet
-     reference. The dark theme re-defines all of these below, so changes here
-     only affect light mode. "lime" is the legacy token name; in light it now
-     carries the pastel-lime pill colour from the reference. */
   --color-lime: #c9ec5b;
   --color-neon-green: #d7f27e;
   --color-neon-orange: #f5803c;
@@ -20,7 +15,6 @@
   --gradient-lime: linear-gradient(135deg, #d7f27e 0%, #b9e34a 100%);
   --gradient-orange: linear-gradient(135deg, #f5803c 0%, #e25a44 100%);
 
-  /* Full temperature spectrum - the thermostat arc in the reference. */
   --gradient-spectrum: linear-gradient(
     90deg,
     #ff4d4d 0%,
@@ -30,7 +24,6 @@
     #2bd4c4 82%,
     #3d8bff 100%
   );
-  /* Glassy emergency/danger fill (the "Emergency call" pill). */
   --gradient-emergency: linear-gradient(
     135deg,
     rgba(228, 87, 77, 0.42) 0%,
@@ -143,7 +136,6 @@
 }
 
 :root[data-theme="dark"] {
-  /* Brighter, more saturated green for glow/accents against deep glass. */
   --color-lime: #4ece6e;
   --color-neon-green: #7eea90;
 
@@ -151,7 +143,6 @@
   --shadow-glow-lime: 0 14px 50px rgba(78, 206, 110, 0.3);
   --shadow-glow-orange: 0 14px 50px rgba(229, 90, 68, 0.28);
 
-  /* Deep neutral near-black with translucent, blurred glass surfaces. */
   --surface-base: #0b0c0e;
   --surface-elevated: #131419;
   --surface-raised: #181a20;

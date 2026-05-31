@@ -10,8 +10,6 @@ export type SupabaseBrowserClient = ReturnType<
 
 let cached: SupabaseBrowserClient | null = null;
 
-// Returns the cookie-backed browser client (session persists across refreshes /
-// restarts and is cleared only on signOut). Null when Supabase isn't configured.
 export const getBrowserSupabase = (): SupabaseBrowserClient | null => {
   if (!isSupabaseConfigured) return null;
   if (!cached) {
@@ -20,8 +18,6 @@ export const getBrowserSupabase = (): SupabaseBrowserClient | null => {
   return cached;
 };
 
-// Same client, but throws instead of returning null — for code paths that
-// require Supabase (repositories, auth).
 export const requireBrowserSupabase = (): SupabaseBrowserClient => {
   const client = getBrowserSupabase();
   if (!client) {

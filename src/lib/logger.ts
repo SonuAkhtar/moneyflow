@@ -1,5 +1,3 @@
-// Tiny logging seam. Swap the body for Sentry/LogRocket/etc. later without
-// touching call sites. Kept dependency-free and SSR-safe.
 type Meta = Record<string, unknown>;
 
 const emit = (

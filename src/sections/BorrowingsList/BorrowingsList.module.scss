@@ -20,19 +20,14 @@
     margin-top: 2px;
   }
 
-  &_paid {
+  &_out {
     font-size: var(--font-xl);
     font-weight: var(--weight-bold);
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.03em;
     line-height: 1;
-    color: var(--color-danger);
-    opacity: 0.8;
+    color: var(--color-warning);
     flex-shrink: 0;
-
-    &--sip {
-      color: var(--color-success);
-    }
   }
 }
 
@@ -53,6 +48,7 @@
   background: var(--gradient-card);
   border: 1px solid var(--border-glass);
   box-shadow: var(--shadow-soft);
+  touch-action: manipulation;
   transition:
     border-color var(--dur-fast) var(--ease-smooth),
     transform var(--dur-fast) var(--ease-smooth);
@@ -120,6 +116,7 @@
   color: var(--text-secondary);
   font-size: var(--font-sm);
   font-weight: var(--weight-medium);
+  touch-action: manipulation;
 }
 
 .item {
@@ -149,8 +146,8 @@
     width: 40px;
     height: 40px;
     border-radius: var(--radius-sm);
-    background: rgba(61, 139, 255, 0.16);
-    color: var(--color-info);
+    background: rgba(245, 166, 35, 0.16);
+    color: var(--color-warning);
     flex-shrink: 0;
   }
 
@@ -194,11 +191,7 @@
     font-weight: var(--weight-bold);
     font-variant-numeric: tabular-nums;
     flex-shrink: 0;
-    color: var(--color-danger);
-
-    &--sip {
-      color: var(--color-success);
-    }
+    color: var(--text-primary);
   }
 
   &_per {
@@ -240,49 +233,25 @@
   gap: var(--space-3);
   width: 100%;
   text-align: left;
-  padding: var(--space-3);
+  padding: var(--space-3) var(--space-3);
   border-radius: var(--radius-sm);
-  background: var(--surface-glass);
-  border: 1px solid var(--border-subtle);
   touch-action: manipulation;
-  transition:
-    background var(--dur-fast) var(--ease-smooth),
-    border-color var(--dur-fast) var(--ease-smooth),
-    transform var(--dur-fast) var(--ease-smooth);
+  transition: background var(--dur-fast) var(--ease-smooth);
 
   &:hover {
-    background: var(--surface-input);
-    border-color: var(--border-strong);
-  }
-
-  &:active {
-    transform: scale(0.99);
+    background: var(--surface-glass);
   }
 
   &_month {
-    flex: 1;
-    min-width: 0;
     font-size: var(--font-sm);
     font-weight: var(--weight-medium);
     @include truncate(1);
-  }
-
-  &_right {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    flex-shrink: 0;
   }
 
   &_amount {
     font-size: var(--font-sm);
     font-weight: var(--weight-semibold);
     font-variant-numeric: tabular-nums;
-    flex-shrink: 0;
-  }
-
-  &_edit {
-    color: var(--text-tertiary);
     flex-shrink: 0;
   }
 
@@ -294,17 +263,16 @@
 }
 
 .childAdd {
-  align-self: flex-end;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-1);
   margin-top: var(--space-1);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-pill);
-  background: var(--accent);
-  color: #fff;
-  font-size: var(--font-xs);
-  font-weight: var(--weight-bold);
-  box-shadow: var(--shadow-soft);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border-strong);
+  color: var(--accent);
+  font-size: var(--font-sm);
+  font-weight: var(--weight-medium);
   touch-action: manipulation;
 }

@@ -12,7 +12,6 @@ interface AmountFieldProps {
   tone?: "success" | "danger";
 }
 
-// Centered "₹ + large amount" input shared across all the money sheets.
 export const AmountField = ({
   value,
   onChange,

@@ -1,6 +1,3 @@
-// Hand-written to match the Supabase schema. Regenerate with:
-//   npx supabase gen types typescript --project-id <ref> --schema public > src/lib/supabase/database.types.ts
-
 export type Json =
   | string
   | number
@@ -185,6 +182,54 @@ export interface Database {
           month: string;
         };
         Update: Partial<Database["public"]["Tables"]["budgets"]["Insert"]>;
+        Relationships: [];
+      };
+      borrowings: {
+        Row: {
+          id: string;
+          user_id: string;
+          lender: string;
+          purpose: string | null;
+          amount: number;
+          borrowed_on: string;
+          due_date: string | null;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          lender: string;
+          purpose?: string | null;
+          amount?: number;
+          borrowed_on?: string;
+          due_date?: string | null;
+          note?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["borrowings"]["Insert"]>;
+        Relationships: [];
+      };
+      borrowing_payments: {
+        Row: {
+          id: string;
+          borrowing_id: string;
+          user_id: string;
+          paid_on: string;
+          amount: number;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          borrowing_id: string;
+          user_id: string;
+          paid_on?: string;
+          amount?: number;
+          note?: string | null;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["borrowing_payments"]["Insert"]
+        >;
         Relationships: [];
       };
     };

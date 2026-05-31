@@ -6,7 +6,6 @@
   gap: var(--space-4);
   padding: var(--space-5);
   border-radius: var(--radius-lg);
-  // Always-dark card surface so text stays legible in light and dark themes.
   background:
     radial-gradient(
       130% 120% at 100% 0%,
@@ -46,7 +45,6 @@
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
   flex-shrink: 0;
 
-  // contact lines on the chip
   background-image:
     linear-gradient(135deg, #e9d27a, #b8923a),
     repeating-linear-gradient(

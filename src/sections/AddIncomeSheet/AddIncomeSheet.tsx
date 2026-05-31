@@ -16,7 +16,6 @@ import { formatCurrency, getCurrencySymbol } from "@/utils";
 import type { CategoryId, Transaction } from "@/types";
 import styles from "./AddIncomeSheet.module.scss";
 
-// Non-salary income kinds. Salary is managed separately in SalaryManager.
 const INCOME_CATEGORIES: CategoryId[] = ["investment", "other"];
 
 const today = () => new Date().toISOString().slice(0, 10);

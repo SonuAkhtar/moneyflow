@@ -6,8 +6,7 @@
   width: 100%;
   max-width: $content-max;
   z-index: z("nav");
-  padding: 0 var(--space-4) var(--space-4);
-  padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  padding: 0 var(--space-1);
   pointer-events: none;
 
   &_bar {
@@ -19,7 +18,6 @@
     padding: 0 var(--space-3);
     border-radius: var(--radius-2xl);
     @include glass(28px, var(--surface-chrome));
-    // Ambient float + crisp inner top highlight: one premium pane of glass.
     @include glass-elevation(0.5);
     pointer-events: auto;
   }
@@ -48,7 +46,6 @@
     height: 40px;
   }
 
-  // Raised, sliding orb that carries the active icon above the bar.
   &_orb {
     position: absolute;
     top: -14px;

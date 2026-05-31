@@ -85,8 +85,6 @@ export const EXPENSE_CATEGORIES: CategoryId[] = [
 
 export const INCOME_CATEGORIES: CategoryId[] = ["salary", "investment", "other"];
 
-// Categories shown in the quick add/edit expense sheet. Excludes flows that are
-// tracked elsewhere (health, education, subscriptions, EMIs).
 export const QUICK_EXPENSE_CATEGORIES: CategoryId[] = [
   "food",
   "groceries",

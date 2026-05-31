@@ -34,8 +34,6 @@ const Form = ({ account, onClose }: { account: Account; onClose: () => void }) =
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
   const toast = useToast();
 
-  // This month's movements stay separate from the running "saved till last
-  // month" total (= balance minus this month's net).
   const flow = bankMonthFlow(account.id, transactions, currentMonthKey());
   const savedTillLastMonth = account.balance - flow.net;
 
@@ -49,10 +47,8 @@ const Form = ({ account, onClose }: { account: Account; onClose: () => void }) =
   const save = () => {
     if (!canSave) return;
     if (mode === "add") {
-      // Counts as saved this month in the insights.
       addSavingDeposit(account.id, value);
     } else {
-      // Withdrawal — recorded for this month, not counted in savings insights.
       addSavingWithdrawal(account.id, value);
     }
     toast({

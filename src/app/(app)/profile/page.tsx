@@ -26,7 +26,7 @@ import {
   bankMonthFlow,
   currentMonthKey,
   emiKind,
-  emiPaidMonths,
+  emiPaidAmount,
   formatCurrency,
   monthLabel,
   sumBy,
@@ -57,7 +57,6 @@ export default function ProfilePage() {
 
   if (!profile) return null;
 
-  // Savings overview — banks (balance + this month's net movement) and SIPs.
   const month = currentMonthKey();
   const banks = accounts.filter((a) => a.type === "savings");
   const banksTotal = sumBy(banks, (a) => a.balance);
@@ -67,7 +66,7 @@ export default function ProfilePage() {
   );
   const sips = emis.filter((e) => e.status === "active" && emiKind(e) === "sip");
   const sipMonthly = sumBy(sips, (e) => e.monthlyAmount);
-  const sipTotal = sumBy(sips, (e) => emiPaidMonths(e) * e.monthlyAmount);
+  const sipTotal = sumBy(sips, emiPaidAmount);
   const totalSavings = banksTotal + sipTotal;
 
   return (
@@ -97,7 +96,6 @@ export default function ProfilePage() {
         </Card>
       </motion.div>
 
-      {/* Total savings — banks + SIPs */}
       <motion.div variants={listItem}>
         <Card surface="solid" className={styles.savings}>
           <div className={styles.savings_head}>

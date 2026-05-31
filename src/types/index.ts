@@ -88,7 +88,6 @@ export interface Emi {
   createdAt: string;
 }
 
-// A single month's payment logged under an EMI / SIP.
 export interface EmiPayment {
   id: string;
   month: string;
@@ -118,6 +117,34 @@ export interface MonthlySummary {
   createdAt: string;
 }
 
+export interface Borrowing {
+  id: string;
+  userId: string;
+  lender: string;
+  purpose: string | null;
+  amount: number;
+  borrowedOn: string;
+  dueDate: string | null;
+  note: string | null;
+  payments: BorrowingPayment[];
+  createdAt: string;
+}
+
+export interface BorrowingPayment {
+  id: string;
+  paidOn: string;
+  amount: number;
+  note: string | null;
+}
+
+export interface BorrowingInput {
+  lender: string;
+  purpose?: string;
+  amount: number;
+  borrowedOn: string;
+  dueDate?: string;
+  note?: string;
+}
 
 export interface SignUpInput {
   fullName: string;

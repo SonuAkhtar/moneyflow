@@ -1,19 +1,18 @@
 "use client";
 
-// Reusable Supabase data layer. Every method is user-scoped and relies on RLS
-// (user_id = auth.uid()) so a user can only ever read/write their own rows.
-// Mutations use upsert(by id) so the store can generate a uuid, update locally
-// (optimistic), then persist the same row.
-
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireBrowserSupabase } from "@/lib/supabase/client";
 import {
   accountToRow,
+  borrowingPaymentToRow,
+  borrowingToRow,
   budgetToRow,
   emiPaymentToRow,
   emiToRow,
   profileToUpdate,
   rowToAccount,
+  rowToBorrowing,
+  rowToBorrowingPayment,
   rowToBudget,
   rowToEmi,
   rowToEmiPayment,
@@ -24,6 +23,8 @@ import {
 } from "@/lib/supabase/mappers";
 import type {
   Account,
+  Borrowing,
+  BorrowingPayment,
   Budget,
   Emi,
   EmiPayment,
@@ -31,9 +32,6 @@ import type {
   Transaction,
 } from "@/types";
 
-// Query-building against a hand-written Database type fights the supabase-js
-// generics; the mappers are where row shapes are enforced, so use an untyped
-// client for the fluent calls and keep all typing at the mapper boundary.
 const sb = (): SupabaseClient => requireBrowserSupabase() as unknown as SupabaseClient;
 
 const fail = (context: string, message?: string): never => {
@@ -65,7 +63,6 @@ export const profileRepo = {
   },
 };
 
-// Generic list/save/remove repo shared by the symmetrical entity tables.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function makeRepo<T extends { id: string }>(
   table: string,
@@ -125,6 +122,34 @@ export const emiRepo = {
   },
 };
 
+export const borrowingRepo = {
+  async save(borrowing: Borrowing): Promise<void> {
+    const { error } = await sb().from("borrowings").upsert(borrowingToRow(borrowing));
+    if (error) fail("borrowingRepo.save", error.message);
+  },
+  async remove(id: string): Promise<void> {
+    const { error } = await sb().from("borrowings").delete().eq("id", id);
+    if (error) fail("borrowingRepo.remove", error.message);
+  },
+  async savePayment(
+    payment: BorrowingPayment,
+    borrowingId: string,
+    userId: string,
+  ): Promise<void> {
+    const { error } = await sb()
+      .from("borrowing_payments")
+      .upsert(borrowingPaymentToRow(payment, borrowingId, userId));
+    if (error) fail("borrowingRepo.savePayment", error.message);
+  },
+  async removePayment(paymentId: string): Promise<void> {
+    const { error } = await sb()
+      .from("borrowing_payments")
+      .delete()
+      .eq("id", paymentId);
+    if (error) fail("borrowingRepo.removePayment", error.message);
+  },
+};
+
 export interface FinanceSnapshot {
   profile: Profile | null;
   majorAccountId: string | null;
@@ -133,24 +158,34 @@ export interface FinanceSnapshot {
   transactions: Transaction[];
   emis: Emi[];
   budgets: Budget[];
+  borrowings: Borrowing[];
 }
 
 export async function fetchSnapshot(userId: string): Promise<FinanceSnapshot> {
   const client = sb();
-  const [bundle, accounts, transactions, emiRows, emiPaymentRows, budgets] =
-    await Promise.all([
-      profileRepo.get(userId),
-      accountRepo.list(userId),
-      transactionRepo.list(userId),
-      client.from("emis").select("*").eq("user_id", userId),
-      client.from("emi_payments").select("*").eq("user_id", userId),
-      budgetRepo.list(userId),
-    ]);
+  const [
+    bundle,
+    accounts,
+    transactions,
+    emiRows,
+    emiPaymentRows,
+    budgets,
+    borrowingRows,
+    borrowingPaymentRows,
+  ] = await Promise.all([
+    profileRepo.get(userId),
+    accountRepo.list(userId),
+    transactionRepo.list(userId),
+    client.from("emis").select("*").eq("user_id", userId),
+    client.from("emi_payments").select("*").eq("user_id", userId),
+    budgetRepo.list(userId),
+    client.from("borrowings").select("*").eq("user_id", userId),
+    client.from("borrowing_payments").select("*").eq("user_id", userId),
+  ]);
 
   if (emiRows.error) fail("fetchSnapshot.emis", emiRows.error.message);
   if (emiPaymentRows.error) fail("fetchSnapshot.emi_payments", emiPaymentRows.error.message);
 
-  // Group payments by emi and nest them onto each EMI.
   const paymentsByEmi = new Map<string, EmiPayment[]>();
   for (const row of emiPaymentRows.data ?? []) {
     const list = paymentsByEmi.get(row.emi_id) ?? [];
@@ -161,6 +196,19 @@ export async function fetchSnapshot(userId: string): Promise<FinanceSnapshot> {
     rowToEmi(r, paymentsByEmi.get(r.id) ?? []),
   );
 
+  let borrowings: Borrowing[] = [];
+  if (!borrowingRows.error && !borrowingPaymentRows.error) {
+    const paymentsByBorrowing = new Map<string, BorrowingPayment[]>();
+    for (const row of borrowingPaymentRows.data ?? []) {
+      const list = paymentsByBorrowing.get(row.borrowing_id) ?? [];
+      list.push(rowToBorrowingPayment(row));
+      paymentsByBorrowing.set(row.borrowing_id, list);
+    }
+    borrowings = (borrowingRows.data ?? []).map((r) =>
+      rowToBorrowing(r, paymentsByBorrowing.get(r.id) ?? []),
+    );
+  }
+
   return {
     profile: bundle?.profile ?? null,
     majorAccountId: bundle?.majorAccountId ?? null,
@@ -169,5 +217,6 @@ export async function fetchSnapshot(userId: string): Promise<FinanceSnapshot> {
     transactions,
     emis,
     budgets,
+    borrowings,
   };
 }

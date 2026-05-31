@@ -14,9 +14,6 @@ export interface MonthTransactions {
   totals: { income: number; expenses: number; savingsDeposits: number };
 }
 
-// Single source of truth for "this month's transactions" — partitioned by type
-// and pre-summed. Memoized once so callers (metrics, analytics) don't each
-// re-filter the full transaction list.
 export const useMonthTransactions = (
   month: string = currentMonthKey(),
 ): MonthTransactions => {

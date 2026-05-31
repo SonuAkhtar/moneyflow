@@ -4,9 +4,6 @@ import { useMemo } from "react";
 import { useFinanceStore } from "@/store/financeStore";
 import type { Account } from "@/types";
 
-// The "which bank account to spend from / deposit to" logic shared by the
-// expense/income/savings sheets: prefer savings accounts, sensible default
-// selection, and a resolver with primary/first fallbacks.
 export const useSpendAccounts = (preferredId?: string | null) => {
   const accounts = useFinanceStore((s) => s.accounts);
 

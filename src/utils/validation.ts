@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-// Login accepts an email OR a username in the same field.
 export const signInSchema = z.object({
   identifier: z.string().min(1, "Enter your email or username"),
   password: z.string().min(6, "Password must be at least 6 characters"),

@@ -14,17 +14,12 @@ interface CollapsibleProps {
   onToggle: (open: boolean) => void;
   title: string;
   caption?: ReactNode;
-  /** Optional leading icon — rendered inside a standard accent chip. */
   icon?: ReactNode;
-  /** Optional right-aligned value/content (e.g. a total). */
   trailing?: ReactNode;
   children: ReactNode;
   className?: string;
 }
 
-// Shared collapsible card: header (icon · title/caption · trailing · chevron)
-// over an animated body. Replaces the hand-rolled accordions in SalaryManager,
-// OtherIncomeManager, and the analytics MonthGroup.
 export const Collapsible = ({
   open,
   onToggle,

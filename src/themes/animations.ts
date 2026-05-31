@@ -6,15 +6,15 @@ const easeOutExpo: Bezier = [0.16, 1, 0.3, 1];
 
 export const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.42, ease: easeOutExpo } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.28, ease: easeOutExpo } },
 };
 
 export const listItem: Variants = {
-  hidden: { opacity: 0, y: 12 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.24, ease: easeOutExpo } },
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.18, ease: easeOutExpo } },
 };
 
 export const staggerContainer: Variants = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.07, delayChildren: 0.04 } },
+  visible: { transition: { staggerChildren: 0.03, delayChildren: 0 } },
 };

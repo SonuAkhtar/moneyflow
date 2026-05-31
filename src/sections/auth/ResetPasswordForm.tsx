@@ -19,15 +19,12 @@ export const ResetPasswordForm = () => {
   const router = useRouter();
   const toast = useToast();
   const [serverError, setServerError] = useState<string | null>(null);
-  // The recovery link opens this page with a session; track that it's ready.
   const [ready, setReady] = useState(false);
   const configured = getBrowserSupabase() !== null;
 
   useEffect(() => {
     const supabase = getBrowserSupabase();
     if (!supabase) return;
-    // The browser client exchanges the recovery code in the URL on load and
-    // fires PASSWORD_RECOVERY; a SIGNED_IN session also means we can proceed.
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) setReady(true);
     });

@@ -1,16 +1,11 @@
 import clsx, { type ClassValue } from "clsx";
 import { format, parseISO, startOfMonth, subMonths } from "date-fns";
 import { CURRENCY, HEALTH_THRESHOLDS } from "@/constants";
-import type { Emi, EmiKind, HealthBand, Transaction } from "@/types";
+import type { Borrowing, Emi, EmiKind, HealthBand, Transaction } from "@/types";
 
-// Marker notes for this-month bank movements — recorded as transfers (so they
-// don't inflate income). Deposits also count as saved in the insights.
 export const SAVINGS_DEPOSIT_NOTE = "Savings deposit";
 export const SAVINGS_WITHDRAWAL_NOTE = "Savings withdrawal";
 
-// Money added / taken from a bank in a given month. `savedTillLastMonth` is
-// then the account balance minus this month's net movement, so it stays fixed
-// within a month and rolls forward once the month changes.
 export const bankMonthFlow = (
   accountId: string,
   transactions: Transaction[],
@@ -27,8 +22,6 @@ export const bankMonthFlow = (
   return { added, taken, net: added - taken };
 };
 
-// SIP/Mutual Funds are investments; everything else is a loan. Falls back to
-// the name for entries saved before `kind`/`paidMonths` existed.
 const SIP_NAMES = ["SIP", "Mutual Funds"];
 export const emiKind = (e: Emi): EmiKind =>
   e.kind ?? (SIP_NAMES.includes(e.name) ? "sip" : "loan");
@@ -36,6 +29,11 @@ export const emiPaidMonths = (e: Emi): number =>
   e.paidMonths ?? Math.max(0, e.totalMonths - e.remainingMonths);
 export const emiStartMonth = (e: Emi): string =>
   e.startMonth ?? monthKey(e.createdAt);
+
+export const emiPaidAmount = (e: Emi): number =>
+  emiKind(e) === "sip" && e.principal > 0
+    ? e.principal
+    : emiPaidMonths(e) * e.monthlyAmount;
 
 export const cn = (...inputs: ClassValue[]): string => clsx(inputs);
 
@@ -72,9 +70,6 @@ export const formatCompact = (value: number): string =>
     maximumFractionDigits: 1,
   }).format(value);
 
-// Full grouped amount below 1 lakh (₹12,500); only abbreviate above that -
-// ₹1,25,000 → ₹1.25L, ₹2,00,00,000 → ₹2Cr. Used on dense rows like the
-// before → after balance trail where the full figure would be too wide.
 export const formatMoneyShort = (value: number): string => {
   const abs = Math.abs(value);
   const sign = value < 0 ? "-" : "";
@@ -131,7 +126,6 @@ export const dayLabel = (date: string | Date): string => {
   return format(d, "EEE, d MMM");
 };
 
-// e.g. "5 May" - used on transaction rows instead of the time of day.
 export const dayShort = (date: string | Date): string => {
   const d = typeof date === "string" ? parseISO(date) : date;
   return format(d, "d MMM");
@@ -189,3 +183,12 @@ export const groupSum = <T>(
     acc[key] = (acc[key] ?? 0) + valueOf(item);
     return acc;
   }, {});
+
+export const borrowingRepaid = (b: Borrowing): number =>
+  sumBy(b.payments ?? [], (p) => p.amount);
+
+export const borrowingOutstanding = (b: Borrowing): number =>
+  Math.max(0, Math.round((b.amount - borrowingRepaid(b)) * 100) / 100);
+
+export const borrowingSettled = (b: Borrowing): boolean =>
+  borrowingRepaid(b) >= b.amount;

@@ -42,7 +42,6 @@ export const useAnalytics = (month: string = currentMonthKey()): AnalyticsData =
   const monthTxns = useMonthTransactions(month);
 
   return useMemo(() => {
-    // This month's expenses come pre-filtered from the shared hook.
     const monthExpenses = monthTxns.expenses;
 
     const byCategory = groupSum(

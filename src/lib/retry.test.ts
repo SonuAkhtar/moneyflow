@@ -50,6 +50,6 @@ describe("runWithRetry", () => {
     await expect(
       runWithRetry(work, { retries: 2, sleep: noSleep }),
     ).rejects.toThrow("network down");
-    expect(work).toHaveBeenCalledTimes(3); // 1 + 2 retries
+    expect(work).toHaveBeenCalledTimes(3);
   });
 });

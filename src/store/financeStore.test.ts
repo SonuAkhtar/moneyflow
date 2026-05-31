@@ -2,8 +2,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { currentMonthKey } from "@/utils";
 import type { Account, Budget, Profile } from "@/types";
 
-// Repositories hit Supabase — stub them so mutations only exercise the
-// optimistic local reducer logic (what the slice split must preserve).
 vi.mock("@/services/repositories", () => {
   const ok = () => Promise.resolve();
   const repo = () => ({ list: () => Promise.resolve([]), save: vi.fn(ok), remove: vi.fn(ok) });
@@ -183,8 +181,8 @@ describe("financeStore mutations (optimistic reducer)", () => {
       occurredAt: new Date().toISOString(),
     });
     const s = useFinanceStore.getState();
-    expect(s.accounts[0]!.balance).toBe(700); // 1000 − 300
-    expect(s.budgets[0]!.spent).toBe(400); // 100 + 300
+    expect(s.accounts[0]!.balance).toBe(700);
+    expect(s.budgets[0]!.spent).toBe(400);
   });
 
   it("addEmi + addEmiPayment nests the payment under the EMI", () => {

@@ -1,11 +1,6 @@
-// Lavender "wallet" card. Light theme: lighter lavender with dark text. Dark
-// theme: deeper lavender with light text. Text/borders use theme tokens so
-// they adapt automatically; only the background + green figure are overridden.
 .accordion {
   overflow: hidden;
   position: relative;
-  // Light theme: frosted lavender glass. Translucent fill + backdrop blur, with
-  // a crisp top highlight so dark text stays readable.
   border: 1px solid rgba(255, 255, 255, 0.55);
   background:
     radial-gradient(
@@ -48,7 +43,6 @@
     text-align: left;
   }
 
-  // Dark "coin" badge in both themes (reads well on light + dark lavender).
   &_icon {
     display: grid;
     place-items: center;
@@ -101,7 +95,6 @@
     }
   }
 
-  // Currency mark as a round "coin" - green fill with dark text for contrast.
   &_symbol {
     display: inline-flex;
     align-items: center;
@@ -165,7 +158,6 @@
     background: var(--surface-glass);
   }
 
-  // Centred 50%-width divider between consecutive rows.
   &:not(:first-child)::before {
     content: "";
     position: absolute;

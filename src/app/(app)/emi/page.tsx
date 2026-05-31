@@ -6,9 +6,10 @@ import { PageIntro } from "@/components/PageIntro/PageIntro";
 import { Card } from "@/components/Card/Card";
 import { ProgressBar } from "@/components/ProgressBar/ProgressBar";
 import { EmiList } from "@/sections/EmiList/EmiList";
+import { BorrowingsList } from "@/sections/BorrowingsList/BorrowingsList";
 import { useFinanceStore } from "@/store/financeStore";
 import { useFinanceMetrics } from "@/hooks/useFinanceMetrics";
-import { emiKind, emiPaidMonths, formatCurrency, sumBy } from "@/utils";
+import { emiKind, emiPaidAmount, emiPaidMonths, formatCurrency, sumBy } from "@/utils";
 import { staggerContainer, listItem } from "@/themes/animations";
 import styles from "./page.module.scss";
 
@@ -21,8 +22,7 @@ export default function EmiPage() {
   const burdenShare =
     monthIncome > 0 ? Math.round((emiBurden / monthIncome) * 100) : 0;
 
-  // Paid so far across everything; remaining + scheduled total for loans only.
-  const paidSoFar = sumBy(active, (e) => emiPaidMonths(e) * e.monthlyAmount);
+  const paidSoFar = sumBy(active, emiPaidAmount);
   const loans = active.filter(
     (e) => emiKind(e) === "loan" && e.totalMonths > 0,
   );
@@ -117,6 +117,10 @@ export default function EmiPage() {
 
       <motion.div variants={listItem}>
         <EmiList kind="sip" />
+      </motion.div>
+
+      <motion.div variants={listItem}>
+        <BorrowingsList />
       </motion.div>
     </motion.div>
   );

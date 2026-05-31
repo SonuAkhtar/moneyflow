@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import type { User } from "@supabase/supabase-js";
 import { AppHeader } from "@/components/AppHeader/AppHeader";
 import { BottomNav } from "@/components/BottomNav/BottomNav";
+import { PullToRefresh } from "@/components/PullToRefresh/PullToRefresh";
 import { SplashScreen } from "@/components/SplashScreen/SplashScreen";
 import { getBrowserSupabase } from "@/lib/supabase/client";
 import { useAuthStore, type SessionUser } from "@/store/authStore";
@@ -32,8 +33,6 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
   const hasHydrated = useFinanceStore((s) => s.hasHydrated);
   const hydratedFor = useRef<string | null>(null);
 
-  // Resolve the Supabase session on mount and keep it in sync. Status stays
-  // "loading" until the first result, so we never flash the login redirect.
   useEffect(() => {
     let active = true;
     const supabase = getBrowserSupabase();
@@ -62,20 +61,24 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
     };
   }, [setUser, resetAll]);
 
-  // Hydrate finance data from Supabase once per signed-in user.
+  useEffect(() => {
+    void useFinanceStore.persist.rehydrate();
+  }, []);
+
   useEffect(() => {
     if (status === "authed" && user && hydratedFor.current !== user.id) {
       hydratedFor.current = user.id;
+      const cached = useFinanceStore.getState().profile;
+      if (cached && cached.id !== user.id) resetAll();
       void hydrate(user.id);
     }
-  }, [status, user, hydrate]);
+  }, [status, user, hydrate, resetAll]);
 
-  // Backup client guard — the middleware already protects routes server-side.
   useEffect(() => {
     if (status === "anon") router.replace(ROUTES.login);
   }, [status, router]);
 
-  if (status !== "authed" || !profile || !hasHydrated) {
+  if (status !== "authed" || !user || !profile || !hasHydrated) {
     return <SplashScreen />;
   }
 
@@ -84,15 +87,17 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
       <div className={styles.shell_glow} aria-hidden />
       <div className={styles.shell_inner}>
         <AppHeader />
-        <motion.main
-          key={pathname}
-          className={styles.shell_main}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-        >
-          {children}
-        </motion.main>
+        <PullToRefresh onRefresh={() => hydrate(user.id)}>
+          <motion.main
+            key={pathname}
+            className={styles.shell_main}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {children}
+          </motion.main>
+        </PullToRefresh>
       </div>
       <BottomNav />
     </div>

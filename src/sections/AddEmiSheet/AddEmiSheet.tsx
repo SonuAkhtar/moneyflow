@@ -73,7 +73,6 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
   const resolvedName = type === "Other" ? customName.trim() : type;
   const canSave = Boolean(Number(amount)) && Boolean(resolvedName);
 
-  // Switching unit converts the entered value using the monthly amount.
   const switchPaidMode = (mode: PaidMode) => {
     if (mode === paidMode) return;
     const monthly = Number(amount) || 0;
@@ -88,9 +87,6 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
     setPaidMode(mode);
   };
 
-  // Build the schedule fields from the form. Loans have a tenure; SIPs are
-  // open-ended and only track how many months have been invested so far. The
-  // paid value can be entered as months or a total amount.
   const schedule = () => {
     const monthly = Number(amount) || 0;
     const paidNum = Number(paid) || 0;
@@ -102,7 +98,14 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
         : Math.floor(paidNum);
     const paidM = Math.max(0, paidRaw);
     if (!isLoan) {
-      return { totalMonths: 0, paidMonths: paidM, remainingMonths: 0 };
+      const invested =
+        paidMode === "amount" ? Math.max(0, Math.round(paidNum)) : paidM * monthly;
+      return {
+        totalMonths: 0,
+        paidMonths: paidM,
+        remainingMonths: 0,
+        principal: invested,
+      };
     }
     const totalMonths = Math.max(0, Math.floor(Number(tenure) || 0));
     const paidMonths = totalMonths > 0 ? Math.min(paidM, totalMonths) : paidM;

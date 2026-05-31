@@ -18,7 +18,6 @@ interface AddSavingsSheetProps {
   account?: Account | null;
 }
 
-// Add / edit a bank savings account: pick a bank + the amount saved so far.
 export const AddSavingsSheet = ({ open, onClose, account }: AddSavingsSheetProps) => {
   const addAccount = useFinanceStore((s) => s.addAccount);
   const updateAccount = useFinanceStore((s) => s.updateAccount);

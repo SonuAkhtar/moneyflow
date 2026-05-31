@@ -42,6 +42,7 @@ export const createCoreSlice: SliceCreator<CoreSlice> = (
         transactions: snap.transactions,
         emis: snap.emis,
         budgets: snap.budgets,
+        borrowings: snap.borrowings,
         summaries: [],
       });
       get().runMonthlyRollover();
@@ -53,7 +54,6 @@ export const createCoreSlice: SliceCreator<CoreSlice> = (
     }
   },
 
-  // Writes the sample dataset into the signed-in user's account (FK-safe order).
   loadDemoData: async () => {
     const profile = get().profile;
     if (!profile) return;
@@ -64,11 +64,8 @@ export const createCoreSlice: SliceCreator<CoreSlice> = (
         profile.email,
         profile.currency,
       );
-      // Phase 1: accounts (transactions/EMIs reference them via FK).
       await Promise.all(seed.accounts.map((a) => accountRepo.save(a)));
-      // Phase 2: EMIs (their payments reference them).
       await Promise.all(seed.emis.map((e) => emiRepo.save(e)));
-      // Phase 3: everything else has no remaining inter-dependency → parallel.
       await Promise.all([
         ...seed.transactions.map((t) => transactionRepo.save(t)),
         ...seed.emis.flatMap((e) =>

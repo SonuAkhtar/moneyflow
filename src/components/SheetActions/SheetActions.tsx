@@ -11,8 +11,6 @@ interface SheetActionsProps {
   disabled?: boolean;
 }
 
-// Shared "[delete icon] + [Save] " row used in the bottom-sheet editors.
-// Pass onDelete to show the delete button (it should open a confirm dialog).
 export const SheetActions = ({
   onSave,
   onDelete,

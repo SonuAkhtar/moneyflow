@@ -1,8 +1,7 @@
-// Row <-> domain mappers. DB is snake_case; the app uses camelCase.
-// Postgres `numeric` can arrive as a string, so all money fields are coerced.
-
 import type {
   Account,
+  Borrowing,
+  BorrowingPayment,
   Budget,
   CategoryId,
   Emi,
@@ -190,4 +189,53 @@ export const budgetToRow = (b: Budget): TablesInsert<"budgets"> => ({
   limit: b.limit,
   spent: b.spent,
   month: b.month,
+});
+
+export const rowToBorrowing = (
+  r: Tables<"borrowings">,
+  payments: BorrowingPayment[],
+): Borrowing => ({
+  id: r.id,
+  userId: r.user_id,
+  lender: r.lender,
+  purpose: r.purpose,
+  amount: n(r.amount),
+  borrowedOn: r.borrowed_on,
+  dueDate: r.due_date,
+  note: r.note,
+  payments,
+  createdAt: r.created_at,
+});
+
+export const borrowingToRow = (b: Borrowing): TablesInsert<"borrowings"> => ({
+  id: b.id,
+  user_id: b.userId,
+  lender: b.lender,
+  purpose: b.purpose,
+  amount: b.amount,
+  borrowed_on: b.borrowedOn,
+  due_date: b.dueDate,
+  note: b.note,
+});
+
+export const rowToBorrowingPayment = (
+  r: Tables<"borrowing_payments">,
+): BorrowingPayment => ({
+  id: r.id,
+  paidOn: r.paid_on,
+  amount: n(r.amount),
+  note: r.note,
+});
+
+export const borrowingPaymentToRow = (
+  p: BorrowingPayment,
+  borrowingId: string,
+  userId: string,
+): TablesInsert<"borrowing_payments"> => ({
+  id: p.id,
+  borrowing_id: borrowingId,
+  user_id: userId,
+  paid_on: p.paidOn,
+  amount: p.amount,
+  note: p.note,
 });

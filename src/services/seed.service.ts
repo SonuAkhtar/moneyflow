@@ -2,7 +2,6 @@ import { subDays, subMonths } from "date-fns";
 import { monthKey, computeHealthScore, healthBand } from "@/utils";
 import { BIG_EXPENSE_THRESHOLD, CURRENCY } from "@/constants";
 
-// Demo rows are written to Supabase, so every id must be a real uuid.
 const createId = (_prefix?: string) => crypto.randomUUID();
 import type {
   Account,
@@ -265,7 +264,6 @@ export const generateSeed = (
 
   return {
     profile,
-    // Accounts are returned so demo transactions/EMIs satisfy their FKs.
     accounts,
     transactions,
     emis,

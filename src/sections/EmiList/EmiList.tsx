@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronRight, CreditCard, Plus, TrendingUp } from "lucide-react";
+import { ChevronRight, CreditCard, Pencil, Plus, TrendingUp } from "lucide-react";
 import { Card } from "@/components/Card/Card";
 import { ProgressBar } from "@/components/ProgressBar/ProgressBar";
 import { Badge } from "@/components/Badge/Badge";
@@ -11,6 +11,7 @@ import { AddEmiPaymentSheet } from "@/sections/AddEmiPaymentSheet/AddEmiPaymentS
 import { useFinanceStore } from "@/store/financeStore";
 import {
   emiKind,
+  emiPaidAmount,
   emiPaidMonths,
   emiStartMonth,
   formatCurrency,
@@ -24,18 +25,16 @@ const SECTION = {
   loan: {
     title: "Loan EMIs",
     icon: CreditCard,
-    sub: "Monthly EMI",
-    addLabel: "Add loan EMI",
-    addChild: "Add EMI payment",
+    addLabel: "Add New Loan EMI Plan",
+    addChild: "Add payment to this Loan",
     emptyTitle: "No loan EMIs yet",
     emptyDesc: "Tap to add your first loan EMI",
   },
   sip: {
     title: "SIPs",
     icon: TrendingUp,
-    sub: "Monthly invest",
-    addLabel: "Add SIP",
-    addChild: "Add SIP entry",
+    addLabel: "Add New SIP Plan",
+    addChild: "Add payment to this SIP",
     emptyTitle: "No SIPs yet",
     emptyDesc: "Tap to add your first SIP",
   },
@@ -64,7 +63,7 @@ export const EmiList = ({ kind }: EmiListProps) => {
   const active = emis.filter(
     (e) => e.status === "active" && emiKind(e) === kind,
   );
-  const totalPaid = sumBy(active, (e) => emiPaidMonths(e) * e.monthlyAmount);
+  const totalPaid = sumBy(active, emiPaidAmount);
 
   const openAdd = () => {
     setEditing(null);
@@ -114,7 +113,7 @@ export const EmiList = ({ kind }: EmiListProps) => {
               ? Math.min(100, (paidMonths / emi.totalMonths) * 100)
               : 0;
             const remainingMonths = Math.max(0, emi.totalMonths - paidMonths);
-            const paidAmount = paidMonths * emi.monthlyAmount;
+            const paidAmount = emiPaidAmount(emi);
             const payments = [...(emi.payments ?? [])].sort((a, b) =>
               b.month.localeCompare(a.month),
             );
@@ -134,7 +133,7 @@ export const EmiList = ({ kind }: EmiListProps) => {
                     <span className={styles.item_info}>
                       <span className={styles.item_name}>{emi.name}</span>
                       <span className={styles.item_sub}>
-                        {meta.sub} · {monthLabel(emiStartMonth(emi))}
+                        Started · {monthLabel(emiStartMonth(emi))}
                       </span>
                     </span>
                   </button>
@@ -208,8 +207,15 @@ export const EmiList = ({ kind }: EmiListProps) => {
                             <span className={styles.child_month}>
                               {monthLabel(p.month)}
                             </span>
-                            <span className={styles.child_amount}>
-                              {formatCurrency(p.amount, currency)}
+                            <span className={styles.child_right}>
+                              <span className={styles.child_amount}>
+                                {formatCurrency(p.amount, currency)}
+                              </span>
+                              <Pencil
+                                size={14}
+                                className={styles.child_edit}
+                                aria-hidden
+                              />
                             </span>
                           </button>
                         ))
@@ -221,12 +227,13 @@ export const EmiList = ({ kind }: EmiListProps) => {
                       <button
                         type="button"
                         className={styles.childAdd}
+                        aria-label={meta.addChild}
                         onClick={() =>
                           setChildTarget({ emiId: emi.id, payment: null })
                         }
                       >
                         <Plus size={15} />
-                        {meta.addChild}
+                        Add
                       </button>
                     </motion.div>
                   )}
