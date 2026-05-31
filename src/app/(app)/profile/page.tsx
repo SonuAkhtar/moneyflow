@@ -8,7 +8,6 @@ import {
   Landmark,
   LogOut,
   Pencil,
-  RotateCcw,
   TrendingUp,
 } from "lucide-react";
 import { Card } from "@/components/Card/Card";
@@ -21,7 +20,6 @@ import { OtherIncomeManager } from "@/sections/OtherIncomeManager/OtherIncomeMan
 import { AccountsList } from "@/sections/AccountsList/AccountsList";
 import { useFinanceStore } from "@/store/financeStore";
 import { useSignOut } from "@/hooks/useSignOut";
-import { useToast } from "@/hooks/useToast";
 import {
   bankMonthFlow,
   currentMonthKey,
@@ -39,21 +37,10 @@ export default function ProfilePage() {
   const accounts = useFinanceStore((s) => s.accounts);
   const emis = useFinanceStore((s) => s.emis);
   const transactions = useFinanceStore((s) => s.transactions);
-  const loadDemoData = useFinanceStore((s) => s.loadDemoData);
-  const toast = useToast();
   const signOut = useSignOut();
   const [editOpen, setEditOpen] = useState(false);
-  const [loadingDemo, setLoadingDemo] = useState(false);
 
   const currency = profile?.currency ?? "INR";
-
-  const loadDemo = async () => {
-    if (loadingDemo) return;
-    setLoadingDemo(true);
-    await loadDemoData();
-    setLoadingDemo(false);
-    toast({ title: "Demo data loaded", variant: "success" });
-  };
 
   if (!profile) return null;
 
@@ -64,7 +51,9 @@ export default function ProfilePage() {
     banks,
     (a) => bankMonthFlow(a.id, transactions, month).net,
   );
-  const sips = emis.filter((e) => e.status === "active" && emiKind(e) === "sip");
+  const sips = emis.filter(
+    (e) => e.status === "active" && emiKind(e) === "sip",
+  );
   const sipMonthly = sumBy(sips, (e) => e.monthlyAmount);
   const sipTotal = sumBy(sips, emiPaidAmount);
   const totalSavings = banksTotal + sipTotal;
@@ -153,15 +142,12 @@ export default function ProfilePage() {
 
       <motion.div className={styles.actions} variants={listItem}>
         <Button
-          variant="secondary"
+          variant="danger"
           fullWidth
-          icon={RotateCcw}
-          loading={loadingDemo}
-          onClick={loadDemo}
+          size="lg"
+          icon={LogOut}
+          onClick={signOut}
         >
-          Load demo data
-        </Button>
-        <Button variant="danger" fullWidth size="lg" icon={LogOut} onClick={signOut}>
           Sign out
         </Button>
       </motion.div>
@@ -176,7 +162,7 @@ export default function ProfilePage() {
           </div>
           <a
             className={styles.credit}
-            href="https://riyaz-portfolio-7.vercel.app/"
+            href="https://riyaz-iota.vercel.app/"
             target="_blank"
             rel="noopener noreferrer"
           >

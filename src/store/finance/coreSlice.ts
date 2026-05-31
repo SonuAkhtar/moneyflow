@@ -1,11 +1,7 @@
-import { generateSeed } from "@/services/seed.service";
 import {
-  accountRepo,
   budgetRepo,
-  emiRepo,
   fetchSnapshot,
   profileRepo,
-  transactionRepo,
 } from "@/services/repositories";
 import {
   computeHealthScore,
@@ -20,7 +16,7 @@ import { emptyState, type FinanceState, type SliceCreator } from "./types";
 
 type CoreSlice = Pick<
   FinanceState,
-  "hydrate" | "loadDemoData" | "resetAll" | "updateProfile" | "runMonthlyRollover"
+  "hydrate" | "resetAll" | "updateProfile" | "runMonthlyRollover"
 >;
 
 export const createCoreSlice: SliceCreator<CoreSlice> = (
@@ -51,38 +47,6 @@ export const createCoreSlice: SliceCreator<CoreSlice> = (
         err instanceof Error ? err.message : "Couldn't load your data",
       );
       set({ hasHydrated: true });
-    }
-  },
-
-  loadDemoData: async () => {
-    const profile = get().profile;
-    if (!profile) return;
-    try {
-      const seed = generateSeed(
-        profile.id,
-        profile.fullName,
-        profile.email,
-        profile.currency,
-      );
-      await Promise.all(seed.accounts.map((a) => accountRepo.save(a)));
-      await Promise.all(seed.emis.map((e) => emiRepo.save(e)));
-      await Promise.all([
-        ...seed.transactions.map((t) => transactionRepo.save(t)),
-        ...seed.emis.flatMap((e) =>
-          e.payments.map((p) => emiRepo.savePayment(p, e.id, profile.id)),
-        ),
-        ...seed.budgets.map((b) => budgetRepo.save(b)),
-        profileRepo.update(profile.id, {
-          monthlySalary: seed.profile.monthlySalary,
-          savingsTarget: seed.profile.savingsTarget,
-          onboardingComplete: true,
-        }),
-      ]);
-      await get().hydrate(profile.id);
-    } catch (err) {
-      toastError(
-        err instanceof Error ? err.message : "Couldn't load demo data",
-      );
     }
   },
 

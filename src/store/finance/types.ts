@@ -30,7 +30,6 @@ export interface FinanceState {
   summaries: MonthlySummary[];
 
   hydrate: (userId: string) => Promise<void>;
-  loadDemoData: () => Promise<void>;
   resetAll: () => void;
   updateProfile: (patch: Partial<Profile>) => void;
 

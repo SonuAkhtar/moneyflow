@@ -51,6 +51,7 @@ next-env.d.ts
 .claude.json
 .claude.json.backup
 CLAUDE.local.md
+*.md
 
 # PWA generated files
 /public/sw.js
