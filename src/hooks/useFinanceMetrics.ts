@@ -3,13 +3,8 @@
 import { useMemo } from "react";
 import { useFinanceStore } from "@/store/financeStore";
 import { useMonthTransactions } from "./useMonthTransactions";
-import {
-  computeHealthScore,
-  currentMonthKey,
-  emiKind,
-  healthBand,
-  sumBy,
-} from "@/utils";
+import { loanEmiPaidInMonth } from "@/store/finance/selectors";
+import { computeHealthScore, currentMonthKey, healthBand, sumBy } from "@/utils";
 import type { HealthBand } from "@/types";
 
 export interface FinanceMetrics {
@@ -47,14 +42,7 @@ export const useFinanceMetrics = (month: string = currentMonthKey()): FinanceMet
     // EMI counts only once it's actually PAID — a payment logged on the EMI page
     // for this month — not the full scheduled monthly amount. SIP contributions
     // are excluded (they are savings, not spending).
-    const emiPaid = sumBy(
-      emis.filter((e) => emiKind(e) === "loan"),
-      (e) =>
-        sumBy(
-          (e.payments ?? []).filter((p) => p.month === month),
-          (p) => p.amount,
-        ),
-    );
+    const emiPaid = loanEmiPaidInMonth(emis, month);
     // "Spent" = expenses + EMIs paid this month; "Saved" = income − that.
     const totalSpent = expenses + emiPaid;
     const saved = Math.max(0, income - totalSpent);

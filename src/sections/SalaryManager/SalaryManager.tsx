@@ -7,6 +7,7 @@ import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
 import { AmountField } from "@/components/AmountField/AmountField";
 import { SheetActions } from "@/components/SheetActions/SheetActions";
 import { useFinanceStore } from "@/store/financeStore";
+import { salaryTotalsByMonth } from "@/store/finance/selectors";
 import { useToast } from "@/hooks/useToast";
 import {
   currentMonthKey,
@@ -29,16 +30,10 @@ export const SalaryManager = () => {
   const [editMonth, setEditMonth] = useState<string | null>(null);
   const [amount, setAmount] = useState("");
 
-  const salaryByMonth = useMemo(() => {
-    const map: Record<string, number> = {};
-    transactions
-      .filter((t) => t.type === "income" && t.category === "salary")
-      .forEach((t) => {
-        const key = monthKey(t.occurredAt);
-        map[key] = (map[key] ?? 0) + t.amount;
-      });
-    return map;
-  }, [transactions]);
+  const salaryByMonth = useMemo(
+    () => salaryTotalsByMonth(transactions),
+    [transactions],
+  );
 
   const months = useMemo(() => lastNMonthKeys(7).reverse(), []);
   const current = currentMonthKey();

@@ -3,15 +3,14 @@
 import { useMemo } from "react";
 import { useFinanceStore } from "@/store/financeStore";
 import { useMonthTransactions } from "./useMonthTransactions";
+import { monthTotals } from "@/store/finance/selectors";
 import { getCategoryMeta } from "@/constants/categories";
 import {
   currentMonthKey,
-  monthKey,
   shortMonthLabel,
   groupSum,
   lastNMonthKeys,
   monthLabel,
-  SAVINGS_DEPOSIT_NOTE,
 } from "@/utils";
 import type { CategoryId } from "@/types";
 
@@ -64,25 +63,15 @@ export const useAnalytics = (month: string = currentMonthKey()): AnalyticsData =
       .sort((a, b) => b.value - a.value);
 
     const monthlyTrend: TrendPoint[] = lastNMonthKeys(6).map((key) => {
-      const income = transactions
-        .filter((t) => t.type === "income" && monthKey(t.occurredAt) === key)
-        .reduce((a, t) => a + t.amount, 0);
-      const expenses = transactions
-        .filter((t) => t.type === "expense" && monthKey(t.occurredAt) === key)
-        .reduce((a, t) => a + t.amount, 0);
-      const deposits = transactions
-        .filter(
-          (t) =>
-            t.type === "transfer" &&
-            t.note === SAVINGS_DEPOSIT_NOTE &&
-            monthKey(t.occurredAt) === key,
-        )
-        .reduce((a, t) => a + t.amount, 0);
+      const { income, expenses, savingsDeposits } = monthTotals(
+        transactions,
+        key,
+      );
       return {
         label: shortMonthLabel(`${key}-01`),
         income: Math.round(income),
         expenses: Math.round(expenses),
-        saved: Math.round(Math.max(0, income - expenses) + deposits),
+        saved: Math.round(Math.max(0, income - expenses) + savingsDeposits),
       };
     });
 
