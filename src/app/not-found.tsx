@@ -14,8 +14,8 @@ export default function NotFound() {
         <span className={styles.notfound_code}>404</span>
         <h1 className={styles.notfound_title}>This page drifted off the map</h1>
         <p className={styles.notfound_text}>
-          The link may be broken, or the page may have moved. Let&apos;s get your
-          money flowing again.
+          The link may be broken, or the page may have moved. Get your money
+          flow again.
         </p>
         <Link href={ROUTES.home} className={styles.notfound_cta}>
           <ArrowLeft size={16} /> Back to dashboard
