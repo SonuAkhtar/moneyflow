@@ -52,13 +52,6 @@ export const BottomNav = () => {
               aria-current={active ? "page" : undefined}
             >
               <span className={styles.nav_iconWrap}>
-                {active && (
-                  <motion.span
-                    layoutId="nav-pill"
-                    className={styles.nav_pill}
-                    transition={SPRING}
-                  />
-                )}
                 <motion.span
                   className={styles.nav_icon}
                   whileTap={{ scale: 0.86 }}

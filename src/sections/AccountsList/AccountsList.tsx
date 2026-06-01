@@ -7,7 +7,13 @@ import { Card } from "@/components/Card/Card";
 import { SectionHeader } from "@/components/SectionHeader/SectionHeader";
 import { AddSavingsSheet } from "@/sections/AddSavingsSheet/AddSavingsSheet";
 import { useFinanceStore } from "@/store/financeStore";
-import { bankMonthFlow, currentMonthKey, sumBy, formatCurrency } from "@/utils";
+import {
+  accountMonthDelta,
+  bankMonthFlow,
+  currentMonthKey,
+  sumBy,
+  formatCurrency,
+} from "@/utils";
 import { listItem, staggerContainer } from "@/themes/animations";
 import type { Account } from "@/types";
 import styles from "./AccountsList.module.scss";
@@ -54,7 +60,8 @@ export const AccountsList = () => {
       >
         {banks.map((bank) => {
           const flow = bankMonthFlow(bank.id, transactions, month);
-          const lastMonth = bank.balance - flow.net;
+          const lastMonth =
+            bank.balance - accountMonthDelta(bank.id, transactions, month);
           return (
             <motion.div key={bank.id} variants={listItem}>
               <Card

@@ -22,6 +22,38 @@ export const bankMonthFlow = (
   return { added, taken, net: added - taken };
 };
 
+/**
+ * Net change to an account's *balance* from this month's transactions — mirrors
+ * the balance mutations in the store (see transactionsSlice / accountsSlice):
+ *  - income credits the balance, EXCEPT salary, which is recorded as income but
+ *    intentionally never credited to a balance (see setSalary);
+ *  - savings-deposit transfers credit the balance;
+ *  - everything else (expenses, withdrawals, plain transfers) debits it.
+ * Unlike `bankMonthFlow`, this accounts for ALL movements, so subtracting it
+ * from the current balance yields the true closing balance for the prior month —
+ * correct even for a bank that is also used for everyday spending.
+ */
+export const accountMonthDelta = (
+  accountId: string,
+  transactions: Transaction[],
+  month: string,
+): number => {
+  let delta = 0;
+  for (const t of transactions) {
+    if (t.accountId !== accountId) continue;
+    if (monthKey(t.occurredAt) !== month) continue;
+    if (t.type === "income") {
+      if (t.category === "salary") continue;
+      delta += t.amount;
+    } else if (t.type === "transfer" && t.note === SAVINGS_DEPOSIT_NOTE) {
+      delta += t.amount;
+    } else {
+      delta -= t.amount;
+    }
+  }
+  return delta;
+};
+
 const SIP_NAMES = ["SIP", "Mutual Funds"];
 export const emiKind = (e: Emi): EmiKind =>
   e.kind ?? (SIP_NAMES.includes(e.name) ? "sip" : "loan");

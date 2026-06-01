@@ -36,8 +36,8 @@
     transition: color var(--dur-base) var(--ease-smooth);
     @include tap-highlight-none;
 
-    // Active tab: only the icon gets the rounded background, and the label
-    // takes the accent colour.
+    // Active tab: no background — only the icon and label take the accent
+    // colour.
     &--active {
       color: var(--accent);
     }
@@ -49,16 +49,6 @@
     place-items: center;
     width: 46px;
     height: 30px;
-  }
-
-  // Sliding accent-tinted pill that sits behind the active icon only.
-  &_pill {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    border-radius: var(--radius-pill);
-    background: var(--accent-bg);
-    box-shadow: inset 0 0 0 1px var(--border-lime);
   }
 
   &_icon {
@@ -102,9 +92,10 @@
     height: 52px;
     margin-top: -24px;
     border-radius: var(--radius-pill);
-    // Inactive: a neutral, raised button with an accent-tinted home icon.
+    // Inactive: a neutral, raised button with the icon in the same muted colour
+    // as the other tabs' inactive icons.
     background: var(--surface-card-solid);
-    color: var(--accent);
+    color: var(--text-tertiary);
     border: 4px solid var(--surface-chrome);
     box-shadow:
       var(--shadow-card),
@@ -117,14 +108,9 @@
     will-change: transform;
   }
 
-  // Active: filled, glowing lime orb that lifts and scales up.
+  // Active: keep the neutral raised orb — like the other tabs, only the icon
+  // and label take the accent colour (no filled background).
   &_home--active &_orb {
-    background: var(--gradient-lime);
-    color: var(--text-inverse);
-    transform: translateY(-2px) scale(1.06);
-    box-shadow:
-      0 0 0 4px var(--accent-bg),
-      var(--shadow-glow-lime),
-      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    color: var(--accent);
   }
 }

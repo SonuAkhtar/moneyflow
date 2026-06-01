@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  accountMonthDelta,
   bankMonthFlow,
   computeHealthScore,
   monthKey,
@@ -75,5 +76,46 @@ describe("bankMonthFlow", () => {
       taken: 300,
       net: 700,
     });
+  });
+});
+
+describe("accountMonthDelta", () => {
+  const tx = (over: Partial<Transaction>): Transaction => ({
+    id: crypto.randomUUID(),
+    userId: "u",
+    accountId: "acc-1",
+    type: "expense",
+    amount: 0,
+    category: "other",
+    note: null,
+    merchant: null,
+    isBigExpense: false,
+    occurredAt: "2026-05-10T09:00:00.000Z",
+    createdAt: "2026-05-10T09:00:00.000Z",
+    ...over,
+  });
+
+  it("nets all balance-affecting movements for the account + month", () => {
+    const txns = [
+      tx({ type: "income", category: "other", amount: 1000 }),
+      tx({ type: "expense", amount: 250 }),
+      tx({ type: "transfer", note: SAVINGS_DEPOSIT_NOTE, amount: 500 }),
+      tx({ type: "transfer", note: SAVINGS_WITHDRAWAL_NOTE, amount: 100 }),
+    ];
+    // +1000 income − 250 expense + 500 deposit − 100 withdrawal = 1150
+    expect(accountMonthDelta("acc-1", txns, "2026-05")).toBe(1150);
+  });
+
+  it("excludes salary income (recorded but never credited to a balance)", () => {
+    const txns = [tx({ type: "income", category: "salary", amount: 5000 })];
+    expect(accountMonthDelta("acc-1", txns, "2026-05")).toBe(0);
+  });
+
+  it("ignores other accounts and other months", () => {
+    const txns = [
+      tx({ type: "expense", amount: 100, accountId: "other" }),
+      tx({ type: "expense", amount: 100, occurredAt: "2026-04-10T09:00:00.000Z" }),
+    ];
+    expect(accountMonthDelta("acc-1", txns, "2026-05")).toBe(0);
   });
 });

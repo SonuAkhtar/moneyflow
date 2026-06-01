@@ -7,6 +7,7 @@ import { Card } from "@/components/Card/Card";
 import { MonthlySavingSheet } from "@/sections/MonthlySavingSheet/MonthlySavingSheet";
 import { useFinanceStore } from "@/store/financeStore";
 import {
+  accountMonthDelta,
   bankMonthFlow,
   currentMonthKey,
   formatCurrency,
@@ -74,7 +75,8 @@ export const SavingsAccordion = () => {
             <div className={styles.accordion_list}>
               {banks.map((bank) => {
                 const flow = bankMonthFlow(bank.id, transactions, month);
-                const lastMonth = bank.balance - flow.net;
+                const lastMonth =
+                  bank.balance - accountMonthDelta(bank.id, transactions, month);
                 return (
                   <button
                     key={bank.id}
