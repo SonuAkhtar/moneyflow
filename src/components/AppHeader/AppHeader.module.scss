@@ -19,7 +19,6 @@
     padding var(--dur-base) var(--ease-smooth),
     box-shadow var(--dur-base) var(--ease-smooth);
 
-  // Slimmer bar once scrolled - tighter padding, smaller logo + avatar.
   &--scrolled {
     padding-top: calc(var(--space-2) + env(safe-area-inset-top, 0px));
     padding-bottom: var(--space-2);

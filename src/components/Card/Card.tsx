@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef } from "react";
-import { motion, type HTMLMotionProps } from "framer-motion";
+import { m, type HTMLMotionProps } from "framer-motion";
 import { cn } from "@/utils";
 import styles from "./Card.module.scss";
 
@@ -27,7 +27,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     },
     ref,
   ) => (
-    <motion.div
+    <m.div
       ref={ref}
       className={cn(
         styles.card,
@@ -43,7 +43,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       {...rest}
     >
       {children}
-    </motion.div>
+    </m.div>
   ),
 );
 

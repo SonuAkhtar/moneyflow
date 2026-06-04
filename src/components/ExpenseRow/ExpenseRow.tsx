@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { ArrowRight, CalendarDays } from "lucide-react";
 import { getCategoryMeta } from "@/constants/categories";
 import { formatCurrency, formatMoneyShort, dayShort, truncate } from "@/utils";
@@ -26,7 +26,7 @@ export const ExpenseRow = memo(function ExpenseRow({
   const Icon = meta.icon;
 
   return (
-    <motion.button
+    <m.button
       type="button"
       className={styles.row}
       onClick={() => onClick?.(transaction)}
@@ -67,6 +67,6 @@ export const ExpenseRow = memo(function ExpenseRow({
           </span>
         )}
       </span>
-    </motion.button>
+    </m.button>
   );
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { getCategoryMeta } from "@/constants/categories";
 import { cn } from "@/utils";
 import type { CategoryId } from "@/types";
@@ -19,7 +19,7 @@ export const CategoryPicker = ({ categories, value, onChange }: CategoryPickerPr
       const Icon = meta.icon;
       const active = id === value;
       return (
-        <motion.button
+        <m.button
           key={id}
           type="button"
           className={cn(styles.chip, active && styles["chip--active"])}
@@ -30,7 +30,7 @@ export const CategoryPicker = ({ categories, value, onChange }: CategoryPickerPr
             <Icon size={18} />
           </span>
           <span className={styles.chip_label}>{meta.label}</span>
-        </motion.button>
+        </m.button>
       );
     })}
   </div>

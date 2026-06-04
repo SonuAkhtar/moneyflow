@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { BOTTOM_NAV, ROUTES } from "@/constants";
 import { cn } from "@/utils";
 import styles from "./BottomNav.module.scss";
@@ -20,7 +20,6 @@ export const BottomNav = () => {
           const active =
             item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
 
-          // Home is the centrepiece — a raised, glowing orb that stands out.
           if (item.href === ROUTES.home) {
             return (
               <Link
@@ -32,13 +31,13 @@ export const BottomNav = () => {
                 )}
                 aria-current={active ? "page" : undefined}
               >
-                <motion.span
+                <m.span
                   className={styles.nav_orb}
                   whileTap={{ scale: 0.9 }}
                   transition={SPRING}
                 >
                   <Icon size={23} strokeWidth={2.4} />
-                </motion.span>
+                </m.span>
                 <span className={styles.nav_label}>{item.label}</span>
               </Link>
             );
@@ -52,13 +51,13 @@ export const BottomNav = () => {
               aria-current={active ? "page" : undefined}
             >
               <span className={styles.nav_iconWrap}>
-                <motion.span
+                <m.span
                   className={styles.nav_icon}
                   whileTap={{ scale: 0.86 }}
                   transition={SPRING}
                 >
                   <Icon size={21} strokeWidth={active ? 2.4 : 2} />
-                </motion.span>
+                </m.span>
               </span>
               <span className={styles.nav_label}>{item.label}</span>
             </Link>

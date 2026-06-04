@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { m, useMotionValue, useTransform, animate } from "framer-motion";
 import { RefreshCw } from "lucide-react";
 import styles from "./PullToRefresh.module.scss";
 
@@ -92,15 +92,15 @@ export const PullToRefresh = ({ onRefresh, children }: PullToRefreshProps) => {
 
   return (
     <>
-      <motion.div className={styles.indicator} style={{ y, opacity }} aria-hidden>
-        <motion.span
+      <m.div className={styles.indicator} style={{ y, opacity }} aria-hidden>
+        <m.span
           className={styles.indicator_badge}
           style={{ scale, rotate: refreshing ? undefined : rotate }}
         >
           <RefreshCw size={18} className={refreshing ? styles.spin : undefined} />
-        </motion.span>
-      </motion.div>
-      <motion.div style={{ y }}>{children}</motion.div>
+        </m.span>
+      </m.div>
+      <m.div style={{ y }}>{children}</m.div>
     </>
   );
 };

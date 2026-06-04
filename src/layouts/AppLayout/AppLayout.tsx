@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import type { User } from "@supabase/supabase-js";
 import { AppHeader } from "@/components/AppHeader/AppHeader";
 import { BottomNav } from "@/components/BottomNav/BottomNav";
@@ -78,7 +78,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
     if (status === "anon") router.replace(ROUTES.login);
   }, [status, router]);
 
-  if (status !== "authed" || !user || !profile || !hasHydrated) {
+  if (status === "anon" || !profile || !hasHydrated) {
     return <SplashScreen />;
   }
 
@@ -87,8 +87,8 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
       <div className={styles.shell_glow} aria-hidden />
       <div className={styles.shell_inner}>
         <AppHeader />
-        <PullToRefresh onRefresh={() => hydrate(user.id)}>
-          <motion.main
+        <PullToRefresh onRefresh={() => hydrate(profile.id)}>
+          <m.main
             key={pathname}
             className={styles.shell_main}
             initial={{ opacity: 0, y: 8 }}
@@ -96,7 +96,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
             transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
           >
             {children}
-          </motion.main>
+          </m.main>
         </PullToRefresh>
       </div>
       <BottomNav />

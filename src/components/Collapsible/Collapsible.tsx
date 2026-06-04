@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { Card } from "@/components/Card/Card";
 import { cn } from "@/utils";
@@ -43,18 +43,18 @@ export const Collapsible = ({
         {caption != null && <span className={styles.caption}>{caption}</span>}
       </span>
       {trailing != null && <span className={styles.trailing}>{trailing}</span>}
-      <motion.span
+      <m.span
         className={styles.chevron}
         animate={{ rotate: open ? 180 : 0 }}
         transition={{ duration: 0.2 }}
       >
         <ChevronDown size={18} />
-      </motion.span>
+      </m.span>
     </button>
 
     <AnimatePresence initial={false}>
       {open && (
-        <motion.div
+        <m.div
           className={styles.body}
           initial={{ height: 0, opacity: 0 }}
           animate={{ height: "auto", opacity: 1 }}
@@ -62,7 +62,7 @@ export const Collapsible = ({
           transition={BODY_TRANSITION}
         >
           {children}
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   </Card>

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { BarChart3, ChevronDown, Plus } from "lucide-react";
 import { Card } from "@/components/Card/Card";
 import { Button } from "@/components/Button/Button";
@@ -121,13 +121,13 @@ export default function AnalyticsPage() {
   ];
 
   return (
-    <motion.div
+    <m.div
       className={styles.page}
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
     >
-      <motion.div variants={listItem}>
+      <m.div variants={listItem}>
         <Select
           aria-label="Select month"
           className={styles.monthSelect}
@@ -145,9 +145,9 @@ export default function AnalyticsPage() {
           value={view}
           onChange={setView}
         />
-      </motion.div>
+      </m.div>
 
-      <motion.div className={styles.kpis} variants={listItem}>
+      <m.div className={styles.kpis} variants={listItem}>
         {kpis.map((kpi) => (
           <Card key={kpi.key} surface="solid" elevation="raised" className={styles.kpi}>
             <span className={styles.kpi_label}>{kpi.label}</span>
@@ -156,10 +156,10 @@ export default function AnalyticsPage() {
             </span>
           </Card>
         ))}
-      </motion.div>
+      </m.div>
 
       {view === "overview" && (
-        <motion.div variants={listItem}>
+        <m.div variants={listItem}>
           <Card surface="solid">
             <SectionHeader title="Income vs Spending" caption="Last 6 months" />
             <AreaTrendChart data={monthlyTrend} currency={currency} />
@@ -174,11 +174,11 @@ export default function AnalyticsPage() {
               </span>
             </div>
           </Card>
-        </motion.div>
+        </m.div>
       )}
 
       {view === "overview" && (
-        <motion.div variants={listItem}>
+        <m.div variants={listItem}>
           <Card surface="solid" className={styles.trend}>
             <SectionHeader title="6-month saving trend" caption="Saved per month" />
             <SpendBarChart
@@ -190,11 +190,11 @@ export default function AnalyticsPage() {
               uniformColor="var(--chart-saved)"
             />
           </Card>
-        </motion.div>
+        </m.div>
       )}
 
       {view === "categories" && (
-        <motion.div variants={listItem}>
+        <m.div variants={listItem}>
           {totalSpend === 0 ? (
             <Card surface="solid">
               <EmptyState
@@ -228,11 +228,11 @@ export default function AnalyticsPage() {
               </div>
             </Card>
           )}
-        </motion.div>
+        </m.div>
       )}
 
       {view === "daily" && (
-        <motion.div variants={listItem}>
+        <m.div variants={listItem}>
           <Card surface="solid">
             <SectionHeader title="Daily spending" caption={monthLabel(month)} />
             {dailySpend.length === 0 ? (
@@ -246,10 +246,10 @@ export default function AnalyticsPage() {
               <SpendBarChart data={dailySpend} currency={currency} />
             )}
           </Card>
-        </motion.div>
+        </m.div>
       )}
 
-      <motion.div variants={listItem}>
+      <m.div variants={listItem}>
         <SectionHeader title="Top merchants" caption={monthLabel(month)} />
         <Card surface="solid" padded={false} className={styles.merchants}>
           {topMerchants.length === 0 ? (
@@ -267,9 +267,9 @@ export default function AnalyticsPage() {
             ))
           )}
         </Card>
-      </motion.div>
+      </m.div>
 
-      <motion.div className={styles.groups} variants={listItem}>
+      <m.div className={styles.groups} variants={listItem}>
         <MonthGroup
           title="Total savings"
           items={groups.savings}
@@ -291,14 +291,14 @@ export default function AnalyticsPage() {
           onEdit={setEditing}
           tone="out"
         />
-      </motion.div>
+      </m.div>
 
       <EditTransactionSheet
         transaction={editing}
         open={editing !== null}
         onClose={() => setEditing(null)}
       />
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -332,18 +332,18 @@ function MonthGroup({ title, items, currency, tone, onEdit }: MonthGroupProps) {
           {tone === "out" && total > 0 ? "-" : ""}
           {formatCurrency(total, currency)}
         </span>
-        <motion.span
+        <m.span
           className={styles.group_chevron}
           animate={{ rotate: open ? 180 : 0 }}
           transition={{ duration: 0.2 }}
         >
           <ChevronDown size={18} />
-        </motion.span>
+        </m.span>
       </button>
 
       <AnimatePresence initial={false}>
         {open && (
-          <motion.div
+          <m.div
             className={styles.group_body}
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
@@ -364,7 +364,7 @@ function MonthGroup({ title, items, currency, tone, onEdit }: MonthGroupProps) {
                 ))
               )}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </Card>

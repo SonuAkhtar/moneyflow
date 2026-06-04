@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { getCategoryMeta } from "@/constants/categories";
 import { formatCurrency, truncate, dayShort, cn } from "@/utils";
 import type { Transaction } from "@/types";
@@ -24,7 +24,7 @@ export const TransactionItem = memo(function TransactionItem({
   const sign = isIncome ? "+" : transaction.type === "expense" ? "-" : "";
 
   return (
-    <motion.button
+    <m.button
       type="button"
       className={styles.item}
       onClick={() => onClick?.(transaction)}
@@ -54,6 +54,6 @@ export const TransactionItem = memo(function TransactionItem({
         {sign}
         {formatCurrency(transaction.amount, currency)}
       </span>
-    </motion.button>
+    </m.button>
   );
 });

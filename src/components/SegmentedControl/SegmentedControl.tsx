@@ -1,7 +1,7 @@
 "use client";
 
 import { useId } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { cn } from "@/utils";
 import styles from "./SegmentedControl.module.scss";
 
@@ -39,7 +39,7 @@ export function SegmentedControl<T extends string>({
             onClick={() => onChange(segment.value)}
           >
             {active && (
-              <motion.span
+              <m.span
                 layoutId={`segmented-${groupId}`}
                 className={styles.segmented_pill}
                 transition={{ type: "spring", stiffness: 420, damping: 34 }}

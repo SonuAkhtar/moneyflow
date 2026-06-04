@@ -9,8 +9,8 @@ import {
 import type { Account, Borrowing, Emi } from "@/types";
 import type { Tables } from "./database.types";
 
-describe("entity → row mappers", () => {
-  it("accountToRow maps every column (camelCase → snake_case)", () => {
+describe("entity to row mappers", () => {
+  it("accountToRow maps every column (camelCase to snake_case)", () => {
     const account: Account = {
       id: "a1",
       userId: "u1",
@@ -126,7 +126,7 @@ describe("entity → row mappers", () => {
   });
 });
 
-describe("row → entity mappers", () => {
+describe("row to entity mappers", () => {
   it("rowToAccount coerces a string numeric balance to a number", () => {
     const row = {
       id: "a1",

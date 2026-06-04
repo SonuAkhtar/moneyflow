@@ -74,8 +74,6 @@
   position: relative;
   padding: var(--space-2);
   color: var(--text-primary);
-  // Clean, high-contrast card surface (theme-aware) so the rows and the "Add"
-  // pill read clearly - replaces the translucent gradient that washed them out.
   background: var(--surface-card-solid);
   border: 1px solid var(--border-subtle);
   box-shadow: var(--shadow-card), var(--shadow-inset);

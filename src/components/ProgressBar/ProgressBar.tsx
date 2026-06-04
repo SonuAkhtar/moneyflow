@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { cn } from "@/utils";
 import styles from "./ProgressBar.module.scss";
 
@@ -34,7 +34,7 @@ export const ProgressBar = ({
       aria-valuemin={0}
       aria-valuemax={100}
     >
-      <motion.span
+      <m.span
         className={cn(styles.progress_fill, styles[`progress_fill--${tone}`])}
         initial={{ width: 0 }}
         animate={{ width: `${clamped}%` }}

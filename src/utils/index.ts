@@ -22,17 +22,6 @@ export const bankMonthFlow = (
   return { added, taken, net: added - taken };
 };
 
-/**
- * Net change to an account's *balance* from this month's transactions — mirrors
- * the balance mutations in the store (see transactionsSlice / accountsSlice):
- *  - income credits the balance, EXCEPT salary, which is recorded as income but
- *    intentionally never credited to a balance (see setSalary);
- *  - savings-deposit transfers credit the balance;
- *  - everything else (expenses, withdrawals, plain transfers) debits it.
- * Unlike `bankMonthFlow`, this accounts for ALL movements, so subtracting it
- * from the current balance yields the true closing balance for the prior month —
- * correct even for a bank that is also used for everyday spending.
- */
 export const accountMonthDelta = (
   accountId: string,
   transactions: Transaction[],
@@ -138,6 +127,13 @@ export const monthKey = (date: Date | string = new Date()): string => {
 
 export const currentMonthKey = (): string => monthKey(new Date());
 
+export const dateKey = (date: Date | string = new Date()): string => {
+  const d = typeof date === "string" ? parseISO(date) : date;
+  return format(d, "yyyy-MM-dd");
+};
+
+export const currentDateKey = (): string => dateKey(new Date());
+
 export const monthLabel = (key: string): string => {
   const [year, month] = key.split("-").map(Number);
   return format(new Date(year ?? 0, (month ?? 1) - 1, 1), "MMMM yyyy");
@@ -177,7 +173,6 @@ export interface HealthInput {
   emiBurden: number;
 }
 
-// Score = savings health (60) + low-EMI-burden health (40).
 export const computeHealthScore = ({
   income,
   expenses,

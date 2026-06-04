@@ -38,6 +38,8 @@ export const CURRENCY = {
 
 export const BIG_EXPENSE_THRESHOLD = 6000;
 
+export const INITIAL_HISTORY_MONTHS = 12;
+
 export const APP = {
   name: "moneyFlow",
   tagline: "Money that moves with you",

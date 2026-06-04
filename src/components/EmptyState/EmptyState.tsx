@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/utils";
 import styles from "./EmptyState.module.scss";
@@ -20,7 +20,7 @@ export const EmptyState = ({
   action,
   className,
 }: EmptyStateProps) => (
-  <motion.div
+  <m.div
     className={cn(styles.empty, className)}
     initial={{ opacity: 0, y: 12 }}
     animate={{ opacity: 1, y: 0 }}
@@ -32,5 +32,5 @@ export const EmptyState = ({
     <h4 className={styles.empty_title}>{title}</h4>
     {description && <p className={styles.empty_desc}>{description}</p>}
     {action && <div className={styles.empty_action}>{action}</div>}
-  </motion.div>
+  </m.div>
 );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { CheckCircle2, ChevronRight, HandCoins, Plus } from "lucide-react";
 import { Card } from "@/components/Card/Card";
 import { ProgressBar } from "@/components/ProgressBar/ProgressBar";
@@ -118,13 +118,13 @@ export const BorrowingsList = () => {
                     aria-label={isOpen ? "Hide payments" : "Show payments"}
                     aria-expanded={isOpen}
                   >
-                    <motion.span
+                    <m.span
                       animate={{ rotate: isOpen ? 90 : 0 }}
                       transition={{ duration: 0.2 }}
                       style={{ display: "grid" }}
                     >
                       <ChevronRight size={18} />
-                    </motion.span>
+                    </m.span>
                   </button>
                 </div>
 
@@ -153,7 +153,7 @@ export const BorrowingsList = () => {
 
                 <AnimatePresence initial={false}>
                   {isOpen && (
-                    <motion.div
+                    <m.div
                       className={styles.children}
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
@@ -205,7 +205,7 @@ export const BorrowingsList = () => {
                           Add
                         </button>
                       )}
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
               </Card>

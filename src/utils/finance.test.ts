@@ -36,7 +36,7 @@ describe("savingsRate", () => {
 });
 
 describe("computeHealthScore", () => {
-  it("returns a score within 0–100", () => {
+  it("returns a score within 0-100", () => {
     const score = computeHealthScore({
       income: 1000,
       expenses: 600,
@@ -102,7 +102,6 @@ describe("accountMonthDelta", () => {
       tx({ type: "transfer", note: SAVINGS_DEPOSIT_NOTE, amount: 500 }),
       tx({ type: "transfer", note: SAVINGS_WITHDRAWAL_NOTE, amount: 100 }),
     ];
-    // +1000 income − 250 expense + 500 deposit − 100 withdrawal = 1150
     expect(accountMonthDelta("acc-1", txns, "2026-05")).toBe(1150);
   });
 

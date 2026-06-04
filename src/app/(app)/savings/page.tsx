@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Landmark, TrendingUp } from "lucide-react";
 import { AccountsList } from "@/sections/AccountsList/AccountsList";
 import { EmiList } from "@/sections/EmiList/EmiList";
@@ -35,13 +35,13 @@ export default function SavingsPage() {
   const totalSavings = banksTotal + sipTotal;
 
   return (
-    <motion.div
+    <m.div
       className={styles.page}
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
     >
-      <motion.div variants={listItem}>
+      <m.div variants={listItem}>
         <div className={styles.hero}>
           <div className={styles.hero_head}>
             <span className={styles.hero_label}>Total savings</span>
@@ -82,15 +82,15 @@ export default function SavingsPage() {
             </div>
           </div>
         </div>
-      </motion.div>
+      </m.div>
 
-      <motion.div variants={listItem}>
+      <m.div variants={listItem}>
         <AccountsList />
-      </motion.div>
+      </m.div>
 
-      <motion.div variants={listItem}>
+      <m.div variants={listItem}>
         <EmiList kind="sip" />
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

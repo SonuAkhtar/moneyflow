@@ -71,6 +71,12 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        <link
+          rel="preload"
+          as="image"
+          href="/icons/moneyflow-logo-full.png"
+          fetchPriority="high"
+        />
         {supabaseOrigin && (
           <>
             <link rel="preconnect" href={supabaseOrigin} crossOrigin="anonymous" />

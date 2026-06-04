@@ -1,4 +1,6 @@
 :root {
+  color-scheme: light;
+
   --color-lime: #c9ec5b;
   --color-neon-green: #d7f27e;
   --color-neon-orange: #f5803c;
@@ -10,7 +12,6 @@
   --color-warning: #f5a623;
   --color-info: #3d8bff;
 
-  /* Chart series colours - theme-aware so they read on either surface. */
   --chart-income: #16a34a;
   --chart-saved: #16a34a;
   --chart-expense: #ef7c2e;
@@ -142,6 +143,8 @@
 }
 
 :root[data-theme="dark"] {
+  color-scheme: dark;
+
   --color-lime: #4ece6e;
   --color-neon-green: #7eea90;
 

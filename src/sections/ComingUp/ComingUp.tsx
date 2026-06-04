@@ -1,16 +1,18 @@
 "use client";
 
 import { useMemo } from "react";
-import { CreditCard, HandCoins, TrendingUp } from "lucide-react";
+import { Check, CreditCard, HandCoins, TrendingUp } from "lucide-react";
 import { Card } from "@/components/Card/Card";
 import { SectionHeader } from "@/components/SectionHeader/SectionHeader";
 import { useFinanceStore } from "@/store/financeStore";
 import {
   borrowingOutstanding,
   borrowingSettled,
+  currentMonthKey,
   dayShort,
   emiKind,
   formatCurrency,
+  monthLabel,
 } from "@/utils";
 import styles from "./ComingUp.module.scss";
 
@@ -20,10 +22,9 @@ interface DueItem {
   amount: number;
   date: Date;
   type: "loan" | "sip" | "borrow";
+  paid: boolean;
 }
 
-// Next occurrence of a day-of-month from today (this month if it hasn't passed,
-// otherwise next month). Clamped to 28 to stay valid in every month.
 const nextDueDate = (dueDay: number): Date => {
   const now = new Date();
   const day = Math.min(Math.max(1, dueDay || 1), 28);
@@ -47,7 +48,7 @@ const daysUntil = (date: Date): number => {
 };
 
 const META = {
-  loan: { icon: CreditCard, color: "var(--color-info)" },
+  loan: { icon: CreditCard, color: "var(--color-danger)" },
   sip: { icon: TrendingUp, color: "var(--color-success)" },
   borrow: { icon: HandCoins, color: "var(--color-warning)" },
 } as const;
@@ -56,6 +57,8 @@ export const ComingUp = () => {
   const emis = useFinanceStore((s) => s.emis);
   const borrowings = useFinanceStore((s) => s.borrowings);
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
+
+  const thisMonth = currentMonthKey();
 
   const items = useMemo<DueItem[]>(() => {
     const out: DueItem[] = [];
@@ -67,6 +70,7 @@ export const ComingUp = () => {
         amount: e.monthlyAmount,
         date: nextDueDate(e.dueDay),
         type: emiKind(e),
+        paid: (e.payments ?? []).some((p) => p.month === thisMonth),
       });
     }
     for (const b of borrowings) {
@@ -77,18 +81,19 @@ export const ComingUp = () => {
         amount: borrowingOutstanding(b),
         date: new Date(b.dueDate),
         type: "borrow",
+        paid: false,
       });
     }
     return out
       .sort((x, y) => x.date.getTime() - y.date.getTime())
       .slice(0, 4);
-  }, [emis, borrowings]);
+  }, [emis, borrowings, thisMonth]);
 
   if (items.length === 0) return null;
 
   return (
     <section>
-      <SectionHeader title="Coming up" caption="Upcoming dues" />
+      <SectionHeader title="Upcoming payments" caption="EMIs, SIPs & dues" />
       <Card surface="solid" padded={false} className={styles.list}>
         {items.map((item) => {
           const meta = META[item.type];
@@ -103,11 +108,18 @@ export const ComingUp = () => {
               </span>
               <span className={styles.row_info}>
                 <span className={styles.row_name}>{item.label}</span>
-                <span className={styles.row_when}>
-                  {dayShort(item.date)} · {when}
-                </span>
+                {item.paid ? (
+                  <span className={styles.row_paid}>
+                    <Check size={12} />
+                    Paid · {monthLabel(thisMonth)}
+                  </span>
+                ) : (
+                  <span className={styles.row_when}>
+                    {dayShort(item.date)} · {when}
+                  </span>
+                )}
               </span>
-              <span className={styles.row_amount}>
+              <span className={styles.row_amount} style={{ color: meta.color }}>
                 {formatCurrency(item.amount, currency)}
               </span>
             </div>

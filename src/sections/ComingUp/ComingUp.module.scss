@@ -43,6 +43,19 @@
     @include truncate(1);
   }
 
+  &_paid {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--font-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--color-success);
+
+    svg {
+      flex-shrink: 0;
+    }
+  }
+
   &_amount {
     font-size: var(--font-sm);
     font-weight: var(--weight-bold);

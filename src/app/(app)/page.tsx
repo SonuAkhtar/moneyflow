@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { GreetingHeader } from "@/sections/GreetingHeader/GreetingHeader";
 import { MonthOverview } from "@/sections/MonthOverview/MonthOverview";
 import { ComingUp } from "@/sections/ComingUp/ComingUp";
@@ -12,35 +12,35 @@ import styles from "./page.module.scss";
 
 export default function HomePage() {
   return (
-    <motion.div
+    <m.div
       className={styles.page}
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
     >
-      <motion.div variants={listItem}>
+      <m.div variants={listItem}>
         <GreetingHeader />
-      </motion.div>
+      </m.div>
 
-      <motion.div variants={listItem}>
+      <m.div variants={listItem}>
         <MonthOverview />
-      </motion.div>
+      </m.div>
 
-      <motion.div variants={listItem}>
+      <m.div variants={listItem}>
         <ComingUp />
-      </motion.div>
+      </m.div>
 
-      <motion.div variants={listItem}>
+      <m.div variants={listItem}>
         <SavingsAccordion />
-      </motion.div>
+      </m.div>
 
-      <motion.div variants={listItem}>
+      <m.div variants={listItem}>
         <MajorSpends />
-      </motion.div>
+      </m.div>
 
-      <motion.div variants={listItem}>
+      <m.div variants={listItem}>
         <DailySpends />
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

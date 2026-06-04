@@ -129,7 +129,6 @@ describe("financeStore mutations (optimistic reducer)", () => {
     expect(
       s.transactions.some((t) => t.category === "salary" && t.amount === 5000),
     ).toBe(true);
-    // Salary is a separate record - it must not credit any bank/savings balance.
     expect(s.accounts[0]!.balance).toBe(0);
   });
 

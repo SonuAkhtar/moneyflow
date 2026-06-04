@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { LogOut } from "lucide-react";
 import { Avatar } from "@/components/Avatar/Avatar";
 import { ThemeToggle } from "@/components/ThemeToggle/ThemeToggle";
@@ -25,14 +25,14 @@ export const ProfileMenu = ({ open, onClose }: ProfileMenuProps) => {
       <AnimatePresence>
         {open && (
           <>
-            <motion.div
+            <m.div
               className={styles.backdrop}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={onClose}
             />
-            <motion.div
+            <m.div
               className={styles.menu}
               initial={{ opacity: 0, y: -8, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -66,7 +66,7 @@ export const ProfileMenu = ({ open, onClose }: ProfileMenuProps) => {
                 <LogOut size={18} />
                 <span>Sign out</span>
               </button>
-            </motion.div>
+            </m.div>
           </>
         )}
       </AnimatePresence>

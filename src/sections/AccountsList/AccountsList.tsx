@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Landmark, Plus } from "lucide-react";
 import { Card } from "@/components/Card/Card";
 import { SectionHeader } from "@/components/SectionHeader/SectionHeader";
@@ -52,7 +52,7 @@ export const AccountsList = () => {
         </span>
       </Card>
 
-      <motion.div
+      <m.div
         className={styles.grid}
         variants={staggerContainer}
         initial="hidden"
@@ -63,7 +63,7 @@ export const AccountsList = () => {
           const lastMonth =
             bank.balance - accountMonthDelta(bank.id, transactions, month);
           return (
-            <motion.div key={bank.id} variants={listItem}>
+            <m.div key={bank.id} variants={listItem}>
               <Card
                 surface="solid"
                 interactive
@@ -93,16 +93,16 @@ export const AccountsList = () => {
                   <span
                     className={flow.net > 0 ? styles.card_in : styles.card_out}
                   >
-                    {flow.net > 0 ? "+" : "−"}
+                    {flow.net > 0 ? "+" : "-"}
                     {formatCurrency(Math.abs(flow.net), currency)} this month
                   </span>
                 )}
               </Card>
-            </motion.div>
+            </m.div>
           );
         })}
 
-        <motion.button
+        <m.button
           variants={listItem}
           type="button"
           className={styles.add}
@@ -110,8 +110,8 @@ export const AccountsList = () => {
         >
           <Plus size={22} />
           <span>Add bank</span>
-        </motion.button>
-      </motion.div>
+        </m.button>
+      </m.div>
 
       <AddSavingsSheet
         key={editing?.id ?? "new"}

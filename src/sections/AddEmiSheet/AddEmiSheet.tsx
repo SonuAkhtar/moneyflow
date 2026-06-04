@@ -11,6 +11,7 @@ import { FormStack } from "@/components/FormStack/FormStack";
 import { useFinanceStore } from "@/store/financeStore";
 import { useToast } from "@/hooks/useToast";
 import {
+  currentDateKey,
   currentMonthKey,
   emiPaidMonths,
   emiStartMonth,
@@ -18,6 +19,11 @@ import {
 } from "@/utils";
 import type { Emi, EmiKind } from "@/types";
 import styles from "./AddEmiSheet.module.scss";
+
+const clampDay = (day: number) => Math.min(31, Math.max(1, day));
+
+const startDateOf = (emi: Emi): string =>
+  `${emiStartMonth(emi)}-${String(clampDay(emi.dueDay || 1)).padStart(2, "0")}`;
 
 interface AddEmiSheetProps {
   open: boolean;
@@ -63,11 +69,10 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
     emi && !isKnownType(emi.name) ? emi.name : "",
   );
   const [amount, setAmount] = useState(emi ? String(emi.monthlyAmount) : "");
-  const [startMonth, setStartMonth] = useState(
-    emi ? emiStartMonth(emi) : currentMonthKey(),
+  const [startDate, setStartDate] = useState(
+    emi ? startDateOf(emi) : currentDateKey(),
   );
   const [tenure, setTenure] = useState(emi ? intStr(emi.totalMonths) : "");
-  const [dueDay, setDueDay] = useState(emi ? intStr(emi.dueDay) : "");
   const [paidMode, setPaidMode] = useState<PaidMode>("months");
   const [paid, setPaid] = useState(emi ? intStr(emiPaidMonths(emi)) : "");
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -130,8 +135,8 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
     const value = Number(amount);
     if (!value || !resolvedName) return;
     const sched = schedule();
-    const month = startMonth || currentMonthKey();
-    const due = Math.min(31, Math.max(1, Math.floor(Number(dueDay) || 1)));
+    const month = startDate ? startDate.slice(0, 7) : currentMonthKey();
+    const due = clampDay(Math.floor(Number(startDate.slice(8, 10)) || 1));
     if (emi) {
       updateEmi(emi.id, {
         name: resolvedName,
@@ -156,9 +161,8 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
       setType(planTypes[0]!);
       setCustomName("");
       setAmount("");
-      setStartMonth(currentMonthKey());
+      setStartDate(currentDateKey());
       setTenure("");
-      setDueDay("");
       setPaid("");
       setPaidMode("months");
     }
@@ -206,19 +210,11 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
         />
 
         <Input
-          label={isLoan ? "Started (month & year)" : "Investing since (month & year)"}
-          type="month"
-          value={startMonth}
-          onChange={(e) => setStartMonth(e.target.value)}
-        />
-
-        <Input
-          label="Due day of month (1–31)"
-          type="number"
-          inputMode="numeric"
-          placeholder="e.g. 5"
-          value={dueDay}
-          onChange={(e) => setDueDay(e.target.value)}
+          label={isLoan ? "Start date" : "Investing since"}
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          hint="The day of this date sets the monthly due day"
         />
 
         {isLoan && (

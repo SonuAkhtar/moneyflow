@@ -90,7 +90,7 @@ const Form = ({ account, onClose }: { account: Account; onClose: () => void }) =
           <div className={styles.summary_row}>
             <span className={styles.summary_label}>Taken this month</span>
             <span className={`${styles.summary_value} ${styles["summary_value--out"]}`}>
-              −{formatCurrency(flow.taken, currency)}
+              -{formatCurrency(flow.taken, currency)}
             </span>
           </div>
         )}

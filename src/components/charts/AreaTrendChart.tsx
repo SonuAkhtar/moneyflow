@@ -36,7 +36,6 @@ interface DotRenderProps {
   index?: number;
 }
 
-// Render a marker only on the latest point so the current value stands out.
 const lastDot = (color: string, lastIndex: number) => {
   const Dot = ({ cx, cy, index }: DotRenderProps) => {
     if (index !== lastIndex || cx == null || cy == null) return <g />;

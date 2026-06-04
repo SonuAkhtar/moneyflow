@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef, type ReactNode } from "react";
-import { motion, type HTMLMotionProps } from "framer-motion";
+import { m, type HTMLMotionProps } from "framer-motion";
 import { Loader2, type LucideIcon } from "lucide-react";
 import { cn } from "@/utils";
 import type { Size, Variant } from "@/types";
@@ -33,7 +33,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref,
   ) => (
-    <motion.button
+    <m.button
       ref={ref}
       className={cn(
         styles.button,
@@ -56,7 +56,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       )}
       {children && <span className={styles.button_label}>{children}</span>}
       {IconRight && !loading && <IconRight className={styles.button_icon} size={18} />}
-    </motion.button>
+    </m.button>
   ),
 );
 

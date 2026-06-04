@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { ArrowRight, Check, PiggyBank, Sparkles, Wallet } from "lucide-react";
 import { Input } from "@/components/Input/Input";
 import { Button } from "@/components/Button/Button";
@@ -93,7 +93,7 @@ export const OnboardingFlow = () => {
       </div>
 
       <AnimatePresence mode="wait">
-        <motion.div
+        <m.div
           key={current.key}
           className={styles.flow_step}
           initial={{ opacity: 0, x: 24 }}
@@ -146,7 +146,7 @@ export const OnboardingFlow = () => {
               </>
             )}
           </div>
-        </motion.div>
+        </m.div>
       </AnimatePresence>
 
       <div className={styles.flow_actions}>

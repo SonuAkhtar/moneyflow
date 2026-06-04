@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { AlertTriangle, CheckCircle2, Info, XCircle } from "lucide-react";
 import { useUiStore } from "@/store/uiStore";
 import { Portal } from "@/components/Portal/Portal";
@@ -25,7 +25,7 @@ const ToastItem = ({ toast }: { toast: ToastMessage }) => {
   }, [toast.id, toast.duration, dismiss]);
 
   return (
-    <motion.div
+    <m.div
       layout
       className={`${styles.toast} ${styles[`toast--${toast.variant}`]}`}
       initial={{ opacity: 0, y: -20, scale: 0.94 }}
@@ -43,7 +43,7 @@ const ToastItem = ({ toast }: { toast: ToastMessage }) => {
           <p className={styles.toast_desc}>{toast.description}</p>
         )}
       </div>
-    </motion.div>
+    </m.div>
   );
 };
 

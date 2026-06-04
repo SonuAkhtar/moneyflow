@@ -102,9 +102,6 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
     );
   },
 
-  // Salary is an income RECORD only - it is intentionally NOT credited to any
-  // account balance (it doesn't inflate banks/savings). It still counts as
-  // monthly income; the balance trail excludes it (see useBalanceTrail).
   setSalary: (month, amount) => {
     const s = get();
     const existing = s.transactions.find(

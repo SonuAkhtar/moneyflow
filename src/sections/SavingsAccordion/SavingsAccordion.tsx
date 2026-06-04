@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { ChevronRight, Landmark, Wallet } from "lucide-react";
 import { Card } from "@/components/Card/Card";
 import { MonthlySavingSheet } from "@/sections/MonthlySavingSheet/MonthlySavingSheet";
@@ -52,20 +52,20 @@ export const SavingsAccordion = () => {
             <span className={styles.accordion_sub}>
               {banks.length} bank{banks.length === 1 ? "" : "s"}
             </span>
-            <motion.span
+            <m.span
               className={styles.accordion_chevron}
               animate={{ rotate: open ? 90 : 0 }}
               transition={{ duration: 0.2 }}
             >
               <ChevronRight size={18} />
-            </motion.span>
+            </m.span>
           </span>
         </span>
       </button>
 
       <AnimatePresence initial={false}>
         {open && (
-          <motion.div
+          <m.div
             className={styles.accordion_body}
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
@@ -98,7 +98,7 @@ export const SavingsAccordion = () => {
                             }
                           >
                             {" · "}
-                            {flow.net > 0 ? "+" : "−"}
+                            {flow.net > 0 ? "+" : "-"}
                             {formatCurrency(Math.abs(flow.net), currency)}
                           </span>
                         )}
@@ -111,7 +111,7 @@ export const SavingsAccordion = () => {
                 );
               })}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 

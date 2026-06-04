@@ -39,11 +39,7 @@ export const useFinanceMetrics = (month: string = currentMonthKey()): FinanceMet
       (e) => e.monthlyAmount,
     );
     const totalBalance = sumBy(accounts, (a) => a.balance);
-    // EMI counts only once it's actually PAID — a payment logged on the EMI page
-    // for this month — not the full scheduled monthly amount. SIP contributions
-    // are excluded (they are savings, not spending).
     const emiPaid = loanEmiPaidInMonth(emis, month);
-    // "Spent" = expenses + EMIs paid this month; "Saved" = income − that.
     const totalSpent = expenses + emiPaid;
     const saved = Math.max(0, income - totalSpent);
     const score = computeHealthScore({

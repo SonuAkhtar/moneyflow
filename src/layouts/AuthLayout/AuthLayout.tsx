@@ -2,7 +2,7 @@
 
 import { useEffect, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { ShieldCheck, Wallet } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { ROUTES, APP } from "@/constants";
@@ -30,7 +30,7 @@ export const AuthLayout = ({ children, title, subtitle }: AuthLayoutProps) => {
     <div className={styles.auth}>
       <div className={styles.auth_bg} aria-hidden />
       <div className={styles.auth_inner}>
-        <motion.div
+        <m.div
           className={styles.auth_hero}
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -42,9 +42,9 @@ export const AuthLayout = ({ children, title, subtitle }: AuthLayoutProps) => {
           <span className={styles.auth_brand}>{APP.name}</span>
           <h1 className={styles.auth_title}>{title}</h1>
           {subtitle && <p className={styles.auth_subtitle}>{subtitle}</p>}
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
           className={styles.auth_panel}
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -55,7 +55,7 @@ export const AuthLayout = ({ children, title, subtitle }: AuthLayoutProps) => {
             <ShieldCheck size={13} />
             Bank-grade encryption · Private by default
           </div>
-        </motion.div>
+        </m.div>
       </div>
     </div>
   );

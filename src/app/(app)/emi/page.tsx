@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { CreditCard } from "lucide-react";
 import { Card } from "@/components/Card/Card";
 import { ProgressBar } from "@/components/ProgressBar/ProgressBar";
@@ -51,13 +51,13 @@ export default function EmiPage() {
   ];
 
   return (
-    <motion.div
+    <m.div
       className={styles.page}
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
     >
-      <motion.div variants={listItem}>
+      <m.div variants={listItem}>
         <div className={styles.hero}>
           <span className={styles.hero_glow} aria-hidden />
           <div className={styles.hero_top}>
@@ -83,9 +83,9 @@ export default function EmiPage() {
             </div>
           )}
         </div>
-      </motion.div>
+      </m.div>
 
-      <motion.div className={styles.stats} variants={listItem}>
+      <m.div className={styles.stats} variants={listItem}>
         {stats.map((stat) => (
           <Card
             key={stat.key}
@@ -97,15 +97,15 @@ export default function EmiPage() {
             <span className={styles.stat_label}>{stat.label}</span>
           </Card>
         ))}
-      </motion.div>
+      </m.div>
 
-      <motion.div variants={listItem}>
+      <m.div variants={listItem}>
         <EmiList kind="loan" />
-      </motion.div>
+      </m.div>
 
-      <motion.div variants={listItem}>
+      <m.div variants={listItem}>
         <BorrowingsList />
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

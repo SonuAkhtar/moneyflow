@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { ExternalLink, Flame, LogOut, Pencil } from "lucide-react";
 import { Card } from "@/components/Card/Card";
 import { Avatar } from "@/components/Avatar/Avatar";
@@ -28,13 +28,13 @@ export default function ProfilePage() {
   if (!profile) return null;
 
   return (
-    <motion.div
+    <m.div
       className={styles.page}
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
     >
-      <motion.div variants={listItem}>
+      <m.div variants={listItem}>
         <Card surface="gradient" glow="lime" className={styles.identity}>
           <Avatar name={profile.fullName} src={profile.avatarUrl} size={64} />
           <div className={styles.identity_info}>
@@ -52,21 +52,21 @@ export default function ProfilePage() {
             <Pencil size={16} />
           </button>
         </Card>
-      </motion.div>
+      </m.div>
 
-      <motion.div variants={listItem}>
+      <m.div variants={listItem}>
         <FinancialHealth />
-      </motion.div>
+      </m.div>
 
-      <motion.div variants={listItem}>
+      <m.div variants={listItem}>
         <SalaryManager />
-      </motion.div>
+      </m.div>
 
-      <motion.div variants={listItem}>
+      <m.div variants={listItem}>
         <OtherIncomeManager />
-      </motion.div>
+      </m.div>
 
-      <motion.div className={styles.actions} variants={listItem}>
+      <m.div className={styles.actions} variants={listItem}>
         <Button
           variant="danger"
           fullWidth
@@ -76,9 +76,9 @@ export default function ProfilePage() {
         >
           Sign out
         </Button>
-      </motion.div>
+      </m.div>
 
-      <motion.div variants={listItem}>
+      <m.div variants={listItem}>
         <Card surface="solid" className={styles.settings}>
           <div className={styles.row}>
             <span className={styles.row_label}>Dark mode</span>
@@ -106,9 +106,9 @@ export default function ProfilePage() {
             </span>
           </a>
         </Card>
-      </motion.div>
+      </m.div>
 
       <EditProfileSheet open={editOpen} onClose={() => setEditOpen(false)} />
-    </motion.div>
+    </m.div>
   );
 }

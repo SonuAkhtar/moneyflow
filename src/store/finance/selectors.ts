@@ -1,6 +1,3 @@
-// Pure, framework-agnostic finance selectors — the single source of truth for
-// month-bucketing and the derived sums that were previously duplicated across
-// hooks, pages and slices (see APP_IMPROVE.md §6 D1). Keep these free of React.
 
 import { SAVINGS_DEPOSIT_NOTE, emiKind, monthKey, sumBy } from "@/utils";
 import type { Emi, Transaction } from "@/types";
@@ -18,7 +15,6 @@ export interface MonthTotals {
   savingsDeposits: number;
 }
 
-/** Transactions that occurred in `month` (yyyy-MM), split by type. */
 export const monthBuckets = (
   transactions: Transaction[],
   month: string,
@@ -32,7 +28,6 @@ export const monthBuckets = (
   };
 };
 
-/** Summed income / expenses / savings-deposit totals for already-bucketed txns. */
 export const totalsOf = (buckets: MonthBuckets): MonthTotals => ({
   income: sumBy(buckets.income, (t) => t.amount),
   expenses: sumBy(buckets.expenses, (t) => t.amount),
@@ -42,13 +37,11 @@ export const totalsOf = (buckets: MonthBuckets): MonthTotals => ({
   ),
 });
 
-/** Income / expenses / savings-deposit totals for a month. */
 export const monthTotals = (
   transactions: Transaction[],
   month: string,
 ): MonthTotals => totalsOf(monthBuckets(transactions, month));
 
-/** Loan-EMI amount actually paid (payments logged) in a month. SIPs excluded. */
 export const loanEmiPaidInMonth = (emis: Emi[], month: string): number =>
   sumBy(
     emis.filter((e) => emiKind(e) === "loan"),
@@ -59,7 +52,6 @@ export const loanEmiPaidInMonth = (emis: Emi[], month: string): number =>
       ),
   );
 
-/** Salary income totalled per month-key. */
 export const salaryTotalsByMonth = (
   transactions: Transaction[],
 ): Record<string, number> => {

@@ -1,7 +1,9 @@
 "use client";
 
+import { startOfMonth, subMonths } from "date-fns";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireBrowserSupabase } from "@/lib/supabase/client";
+import { INITIAL_HISTORY_MONTHS } from "@/constants";
 import {
   accountToRow,
   borrowingPaymentToRow,
@@ -68,8 +70,12 @@ function makeRepo<T extends { id: string }>(
   orderBy?: { column: string; ascending: boolean },
 ) {
   return {
-    async list(userId: string): Promise<T[]> {
+    async list(
+      userId: string,
+      opts?: { since?: { column: string; value: string } },
+    ): Promise<T[]> {
       let query = sb().from(table).select("*").eq("user_id", userId);
+      if (opts?.since) query = query.gte(opts.since.column, opts.since.value);
       if (orderBy) query = query.order(orderBy.column, { ascending: orderBy.ascending });
       const { data, error } = await query;
       if (error) fail(`${table}.list`, error.message);
@@ -157,6 +163,9 @@ export interface FinanceSnapshot {
 
 export async function fetchSnapshot(userId: string): Promise<FinanceSnapshot> {
   const client = sb();
+  const since = startOfMonth(
+    subMonths(new Date(), INITIAL_HISTORY_MONTHS),
+  ).toISOString();
   const [
     bundle,
     accounts,
@@ -168,7 +177,7 @@ export async function fetchSnapshot(userId: string): Promise<FinanceSnapshot> {
   ] = await Promise.all([
     profileRepo.get(userId),
     accountRepo.list(userId),
-    transactionRepo.list(userId),
+    transactionRepo.list(userId, { since: { column: "occurred_at", value: since } }),
     client.from("emis").select("*").eq("user_id", userId),
     client.from("emi_payments").select("*").eq("user_id", userId),
     client.from("borrowings").select("*").eq("user_id", userId),

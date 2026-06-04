@@ -25,8 +25,6 @@ interface SpendBarChartProps {
   data: BarDatum[];
   height?: number;
   currency?: string;
-  // When set, every bar uses this colour (e.g. a savings trend that's all
-  // positive); otherwise high values flag orange like a spending warning.
   uniformColor?: string;
 }
 

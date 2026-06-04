@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { Portal } from "@/components/Portal/Portal";
 import { Button } from "@/components/Button/Button";
 import type { Variant } from "@/types";
@@ -31,14 +31,14 @@ export const ConfirmDialog = ({
     <AnimatePresence>
       {open && (
         <div key="dialog" className={styles.dialog}>
-          <motion.div
+          <m.div
             className={styles.dialog_backdrop}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onCancel}
           />
-          <motion.div
+          <m.div
             className={styles.dialog_panel}
             initial={{ opacity: 0, scale: 0.94, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -57,7 +57,7 @@ export const ConfirmDialog = ({
                 {confirmLabel}
               </Button>
             </div>
-          </motion.div>
+          </m.div>
         </div>
       )}
     </AnimatePresence>

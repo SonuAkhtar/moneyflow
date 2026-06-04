@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Card } from "@/components/Card/Card";
 import { useFinanceStore } from "@/store/financeStore";
 import { useFinanceMetrics } from "@/hooks/useFinanceMetrics";
@@ -59,7 +59,7 @@ export const FinancialHealth = () => {
         <div className={styles.ring}>
           <svg viewBox="0 0 120 120" className={styles.ring_svg} aria-hidden>
             <circle className={styles.ring_track} cx="60" cy="60" r={R} />
-            <motion.circle
+            <m.circle
               className={styles.ring_fill}
               cx="60"
               cy="60"

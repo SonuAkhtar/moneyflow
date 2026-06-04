@@ -14,7 +14,6 @@ export const AppHeader = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  // Collapse the header into a slimmer bar once the page is scrolled.
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();

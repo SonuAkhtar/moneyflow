@@ -18,8 +18,6 @@ export const useBalanceTrail = (): Map<string, BalancePoint> => {
     const map = new Map<string, BalancePoint>();
     for (const account of accounts) {
       const txns = transactions
-        // Salary is a record only and never moves an account balance, so it
-        // must be excluded from the running-balance derivation.
         .filter((t) => t.accountId === account.id && t.category !== "salary")
         .sort((a, b) => {
           const d = +new Date(a.occurredAt) - +new Date(b.occurredAt);
