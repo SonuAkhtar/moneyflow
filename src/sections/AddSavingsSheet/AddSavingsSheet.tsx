@@ -18,7 +18,11 @@ interface AddSavingsSheetProps {
   account?: Account | null;
 }
 
-export const AddSavingsSheet = ({ open, onClose, account }: AddSavingsSheetProps) => {
+export const AddSavingsSheet = ({
+  open,
+  onClose,
+  account,
+}: AddSavingsSheetProps) => {
   const addAccount = useFinanceStore((s) => s.addAccount);
   const updateAccount = useFinanceStore((s) => s.updateAccount);
   const deleteAccount = useFinanceStore((s) => s.deleteAccount);
@@ -28,7 +32,9 @@ export const AddSavingsSheet = ({ open, onClose, account }: AddSavingsSheetProps
   const isEdit = Boolean(account);
 
   const [bankId, setBankId] = useState(
-    account ? getBankByName(account.name)?.id ?? "other" : BANK_PRESETS[0]!.id,
+    account
+      ? (getBankByName(account.name)?.id ?? "other")
+      : BANK_PRESETS[0]!.id,
   );
   const [otherName, setOtherName] = useState(
     account && !getBankByName(account.name) ? account.name : "",
@@ -51,7 +57,11 @@ export const AddSavingsSheet = ({ open, onClose, account }: AddSavingsSheetProps
         balance: value,
         colorTag: selectedBank.color,
       });
-      toast({ title: "Bank updated", description: bankName, variant: "success" });
+      toast({
+        title: "Bank updated",
+        description: bankName,
+        variant: "success",
+      });
     } else {
       addAccount({
         name: bankName,
@@ -81,7 +91,9 @@ export const AddSavingsSheet = ({ open, onClose, account }: AddSavingsSheetProps
         <SheetActions
           onSave={submit}
           onDelete={isEdit ? () => setConfirmOpen(true) : undefined}
-          saveLabel={isEdit ? "Save changes" : `Add ${formatCurrency(value, currency)}`}
+          saveLabel={
+            isEdit ? "Save changes" : `Add ${formatCurrency(value, currency)}`
+          }
           disabled={!canSave}
         />
       }
@@ -134,7 +146,7 @@ export const AddSavingsSheet = ({ open, onClose, account }: AddSavingsSheetProps
       <ConfirmDialog
         open={confirmOpen}
         title="Delete this bank?"
-        message={`"${account?.name ?? ""}" and its balance will be removed from your savings.`}
+        message={`"${account?.name ?? ""}", its balance, and all transactions recorded against it will be removed.`}
         confirmLabel="Delete"
         onConfirm={confirmDelete}
         onCancel={() => setConfirmOpen(false)}

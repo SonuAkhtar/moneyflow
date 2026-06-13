@@ -19,21 +19,36 @@ import {
 import type { CategoryId, CategoryMeta } from "@/types";
 
 export const CATEGORY_META: Record<CategoryId, CategoryMeta> = {
-  food: { id: "food", label: "Food & Dining", icon: Utensils, color: "#f5803c" },
+  food: {
+    id: "food",
+    label: "Food & Dining",
+    icon: Utensils,
+    color: "#f5803c",
+  },
   groceries: {
     id: "groceries",
     label: "Groceries",
     icon: ShoppingCart,
     color: "#2bd4c4",
   },
-  transport: { id: "transport", label: "Transport", icon: Bus, color: "#3d8bff" },
+  transport: {
+    id: "transport",
+    label: "Transport",
+    icon: Bus,
+    color: "#3d8bff",
+  },
   shopping: {
     id: "shopping",
     label: "Shopping",
     icon: ShoppingBag,
     color: "#9b8cff",
   },
-  bills: { id: "bills", label: "Bills & Utilities", icon: Banknote, color: "#ffb23e" },
+  bills: {
+    id: "bills",
+    label: "Bills & Utilities",
+    icon: Banknote,
+    color: "#ffb23e",
+  },
   rent: { id: "rent", label: "Rent", icon: Home, color: "#e4574d" },
   entertainment: {
     id: "entertainment",
@@ -63,7 +78,12 @@ export const CATEGORY_META: Record<CategoryId, CategoryMeta> = {
     icon: TrendingUp,
     color: "#2bd4c4",
   },
-  transfer: { id: "transfer", label: "Transfer", icon: PiggyBank, color: "#3d8bff" },
+  transfer: {
+    id: "transfer",
+    label: "Transfer",
+    icon: PiggyBank,
+    color: "#3d8bff",
+  },
   other: { id: "other", label: "Other", icon: Gift, color: "#ffb23e" },
 };
 
@@ -83,7 +103,11 @@ export const EXPENSE_CATEGORIES: CategoryId[] = [
   "other",
 ];
 
-export const INCOME_CATEGORIES: CategoryId[] = ["salary", "investment", "other"];
+export const INCOME_CATEGORIES: CategoryId[] = [
+  "salary",
+  "investment",
+  "other",
+];
 
 export const QUICK_EXPENSE_CATEGORIES: CategoryId[] = [
   "food",

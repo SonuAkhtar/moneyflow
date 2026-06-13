@@ -4,7 +4,13 @@ import { useMemo } from "react";
 import { useFinanceStore } from "@/store/financeStore";
 import { useMonthTransactions } from "./useMonthTransactions";
 import { loanEmiPaidInMonth } from "@/store/finance/selectors";
-import { computeHealthScore, currentMonthKey, healthBand, sumBy } from "@/utils";
+import {
+  computeHealthScore,
+  currentMonthKey,
+  emiKind,
+  healthBand,
+  sumBy,
+} from "@/utils";
 import type { HealthBand } from "@/types";
 
 export interface FinanceMetrics {
@@ -27,15 +33,18 @@ const daysElapsed = (month: string): number => {
   return new Date(year ?? 0, m ?? 1, 0).getDate();
 };
 
-export const useFinanceMetrics = (month: string = currentMonthKey()): FinanceMetrics => {
+export const useFinanceMetrics = (
+  month: string = currentMonthKey(),
+): FinanceMetrics => {
   const accounts = useFinanceStore((s) => s.accounts);
   const emis = useFinanceStore((s) => s.emis);
   const monthTxns = useMonthTransactions(month);
 
   return useMemo(() => {
     const { income, expenses } = monthTxns.totals;
+    // Only loan EMIs are a debt burden; SIPs are voluntary investments.
     const emiBurden = sumBy(
-      emis.filter((e) => e.status === "active"),
+      emis.filter((e) => e.status === "active" && emiKind(e) === "loan"),
       (e) => e.monthlyAmount,
     );
     const totalBalance = sumBy(accounts, (a) => a.balance);

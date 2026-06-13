@@ -32,7 +32,11 @@ export const EditTransactionSheet = ({
     title={transaction?.type === "income" ? "Edit income" : "Edit expense"}
   >
     {transaction && (
-      <EditForm key={transaction.id} transaction={transaction} onClose={onClose} />
+      <EditForm
+        key={transaction.id}
+        transaction={transaction}
+        onClose={onClose}
+      />
     )}
   </BottomSheet>
 );
@@ -56,9 +60,11 @@ const EditForm = ({ transaction, onClose }: EditFormProps) => {
   const [date, setDate] = useState(dateValue(transaction.occurredAt));
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  const value = Number(amount);
+  const canSave = value > 0;
+
   const save = () => {
-    const value = Number(amount);
-    if (!value) return;
+    if (!canSave) return;
     updateTransaction(transaction.id, {
       accountId: transaction.accountId,
       type: transaction.type,
@@ -68,7 +74,11 @@ const EditForm = ({ transaction, onClose }: EditFormProps) => {
       isBigExpense: transaction.isBigExpense,
       occurredAt: new Date(date).toISOString(),
     });
-    toast({ title: "Expense updated", description: `${symbol}${value}`, variant: "success" });
+    toast({
+      title: "Expense updated",
+      description: `${symbol}${value}`,
+      variant: "success",
+    });
     onClose();
   };
 
@@ -127,7 +137,12 @@ const EditForm = ({ transaction, onClose }: EditFormProps) => {
         >
           <Trash2 size={18} />
         </button>
-        <Button size="lg" className={styles.save} onClick={save}>
+        <Button
+          size="lg"
+          className={styles.save}
+          onClick={save}
+          disabled={!canSave}
+        >
           Save changes
         </Button>
       </div>

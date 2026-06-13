@@ -97,7 +97,10 @@ export const PullToRefresh = ({ onRefresh, children }: PullToRefreshProps) => {
           className={styles.indicator_badge}
           style={{ scale, rotate: refreshing ? undefined : rotate }}
         >
-          <RefreshCw size={18} className={refreshing ? styles.spin : undefined} />
+          <RefreshCw
+            size={18}
+            className={refreshing ? styles.spin : undefined}
+          />
         </m.span>
       </m.div>
       <m.div style={{ y }}>{children}</m.div>

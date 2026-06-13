@@ -21,7 +21,10 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         </label>
       )}
       <div
-        className={cn(styles.field_control, error && styles["field_control--error"])}
+        className={cn(
+          styles.field_control,
+          error && styles["field_control--error"],
+        )}
       >
         <select ref={ref} id={id} className={styles.field_select} {...rest}>
           {options.map((option) => (

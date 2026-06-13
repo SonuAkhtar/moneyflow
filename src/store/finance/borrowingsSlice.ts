@@ -84,7 +84,8 @@ export const createBorrowingsSlice: SliceCreator<BorrowingsSlice> = (
       return { ...b, payments };
     });
     set({ borrowings });
-    if (updated) sync(() => borrowingRepo.savePayment(updated!, borrowingId, ownerId()));
+    if (updated)
+      sync(() => borrowingRepo.savePayment(updated!, borrowingId, ownerId()));
   },
 
   deleteBorrowingPayment: (borrowingId, paymentId) => {

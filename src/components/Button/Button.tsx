@@ -7,7 +7,10 @@ import { cn } from "@/utils";
 import type { Size, Variant } from "@/types";
 import styles from "./Button.module.scss";
 
-interface ButtonProps extends Omit<HTMLMotionProps<"button">, "ref" | "children"> {
+interface ButtonProps extends Omit<
+  HTMLMotionProps<"button">,
+  "ref" | "children"
+> {
   variant?: Variant;
   size?: Size;
   fullWidth?: boolean;
@@ -55,7 +58,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         Icon && <Icon className={styles.button_icon} size={18} />
       )}
       {children && <span className={styles.button_label}>{children}</span>}
-      {IconRight && !loading && <IconRight className={styles.button_icon} size={18} />}
+      {IconRight && !loading && (
+        <IconRight className={styles.button_icon} size={18} />
+      )}
     </m.button>
   ),
 );

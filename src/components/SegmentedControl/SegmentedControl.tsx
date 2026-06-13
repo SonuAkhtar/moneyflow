@@ -28,14 +28,19 @@ export function SegmentedControl<T extends string>({
   const groupId = useId();
 
   return (
-    <div className={cn(styles.segmented, styles[`segmented--${size}`], className)}>
+    <div
+      className={cn(styles.segmented, styles[`segmented--${size}`], className)}
+    >
       {segments.map((segment) => {
         const active = segment.value === value;
         return (
           <button
             key={segment.value}
             type="button"
-            className={cn(styles.segmented_item, active && styles["segmented_item--active"])}
+            className={cn(
+              styles.segmented_item,
+              active && styles["segmented_item--active"],
+            )}
             onClick={() => onChange(segment.value)}
           >
             {active && (

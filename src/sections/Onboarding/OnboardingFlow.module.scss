@@ -13,9 +13,7 @@
   &_glow {
     position: absolute;
     inset: 0;
-    background:
-      var(--gradient-mesh),
-      var(--surface-base);
+    background: var(--gradient-mesh), var(--surface-base);
     pointer-events: none;
   }
 

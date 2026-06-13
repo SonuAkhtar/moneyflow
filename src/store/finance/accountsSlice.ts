@@ -1,10 +1,11 @@
 import {
   accountRepo,
+  emiRepo,
   profileRepo,
   transactionRepo,
 } from "@/services/repositories";
 import { isoNow, SAVINGS_DEPOSIT_NOTE, SAVINGS_WITHDRAWAL_NOTE } from "@/utils";
-import type { Account, Transaction } from "@/types";
+import type { Account, EmiPayment, Transaction } from "@/types";
 import { applyBalance, newId } from "./helpers";
 import type { FinanceState, SliceCreator } from "./types";
 
@@ -80,14 +81,46 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (
     const s = get();
     const major = s.majorAccountId === id ? null : s.majorAccountId;
     const daily = s.dailyAccountId === id ? null : s.dailyAccountId;
+
+    // Cascade: drop this account's transactions so they stop feeding totals.
+    const removedTxnIds = s.transactions
+      .filter((t) => t.accountId === id)
+      .map((t) => t.id);
+    const transactions = s.transactions.filter((t) => t.accountId !== id);
+
+    // Detach EMI/SIP payments paid from this (now-gone) account so later
+    // edits/deletes don't try to refund a missing bank.
+    const detachedPayments: { payment: EmiPayment; emiId: string }[] = [];
+    const emis = s.emis.map((e) => {
+      if (!(e.payments ?? []).some((p) => p.accountId === id)) return e;
+      const payments = (e.payments ?? []).map((p) => {
+        if (p.accountId !== id) return p;
+        const detached: EmiPayment = { ...p, accountId: null };
+        detachedPayments.push({ payment: detached, emiId: e.id });
+        return detached;
+      });
+      return { ...e, payments };
+    });
+
     set({
       accounts: s.accounts.filter((a) => a.id !== id),
+      transactions,
+      emis,
       majorAccountId: major,
       dailyAccountId: daily,
     });
+
     const uid = ownerId();
     sync(async () => {
       await accountRepo.remove(id);
+      await Promise.all(
+        removedTxnIds.map((tid) => transactionRepo.remove(tid)),
+      );
+      await Promise.all(
+        detachedPayments.map(({ payment, emiId }) =>
+          emiRepo.savePayment(payment, emiId, uid),
+        ),
+      );
       if (major !== s.majorAccountId || daily !== s.dailyAccountId) {
         await profileRepo.update(uid, {
           majorAccountId: major,

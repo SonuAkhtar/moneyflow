@@ -77,7 +77,13 @@ export const LoginForm = () => {
           Forgot password?
         </Link>
       </div>
-      <Button type="submit" size="lg" fullWidth loading={isSubmitting} iconRight={ArrowRight}>
+      <Button
+        type="submit"
+        size="lg"
+        fullWidth
+        loading={isSubmitting}
+        iconRight={ArrowRight}
+      >
         Sign in
       </Button>
       <p className={styles.footer}>

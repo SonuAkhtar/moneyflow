@@ -33,7 +33,33 @@ export const AddExpenseSheet = ({
   big = false,
   defaultCategory = "food",
   accountId,
-}: AddExpenseSheetProps) => {
+}: AddExpenseSheetProps) => (
+  <BottomSheet open={open} onClose={onClose} title={title}>
+    {open && (
+      <ExpenseForm
+        key={`${accountId ?? "none"}-${defaultCategory}`}
+        onClose={onClose}
+        big={big}
+        defaultCategory={defaultCategory}
+        accountId={accountId}
+      />
+    )}
+  </BottomSheet>
+);
+
+interface ExpenseFormProps {
+  onClose: () => void;
+  big: boolean;
+  defaultCategory: CategoryId;
+  accountId?: string;
+}
+
+const ExpenseForm = ({
+  onClose,
+  big,
+  defaultCategory,
+  accountId,
+}: ExpenseFormProps) => {
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
   const addTransaction = useFinanceStore((s) => s.addTransaction);
   const { banks, defaultBankId, resolve } = useSpendAccounts(accountId);
@@ -51,7 +77,7 @@ export const AddExpenseSheet = ({
   const submit = () => {
     const value = Number(amount);
     const account = resolve(bankId);
-    if (!value || !account) return;
+    if (!(value > 0) || !account) return;
     addTransaction({
       accountId: account.id,
       type: "expense",
@@ -61,73 +87,64 @@ export const AddExpenseSheet = ({
       isBigExpense: big,
       occurredAt: new Date(date).toISOString(),
     });
-    toast({ title: "Expense added", description: `${symbol}${value}`, variant: "success" });
-    setAmount("");
-    setMerchant("");
-    setCategory(defaultCategory);
-    setBankId(defaultBankId);
-    setDate(today());
+    toast({
+      title: "Expense added",
+      description: `${symbol}${value}`,
+      variant: "success",
+    });
     onClose();
   };
 
   return (
-    <BottomSheet
-      open={open}
-      onClose={onClose}
-      title={title}
-      footer={
-        <Button size="lg" fullWidth onClick={submit} disabled={!canSave}>
-          Add expense
-        </Button>
-      }
-    >
-      <div className={styles.form}>
-        <AmountField value={amount} onChange={setAmount} symbol={symbol} />
+    <div className={styles.form}>
+      <AmountField value={amount} onChange={setAmount} symbol={symbol} />
 
-
-        <div className={styles.field}>
-          <span className={styles.label}>Category</span>
-          <CategoryPicker
-            categories={QUICK_EXPENSE_CATEGORIES}
-            value={category}
-            onChange={setCategory}
-          />
-        </div>
-
-        <Select
-          label="Bank"
-          value={bankId}
-          onChange={(e) => setBankId(e.target.value)}
-          options={banks.map((a) => ({
-            label: `${a.name} · ${formatCurrency(a.balance, currency)}`,
-            value: a.id,
-          }))}
+      <div className={styles.field}>
+        <span className={styles.label}>Category</span>
+        <CategoryPicker
+          categories={QUICK_EXPENSE_CATEGORIES}
+          value={category}
+          onChange={setCategory}
         />
+      </div>
 
-        {big ? (
-          <div className={styles.row}>
-            <Input
-              label="Merchant"
-              placeholder="Where?"
-              value={merchant}
-              onChange={(e) => setMerchant(e.target.value)}
-            />
-            <Input
-              label="Date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
-          </div>
-        ) : (
+      {big ? (
+        <div className={styles.row}>
+          <Input
+            label="Merchant"
+            placeholder="Where?"
+            value={merchant}
+            onChange={(e) => setMerchant(e.target.value)}
+          />
           <Input
             label="Date"
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
           />
-        )}
-      </div>
-    </BottomSheet>
+        </div>
+      ) : (
+        <Input
+          label="Date"
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+        />
+      )}
+
+      <Select
+        label="Bank"
+        value={bankId}
+        onChange={(e) => setBankId(e.target.value)}
+        options={banks.map((a) => ({
+          label: `${a.name} · ${formatCurrency(a.balance, currency)}`,
+          value: a.id,
+        }))}
+      />
+
+      <Button size="lg" fullWidth onClick={submit} disabled={!canSave}>
+        Add expense
+      </Button>
+    </div>
   );
 };

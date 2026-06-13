@@ -79,7 +79,11 @@ export default function RootLayout({
         />
         {supabaseOrigin && (
           <>
-            <link rel="preconnect" href={supabaseOrigin} crossOrigin="anonymous" />
+            <link
+              rel="preconnect"
+              href={supabaseOrigin}
+              crossOrigin="anonymous"
+            />
             <link rel="dns-prefetch" href={supabaseOrigin} />
           </>
         )}

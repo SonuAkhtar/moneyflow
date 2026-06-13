@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
 import { Input } from "@/components/Input/Input";
+import { Select } from "@/components/Select/Select";
 import { AmountField } from "@/components/AmountField/AmountField";
 import { SheetActions } from "@/components/SheetActions/SheetActions";
 import { ConfirmDialog } from "@/components/ConfirmDialog/ConfirmDialog";
 import { useFinanceStore } from "@/store/financeStore";
+import { useSpendAccounts } from "@/hooks/useSpendAccounts";
 import { useToast } from "@/hooks/useToast";
-import { currentMonthKey, monthLabel } from "@/utils";
+import { currentDateKey, formatCurrency, monthKey, monthLabel } from "@/utils";
 import type { EmiKind, EmiPayment } from "@/types";
 import styles from "./AddEmiPaymentSheet.module.scss";
 
@@ -30,24 +32,44 @@ export const AddEmiPaymentSheet = ({
   const addEmiPayment = useFinanceStore((s) => s.addEmiPayment);
   const updateEmiPayment = useFinanceStore((s) => s.updateEmiPayment);
   const deleteEmiPayment = useFinanceStore((s) => s.deleteEmiPayment);
+  const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
+  const { banks, defaultBankId, resolve } = useSpendAccounts(
+    payment?.accountId,
+  );
   const toast = useToast();
   const isEdit = Boolean(payment);
   const noun = kind === "sip" ? "SIP" : "EMI";
 
   const [amount, setAmount] = useState(payment ? String(payment.amount) : "");
-  const [month, setMonth] = useState(payment ? payment.month : currentMonthKey());
+  const [paidOn, setPaidOn] = useState(
+    payment?.paidOn?.slice(0, 10) ?? currentDateKey(),
+  );
+  const [bankId, setBankId] = useState(defaultBankId);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const value = Number(amount) || 0;
-  const canSave = value > 0 && Boolean(month) && Boolean(emiId);
+  const canSave =
+    value > 0 && Boolean(paidOn) && Boolean(emiId) && Boolean(resolve(bankId));
 
   const save = () => {
     if (!canSave || !emiId) return;
+    const account = resolve(bankId);
+    const month = monthKey(paidOn);
     if (payment) {
-      updateEmiPayment(emiId, payment.id, { amount: value, month });
+      updateEmiPayment(emiId, payment.id, {
+        amount: value,
+        month,
+        paidOn,
+        accountId: account?.id ?? null,
+      });
       toast({ title: `${noun} updated`, variant: "success" });
     } else {
-      addEmiPayment(emiId, { amount: value, month });
+      addEmiPayment(emiId, {
+        amount: value,
+        month,
+        paidOn,
+        accountId: account?.id ?? null,
+      });
       toast({
         title: `${noun} added`,
         description: monthLabel(month),
@@ -81,10 +103,19 @@ export const AddEmiPaymentSheet = ({
       <div className={styles.body}>
         <AmountField value={amount} onChange={setAmount} />
         <Input
-          label="Month & Year"
-          type="month"
-          value={month}
-          onChange={(e) => setMonth(e.target.value)}
+          label="Payment date"
+          type="date"
+          value={paidOn}
+          onChange={(e) => setPaidOn(e.target.value)}
+        />
+        <Select
+          label="Pay from bank"
+          value={bankId}
+          onChange={(e) => setBankId(e.target.value)}
+          options={banks.map((a) => ({
+            label: `${a.name} · ${formatCurrency(a.balance, currency)}`,
+            value: a.id,
+          }))}
         />
       </div>
 

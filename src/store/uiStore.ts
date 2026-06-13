@@ -10,10 +10,23 @@ interface UiState {
   dismissToast: (id: string) => void;
 }
 
+const MAX_TOASTS = 4;
+
 export const useUiStore = create<UiState>((set) => ({
   toasts: [],
   pushToast: (toast) =>
-    set((s) => ({ toasts: [...s.toasts, { ...toast, id: createId("toast") }] })),
+    set((s) => {
+      // Skip an identical toast already on screen (e.g. a retrying sync).
+      const duplicate = s.toasts.some(
+        (t) =>
+          t.title === toast.title &&
+          t.description === toast.description &&
+          t.variant === toast.variant,
+      );
+      if (duplicate) return s;
+      const next = [...s.toasts, { ...toast, id: createId("toast") }];
+      return { toasts: next.slice(-MAX_TOASTS) };
+    }),
   dismissToast: (id) =>
     set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
 }));

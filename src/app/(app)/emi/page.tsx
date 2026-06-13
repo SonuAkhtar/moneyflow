@@ -8,7 +8,13 @@ import { EmiList } from "@/sections/EmiList/EmiList";
 import { BorrowingsList } from "@/sections/BorrowingsList/BorrowingsList";
 import { useFinanceStore } from "@/store/financeStore";
 import { useFinanceMetrics } from "@/hooks/useFinanceMetrics";
-import { emiKind, emiPaidAmount, emiPaidMonths, formatCurrency, sumBy } from "@/utils";
+import {
+  emiKind,
+  emiPaidAmount,
+  emiPaidMonths,
+  formatCurrency,
+  sumBy,
+} from "@/utils";
 import { staggerContainer, listItem } from "@/themes/animations";
 import styles from "./page.module.scss";
 
@@ -17,7 +23,9 @@ export default function EmiPage() {
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
   const { monthIncome } = useFinanceMetrics();
 
-  const loans = emis.filter((e) => e.status === "active" && emiKind(e) === "loan");
+  const loans = emis.filter(
+    (e) => e.status === "active" && emiKind(e) === "loan",
+  );
   const loanMonthly = sumBy(loans, (e) => e.monthlyAmount);
   const burdenShare =
     monthIncome > 0 ? Math.round((loanMonthly / monthIncome) * 100) : 0;

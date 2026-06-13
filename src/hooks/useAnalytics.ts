@@ -36,7 +36,9 @@ export interface AnalyticsData {
   topMerchants: { name: string; value: number; count: number }[];
 }
 
-export const useAnalytics = (month: string = currentMonthKey()): AnalyticsData => {
+export const useAnalytics = (
+  month: string = currentMonthKey(),
+): AnalyticsData => {
   const transactions = useFinanceStore((s) => s.transactions);
   const monthTxns = useMonthTransactions(month);
 
@@ -48,7 +50,8 @@ export const useAnalytics = (month: string = currentMonthKey()): AnalyticsData =
       (t) => t.category,
       (t) => t.amount,
     );
-    const totalSpend = Object.values(byCategory).reduce((a, b) => a + b, 0) || 1;
+    const totalSpend =
+      Object.values(byCategory).reduce((a, b) => a + b, 0) || 1;
     const categoryBreakdown: CategorySlice[] = Object.entries(byCategory)
       .map(([id, value]) => {
         const meta = getCategoryMeta(id as CategoryId);
@@ -84,7 +87,8 @@ export const useAnalytics = (month: string = currentMonthKey()): AnalyticsData =
       .map(([day, value]) => ({ label: day, value: Math.round(value) }))
       .sort((a, b) => Number(a.label) - Number(b.label));
 
-    const merchantBuckets: Record<string, { value: number; count: number }> = {};
+    const merchantBuckets: Record<string, { value: number; count: number }> =
+      {};
     monthExpenses.forEach((t) => {
       const key = t.merchant ?? getCategoryMeta(t.category).label;
       const entry = merchantBuckets[key] ?? { value: 0, count: 0 };
@@ -93,7 +97,11 @@ export const useAnalytics = (month: string = currentMonthKey()): AnalyticsData =
       merchantBuckets[key] = entry;
     });
     const topMerchants = Object.entries(merchantBuckets)
-      .map(([name, { value, count }]) => ({ name, value: Math.round(value), count }))
+      .map(([name, { value, count }]) => ({
+        name,
+        value: Math.round(value),
+        count,
+      }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 5);
 

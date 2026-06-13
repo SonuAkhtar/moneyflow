@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { AnimatePresence, m } from "framer-motion";
-import { ChevronRight, CreditCard, Pencil, Plus, TrendingUp } from "lucide-react";
+import {
+  ChevronRight,
+  CreditCard,
+  Pencil,
+  Plus,
+  TrendingUp,
+} from "lucide-react";
 import { Card } from "@/components/Card/Card";
 import { ProgressBar } from "@/components/ProgressBar/ProgressBar";
 import { Badge } from "@/components/Badge/Badge";

@@ -184,4 +184,69 @@ describe("financeStore mutations (optimistic reducer)", () => {
     expect(emi.payments).toHaveLength(1);
     expect(emi.payments[0]!.amount).toBe(100);
   });
+
+  it("addEmiPayment deducts from the chosen bank; deleteEmi refunds it", () => {
+    seed({ accounts: [account(1000)] });
+    const store = useFinanceStore.getState();
+    store.addEmi({
+      name: "Loan",
+      kind: "loan",
+      startMonth: currentMonthKey(),
+      principal: 0,
+      monthlyAmount: 100,
+      totalMonths: 12,
+      remainingMonths: 12,
+      paidMonths: 0,
+      interestRate: 0,
+      dueDay: 5,
+    });
+    const emiId = useFinanceStore.getState().emis[0]!.id;
+    store.addEmiPayment(emiId, {
+      month: currentMonthKey(),
+      amount: 100,
+      paidOn: "2026-06-01",
+      accountId: "acc1",
+    });
+    expect(useFinanceStore.getState().accounts[0]!.balance).toBe(900);
+
+    store.deleteEmi(emiId);
+    expect(useFinanceStore.getState().accounts[0]!.balance).toBe(1000);
+  });
+
+  it("deleteAccount cascades transactions and detaches EMI payments", () => {
+    seed({ accounts: [account(1000)] });
+    const store = useFinanceStore.getState();
+    store.addTransaction({
+      accountId: "acc1",
+      type: "expense",
+      amount: 200,
+      category: "food",
+      occurredAt: new Date().toISOString(),
+    });
+    store.addEmi({
+      name: "Loan",
+      kind: "loan",
+      startMonth: currentMonthKey(),
+      principal: 0,
+      monthlyAmount: 100,
+      totalMonths: 12,
+      remainingMonths: 12,
+      paidMonths: 0,
+      interestRate: 0,
+      dueDay: 5,
+    });
+    const emiId = useFinanceStore.getState().emis[0]!.id;
+    store.addEmiPayment(emiId, {
+      month: currentMonthKey(),
+      amount: 100,
+      paidOn: "2026-06-01",
+      accountId: "acc1",
+    });
+
+    store.deleteAccount("acc1");
+    const s = useFinanceStore.getState();
+    expect(s.accounts).toHaveLength(0);
+    expect(s.transactions).toHaveLength(0);
+    expect(s.emis[0]!.payments[0]!.accountId).toBeNull();
+  });
 });

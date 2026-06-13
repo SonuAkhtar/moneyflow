@@ -44,7 +44,9 @@ export const SavingsAccordion = () => {
           <span className={styles.accordion_row}>
             <span className={styles.accordion_title}>Bank Savings</span>
             <span className={styles.accordion_amount}>
-              <span className={styles.accordion_symbol}>{getCurrencySymbol()}</span>
+              <span className={styles.accordion_symbol}>
+                {getCurrencySymbol()}
+              </span>
               {formatNumber(total)}
             </span>
           </span>
@@ -76,7 +78,8 @@ export const SavingsAccordion = () => {
               {banks.map((bank) => {
                 const flow = bankMonthFlow(bank.id, transactions, month);
                 const lastMonth =
-                  bank.balance - accountMonthDelta(bank.id, transactions, month);
+                  bank.balance -
+                  accountMonthDelta(bank.id, transactions, month);
                 return (
                   <button
                     key={bank.id}

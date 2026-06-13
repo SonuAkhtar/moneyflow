@@ -9,7 +9,12 @@ interface BadgeProps {
   className?: string;
 }
 
-export const Badge = ({ children, tone = "neutral", dot = false, className }: BadgeProps) => (
+export const Badge = ({
+  children,
+  tone = "neutral",
+  dot = false,
+  className,
+}: BadgeProps) => (
   <span className={cn(styles.badge, styles[`badge--${tone}`], className)}>
     {dot && <span className={styles.badge_dot} />}
     {children}

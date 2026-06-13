@@ -36,11 +36,19 @@ export const FinancialHealth = () => {
   const metrics = useFinanceMetrics();
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
   const target = useFinanceStore((s) => s.profile?.savingsTarget ?? 0);
+  const hasActivity = useFinanceStore((s) => s.transactions.length > 0);
 
   const band = BAND[metrics.healthBand];
-  const insight = useMemo(() => insightFor(metrics), [metrics]);
-  const offset =
-    C * (1 - Math.max(0, Math.min(100, metrics.healthScore)) / 100);
+  const insight = useMemo(
+    () =>
+      hasActivity
+        ? insightFor(metrics)
+        : "Log your income and a few expenses to see your financial health.",
+    [metrics, hasActivity],
+  );
+  const offset = hasActivity
+    ? C * (1 - Math.max(0, Math.min(100, metrics.healthScore)) / 100)
+    : C;
   const targetPct =
     target > 0
       ? Math.min(100, Math.round((metrics.monthSaved / target) * 100))
@@ -50,8 +58,11 @@ export const FinancialHealth = () => {
     <Card surface="solid" className={styles.health}>
       <div className={styles.head}>
         <span className={styles.head_title}>Financial health</span>
-        <span className={styles.head_band} style={{ color: band.color }}>
-          {band.label}
+        <span
+          className={styles.head_band}
+          style={{ color: hasActivity ? band.color : "var(--color-text-soft)" }}
+        >
+          {hasActivity ? band.label : "Getting started"}
         </span>
       </div>
 
@@ -74,7 +85,9 @@ export const FinancialHealth = () => {
             />
           </svg>
           <div className={styles.ring_center}>
-            <span className={styles.ring_score}>{metrics.healthScore}</span>
+            <span className={styles.ring_score}>
+              {hasActivity ? metrics.healthScore : "—"}
+            </span>
             <span className={styles.ring_max}>/ 100</span>
           </div>
         </div>

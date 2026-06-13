@@ -32,11 +32,15 @@ export const AddBorrowingSheet = ({
   const isEdit = Boolean(borrowing);
 
   const [lender, setLender] = useState(borrowing?.lender ?? "");
-  const [amount, setAmount] = useState(borrowing ? String(borrowing.amount) : "");
+  const [amount, setAmount] = useState(
+    borrowing ? String(borrowing.amount) : "",
+  );
   const [borrowedOn, setBorrowedOn] = useState(
     borrowing?.borrowedOn?.slice(0, 10) ?? todayKey(),
   );
-  const [dueDate, setDueDate] = useState(borrowing?.dueDate?.slice(0, 10) ?? "");
+  const [dueDate, setDueDate] = useState(
+    borrowing?.dueDate?.slice(0, 10) ?? "",
+  );
   const [purpose, setPurpose] = useState(borrowing?.purpose ?? "");
   const [note, setNote] = useState(borrowing?.note ?? "");
   const [confirmOpen, setConfirmOpen] = useState(false);

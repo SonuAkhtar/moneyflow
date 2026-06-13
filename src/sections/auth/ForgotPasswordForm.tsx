@@ -8,7 +8,10 @@ import { AlertCircle, ArrowRight, MailCheck, Mail } from "lucide-react";
 import { Input } from "@/components/Input/Input";
 import { Button } from "@/components/Button/Button";
 import { authService } from "@/services/auth.service";
-import { forgotPasswordSchema, type ForgotPasswordValues } from "@/utils/validation";
+import {
+  forgotPasswordSchema,
+  type ForgotPasswordValues,
+} from "@/utils/validation";
 import { ROUTES } from "@/constants";
 import styles from "./auth.module.scss";
 
@@ -43,8 +46,8 @@ export const ForgotPasswordForm = () => {
           <MailCheck size={28} />
         </span>
         <p className={styles.success_text}>
-          We sent a reset link to <strong>{getValues("email")}</strong>. Check your inbox to
-          continue.
+          We sent a reset link to <strong>{getValues("email")}</strong>. Check
+          your inbox to continue.
         </p>
         <Button variant="secondary" fullWidth onClick={() => setSent(false)}>
           Use a different email
@@ -73,7 +76,13 @@ export const ForgotPasswordForm = () => {
         error={errors.email?.message}
         {...register("email")}
       />
-      <Button type="submit" size="lg" fullWidth loading={isSubmitting} iconRight={ArrowRight}>
+      <Button
+        type="submit"
+        size="lg"
+        fullWidth
+        loading={isSubmitting}
+        iconRight={ArrowRight}
+      >
         Send reset link
       </Button>
       <p className={styles.footer}>

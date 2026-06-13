@@ -35,15 +35,18 @@ function ChartFallback() {
 }
 
 const AreaTrendChart = dynamic(
-  () => import("@/components/charts/AreaTrendChart").then((m) => m.AreaTrendChart),
+  () =>
+    import("@/components/charts/AreaTrendChart").then((m) => m.AreaTrendChart),
   { ssr: false, loading: ChartFallback },
 );
 const CategoryDonut = dynamic(
-  () => import("@/components/charts/CategoryDonut").then((m) => m.CategoryDonut),
+  () =>
+    import("@/components/charts/CategoryDonut").then((m) => m.CategoryDonut),
   { ssr: false, loading: ChartFallback },
 );
 const SpendBarChart = dynamic(
-  () => import("@/components/charts/SpendBarChart").then((m) => m.SpendBarChart),
+  () =>
+    import("@/components/charts/SpendBarChart").then((m) => m.SpendBarChart),
   { ssr: false, loading: ChartFallback },
 );
 
@@ -149,9 +152,16 @@ export default function AnalyticsPage() {
 
       <m.div className={styles.kpis} variants={listItem}>
         {kpis.map((kpi) => (
-          <Card key={kpi.key} surface="solid" elevation="raised" className={styles.kpi}>
+          <Card
+            key={kpi.key}
+            surface="solid"
+            elevation="raised"
+            className={styles.kpi}
+          >
             <span className={styles.kpi_label}>{kpi.label}</span>
-            <span className={`${styles.kpi_value} ${styles[`kpi_value--${kpi.tone}`]}`}>
+            <span
+              className={`${styles.kpi_value} ${styles[`kpi_value--${kpi.tone}`]}`}
+            >
               {kpi.value}
             </span>
           </Card>
@@ -165,11 +175,15 @@ export default function AnalyticsPage() {
             <AreaTrendChart data={monthlyTrend} currency={currency} />
             <div className={styles.legend}>
               <span className={styles.legend_item}>
-                <span className={`${styles.legend_dot} ${styles["legend_dot--lime"]}`} />
+                <span
+                  className={`${styles.legend_dot} ${styles["legend_dot--lime"]}`}
+                />
                 Income
               </span>
               <span className={styles.legend_item}>
-                <span className={`${styles.legend_dot} ${styles["legend_dot--orange"]}`} />
+                <span
+                  className={`${styles.legend_dot} ${styles["legend_dot--orange"]}`}
+                />
                 Expenses
               </span>
             </div>
@@ -180,7 +194,10 @@ export default function AnalyticsPage() {
       {view === "overview" && (
         <m.div variants={listItem}>
           <Card surface="solid" className={styles.trend}>
-            <SectionHeader title="6-month saving trend" caption="Saved per month" />
+            <SectionHeader
+              title="6-month saving trend"
+              caption="Saved per month"
+            />
             <SpendBarChart
               data={monthlyTrend.map((t) => ({
                 label: t.label,
@@ -207,13 +224,22 @@ export default function AnalyticsPage() {
           ) : (
             <Card surface="solid">
               <SectionHeader title="Where it goes" caption="By category" />
-              <CategoryDonut data={categoryBreakdown} total={totalSpend} currency={currency} />
+              <CategoryDonut
+                data={categoryBreakdown}
+                total={totalSpend}
+                currency={currency}
+              />
               <ul className={styles.cats}>
                 {categoryBreakdown.slice(0, 6).map((cat) => (
                   <li key={cat.id} className={styles.cats_item}>
-                    <span className={styles.cats_dot} style={{ background: cat.color }} />
+                    <span
+                      className={styles.cats_dot}
+                      style={{ background: cat.color }}
+                    />
                     <span className={styles.cats_name}>{cat.label}</span>
-                    <span className={styles.cats_share}>{formatPercent(cat.share)}</span>
+                    <span className={styles.cats_share}>
+                      {formatPercent(cat.share)}
+                    </span>
                     <span className={styles.cats_value}>
                       {formatCurrency(cat.value, currency)}
                     </span>
@@ -352,7 +378,9 @@ function MonthGroup({ title, items, currency, tone, onEdit }: MonthGroupProps) {
           >
             <div className={styles.group_list}>
               {items.length === 0 ? (
-                <p className={styles.group_empty}>Nothing recorded this month.</p>
+                <p className={styles.group_empty}>
+                  Nothing recorded this month.
+                </p>
               ) : (
                 items.map((transaction) => (
                   <TransactionItem

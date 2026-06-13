@@ -14,16 +14,18 @@ import { SalaryManager } from "@/sections/SalaryManager/SalaryManager";
 import { OtherIncomeManager } from "@/sections/OtherIncomeManager/OtherIncomeManager";
 import { useFinanceStore } from "@/store/financeStore";
 import { useSignOut } from "@/hooks/useSignOut";
-import { monthLabel } from "@/utils";
+import { currentStreak, monthLabel } from "@/utils";
 import { staggerContainer, listItem } from "@/themes/animations";
 import styles from "./page.module.scss";
 
 export default function ProfilePage() {
   const profile = useFinanceStore((s) => s.profile);
+  const transactions = useFinanceStore((s) => s.transactions);
   const signOut = useSignOut();
   const [editOpen, setEditOpen] = useState(false);
 
   const currency = profile?.currency ?? "INR";
+  const streak = currentStreak(transactions);
 
   if (!profile) return null;
 
@@ -41,7 +43,7 @@ export default function ProfilePage() {
             <span className={styles.identity_name}>{profile.fullName}</span>
             <span className={styles.identity_email}>{profile.email}</span>
             <Badge tone="orange" className={styles.identity_streak}>
-              <Flame size={12} /> {profile.streakCount} day streak
+              <Flame size={12} /> {streak} day streak
             </Badge>
           </div>
           <button

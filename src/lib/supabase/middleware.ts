@@ -10,7 +10,9 @@ const RECOVERY_PATHS = ["/verify", "/reset-password"];
 const PUBLIC_PATHS = ["/offline"];
 
 const startsWithAny = (path: string, prefixes: string[]) =>
-  prefixes.some((p) => path === p || path.startsWith(`${p}/`) || path.startsWith(p));
+  prefixes.some(
+    (p) => path === p || path.startsWith(`${p}/`) || path.startsWith(p),
+  );
 
 export const updateSession = async (request: NextRequest) => {
   let response = NextResponse.next({ request });

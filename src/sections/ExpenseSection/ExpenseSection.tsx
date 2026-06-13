@@ -1,7 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Building2, ChevronDown, Plus, Receipt, TrendingUp } from "lucide-react";
+import {
+  Building2,
+  ChevronDown,
+  Plus,
+  Receipt,
+  TrendingUp,
+} from "lucide-react";
 import { Card } from "@/components/Card/Card";
 import { EmptyState } from "@/components/EmptyState/EmptyState";
 import { ExpenseRow } from "@/components/ExpenseRow/ExpenseRow";
@@ -84,18 +90,24 @@ export const ExpenseSection = ({ variant }: ExpenseSectionProps) => {
         <div className={styles.head_top}>
           <h3 className={styles.head_title}>{title}</h3>
           <span className={styles.head_total}>
-            {total > 0 ? `-${formatCurrency(total, currency)}` : formatCurrency(0, currency)}
+            {total > 0
+              ? `-${formatCurrency(total, currency)}`
+              : formatCurrency(0, currency)}
           </span>
         </div>
         <div className={styles.head_meta}>
-          <button type="button" className={styles.bankchip} onClick={openPicker}>
+          <button
+            type="button"
+            className={styles.bankchip}
+            onClick={openPicker}
+          >
             <Building2 size={13} />
-            <span className={styles.bankchip_name}>{bank?.name ?? "Choose bank"}</span>
+            <span className={styles.bankchip_name}>
+              {bank?.name ?? "Choose bank"}
+            </span>
             <ChevronDown size={13} />
           </button>
-          <span className={styles.head_count}>
-            {items.length} this month
-          </span>
+          <span className={styles.head_count}>{items.length} this month</span>
         </div>
       </div>
 

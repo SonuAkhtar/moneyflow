@@ -44,7 +44,9 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
       if (!active) return;
       setUser(u ? toSessionUser(u) : null);
     };
-    supabase.auth.getSession().then(({ data }) => apply(data.session?.user ?? null));
+    supabase.auth
+      .getSession()
+      .then(({ data }) => apply(data.session?.user ?? null));
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return;
       if (event === "SIGNED_OUT") {

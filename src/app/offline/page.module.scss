@@ -7,9 +7,7 @@
   text-align: center;
   gap: var(--space-4);
   padding: var(--space-7);
-  background:
-    var(--gradient-mesh),
-    var(--surface-base);
+  background: var(--gradient-mesh), var(--surface-base);
 
   &_orb {
     display: grid;

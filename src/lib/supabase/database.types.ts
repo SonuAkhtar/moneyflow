@@ -148,7 +148,9 @@ export interface Database {
           id: string;
           emi_id: string;
           user_id: string;
+          account_id: string | null;
           month: string;
+          paid_on: string | null;
           amount: number;
           created_at: string;
         };
@@ -156,7 +158,9 @@ export interface Database {
           id?: string;
           emi_id: string;
           user_id: string;
+          account_id?: string | null;
           month: string;
+          paid_on?: string | null;
           amount?: number;
         };
         Update: Partial<Database["public"]["Tables"]["emi_payments"]["Insert"]>;

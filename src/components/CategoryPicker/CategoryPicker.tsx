@@ -12,7 +12,11 @@ interface CategoryPickerProps {
   onChange: (value: CategoryId) => void;
 }
 
-export const CategoryPicker = ({ categories, value, onChange }: CategoryPickerProps) => (
+export const CategoryPicker = ({
+  categories,
+  value,
+  onChange,
+}: CategoryPickerProps) => (
   <div className={styles.grid}>
     {categories.map((id) => {
       const meta = getCategoryMeta(id);

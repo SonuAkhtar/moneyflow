@@ -51,10 +51,15 @@ export const emiPaidMonths = (e: Emi): number =>
 export const emiStartMonth = (e: Emi): string =>
   e.startMonth ?? monthKey(e.createdAt);
 
-export const emiPaidAmount = (e: Emi): number =>
-  emiKind(e) === "sip" && e.principal > 0
-    ? e.principal
-    : emiPaidMonths(e) * e.monthlyAmount;
+export const emiPaidAmount = (e: Emi): number => {
+  // SIP "invested" = the opening baseline (principal) plus every logged
+  // contribution; loans track progress by paid months.
+  if (emiKind(e) === "sip") {
+    const logged = (e.payments ?? []).reduce((acc, p) => acc + p.amount, 0);
+    return e.principal + logged;
+  }
+  return emiPaidMonths(e) * e.monthlyAmount;
+};
 
 export const cn = (...inputs: ClassValue[]): string => clsx(inputs);
 
@@ -66,11 +71,32 @@ export const createId = (prefix = "id"): string => {
   return `${prefix}_${random}`;
 };
 
-export const getCurrencySymbol = (): string => CURRENCY.symbol;
+// The user's chosen currency, kept in a module variable so the many no-arg
+// callers of getCurrencySymbol()/formatCurrency() reflect it without threading
+// it through every component. Set from the profile on hydrate/update.
+let ACTIVE_CURRENCY: string = CURRENCY.code;
+
+export const setActiveCurrency = (code: string | null | undefined): void => {
+  ACTIVE_CURRENCY = code || CURRENCY.code;
+};
+
+export const getCurrencySymbol = (
+  currency: string = ACTIVE_CURRENCY,
+): string => {
+  try {
+    const parts = new Intl.NumberFormat(CURRENCY.locale, {
+      style: "currency",
+      currency,
+    }).formatToParts(0);
+    return parts.find((p) => p.type === "currency")?.value ?? CURRENCY.symbol;
+  } catch {
+    return CURRENCY.symbol;
+  }
+};
 
 export const formatCurrency = (
   value: number,
-  currency: string = CURRENCY.code,
+  currency: string = ACTIVE_CURRENCY,
   options: { compact?: boolean; signed?: boolean } = {},
 ): string => {
   const { compact = false, signed = false } = options;
@@ -133,6 +159,21 @@ export const dateKey = (date: Date | string = new Date()): string => {
 };
 
 export const currentDateKey = (): string => dateKey(new Date());
+
+// Consecutive days (ending today, or yesterday if today has no activity yet)
+// that have at least one transaction.
+export const currentStreak = (transactions: Transaction[]): number => {
+  if (transactions.length === 0) return 0;
+  const days = new Set(transactions.map((t) => dateKey(t.occurredAt)));
+  const cursor = new Date();
+  if (!days.has(dateKey(cursor))) cursor.setDate(cursor.getDate() - 1);
+  let streak = 0;
+  while (days.has(dateKey(cursor))) {
+    streak += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
+};
 
 export const monthLabel = (key: string): string => {
   const [year, month] = key.split("-").map(Number);

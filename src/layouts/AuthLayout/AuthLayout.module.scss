@@ -11,10 +11,17 @@
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(58% 44% at 50% -6%, rgba(124, 92, 240, 0.28), transparent 60%),
-      radial-gradient(46% 38% at 100% 102%, rgba(198, 244, 50, 0.16), transparent 60%),
-      var(--gradient-mesh),
-      var(--surface-base);
+      radial-gradient(
+        58% 44% at 50% -6%,
+        rgba(124, 92, 240, 0.28),
+        transparent 60%
+      ),
+      radial-gradient(
+        46% 38% at 100% 102%,
+        rgba(198, 244, 50, 0.16),
+        transparent 60%
+      ),
+      var(--gradient-mesh), var(--surface-base);
     pointer-events: none;
   }
 

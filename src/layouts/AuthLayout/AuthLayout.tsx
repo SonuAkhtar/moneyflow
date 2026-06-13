@@ -20,7 +20,8 @@ export const AuthLayout = ({ children, title, subtitle }: AuthLayoutProps) => {
   const status = useAuthStore((s) => s.status);
 
   const isRecovery =
-    pathname.startsWith(ROUTES.resetPassword) || pathname.startsWith(ROUTES.verify);
+    pathname.startsWith(ROUTES.resetPassword) ||
+    pathname.startsWith(ROUTES.verify);
 
   useEffect(() => {
     if (status === "authed" && !isRecovery) router.replace(ROUTES.home);

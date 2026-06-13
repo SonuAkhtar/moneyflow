@@ -29,7 +29,9 @@ export default function SavingsPage() {
     banks,
     (a) => bankMonthFlow(a.id, transactions, month).net,
   );
-  const sips = emis.filter((e) => e.status === "active" && emiKind(e) === "sip");
+  const sips = emis.filter(
+    (e) => e.status === "active" && emiKind(e) === "sip",
+  );
   const sipMonthly = sumBy(sips, (e) => e.monthlyAmount);
   const sipTotal = sumBy(sips, emiPaidAmount);
   const totalSavings = banksTotal + sipTotal;

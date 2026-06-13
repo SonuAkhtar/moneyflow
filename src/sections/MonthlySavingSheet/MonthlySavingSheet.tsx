@@ -27,7 +27,13 @@ export const MonthlySavingSheet = ({
   </BottomSheet>
 );
 
-const Form = ({ account, onClose }: { account: Account; onClose: () => void }) => {
+const Form = ({
+  account,
+  onClose,
+}: {
+  account: Account;
+  onClose: () => void;
+}) => {
   const addSavingDeposit = useFinanceStore((s) => s.addSavingDeposit);
   const addSavingWithdrawal = useFinanceStore((s) => s.addSavingWithdrawal);
   const transactions = useFinanceStore((s) => s.transactions);
@@ -81,7 +87,9 @@ const Form = ({ account, onClose }: { account: Account; onClose: () => void }) =
         {flow.added > 0 && (
           <div className={styles.summary_row}>
             <span className={styles.summary_label}>Added this month</span>
-            <span className={`${styles.summary_value} ${styles["summary_value--in"]}`}>
+            <span
+              className={`${styles.summary_value} ${styles["summary_value--in"]}`}
+            >
               +{formatCurrency(flow.added, currency)}
             </span>
           </div>
@@ -89,12 +97,16 @@ const Form = ({ account, onClose }: { account: Account; onClose: () => void }) =
         {flow.taken > 0 && (
           <div className={styles.summary_row}>
             <span className={styles.summary_label}>Taken this month</span>
-            <span className={`${styles.summary_value} ${styles["summary_value--out"]}`}>
+            <span
+              className={`${styles.summary_value} ${styles["summary_value--out"]}`}
+            >
               -{formatCurrency(flow.taken, currency)}
             </span>
           </div>
         )}
-        <div className={`${styles.summary_row} ${styles["summary_row--total"]}`}>
+        <div
+          className={`${styles.summary_row} ${styles["summary_row--total"]}`}
+        >
           <span className={styles.summary_label}>Total saved</span>
           <span className={styles.summary_value}>
             {formatCurrency(account.balance, currency)}
@@ -105,14 +117,20 @@ const Form = ({ account, onClose }: { account: Account; onClose: () => void }) =
       <div className={styles.toggle}>
         <button
           type="button"
-          className={cn(styles.toggle_btn, mode === "add" && styles["toggle_btn--add"])}
+          className={cn(
+            styles.toggle_btn,
+            mode === "add" && styles["toggle_btn--add"],
+          )}
           onClick={() => setMode("add")}
         >
           <Plus size={16} /> Add money
         </button>
         <button
           type="button"
-          className={cn(styles.toggle_btn, mode === "take" && styles["toggle_btn--take"])}
+          className={cn(
+            styles.toggle_btn,
+            mode === "take" && styles["toggle_btn--take"],
+          )}
           onClick={() => setMode("take")}
         >
           <Minus size={16} /> Take money
@@ -124,7 +142,6 @@ const Form = ({ account, onClose }: { account: Account; onClose: () => void }) =
         onChange={setAmount}
         tone={mode === "add" ? "success" : "danger"}
       />
-
 
       <div className={styles.preview}>
         <span className={styles.preview_label}>New total</span>

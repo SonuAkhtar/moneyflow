@@ -41,7 +41,11 @@ export const ProfileMenu = ({ open, onClose }: ProfileMenuProps) => {
               role="menu"
             >
               <div className={styles.menu_head}>
-                <Avatar name={profile?.fullName ?? "MF"} src={profile?.avatarUrl} size={46} />
+                <Avatar
+                  name={profile?.fullName ?? "MF"}
+                  src={profile?.avatarUrl}
+                  size={46}
+                />
                 <div className={styles.menu_identity}>
                   <span className={styles.menu_name}>{profile?.fullName}</span>
                   <span className={styles.menu_email}>{profile?.email}</span>

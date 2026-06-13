@@ -1,7 +1,8 @@
 const TRANSIENT =
   /network|fetch failed|failed to fetch|timeout|timed out|temporarily|ETIMEDOUT|ECONNRESET|503|429/i;
 
-const AUTH = /\bjwt\b|unauthorized|401|not authenticated|invalid (refresh )?token|session.*(expired|missing)/i;
+const AUTH =
+  /\bjwt\b|unauthorized|401|not authenticated|invalid (refresh )?token|session.*(expired|missing)/i;
 
 const messageOf = (err: unknown): string =>
   err instanceof Error ? err.message : String(err ?? "");
@@ -17,7 +18,8 @@ export interface RetryOptions {
   sleep?: (ms: number) => Promise<void>;
 }
 
-const defaultSleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+const defaultSleep = (ms: number) =>
+  new Promise<void>((r) => setTimeout(r, ms));
 
 export const runWithRetry = async <T>(
   work: () => Promise<T>,

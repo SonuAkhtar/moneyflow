@@ -59,7 +59,7 @@ export const OnboardingFlow = () => {
           id: crypto.randomUUID(),
           userId,
           name,
-          type: "bank",
+          type: "savings",
           balance: Number(balance) || 0,
           institution: null,
           colorTag: "#4ece6e",

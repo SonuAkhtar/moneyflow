@@ -38,7 +38,9 @@ export const ChartTooltip = ({
             <span className={styles.tooltip_name}>{entry.name}</span>
             <span className={styles.tooltip_value}>
               {typeof entry.value === "number"
-                ? formatCurrency(entry.value, currency, { compact: entry.value > 9999 })
+                ? formatCurrency(entry.value, currency, {
+                    compact: entry.value > 9999,
+                  })
                 : entry.value}
             </span>
           </div>

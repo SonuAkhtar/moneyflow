@@ -7,7 +7,12 @@ import { BOTTOM_NAV, ROUTES } from "@/constants";
 import { cn } from "@/utils";
 import styles from "./BottomNav.module.scss";
 
-const SPRING = { type: "spring" as const, stiffness: 460, damping: 36, mass: 0.8 };
+const SPRING = {
+  type: "spring" as const,
+  stiffness: 460,
+  damping: 36,
+  mass: 0.8,
+};
 
 export const BottomNav = () => {
   const pathname = usePathname();
@@ -18,7 +23,9 @@ export const BottomNav = () => {
         {BOTTOM_NAV.map((item) => {
           const Icon = item.icon;
           const active =
-            item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+            item.href === "/"
+              ? pathname === "/"
+              : pathname.startsWith(item.href);
 
           if (item.href === ROUTES.home) {
             return (
@@ -47,7 +54,10 @@ export const BottomNav = () => {
             <Link
               key={item.href}
               href={item.href}
-              className={cn(styles.nav_item, active && styles["nav_item--active"])}
+              className={cn(
+                styles.nav_item,
+                active && styles["nav_item--active"],
+              )}
               aria-current={active ? "page" : undefined}
             >
               <span className={styles.nav_iconWrap}>

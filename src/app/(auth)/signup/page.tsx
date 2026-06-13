@@ -6,7 +6,10 @@ export const metadata: Metadata = { title: "Create account" };
 
 export default function SignupPage() {
   return (
-    <AuthLayout title="Create your account" subtitle="Start tracking smarter in under a minute.">
+    <AuthLayout
+      title="Create your account"
+      subtitle="Start tracking smarter in under a minute."
+    >
       <SignupForm />
     </AuthLayout>
   );

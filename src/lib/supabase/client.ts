@@ -13,7 +13,10 @@ let cached: SupabaseBrowserClient | null = null;
 export const getBrowserSupabase = (): SupabaseBrowserClient | null => {
   if (!isSupabaseConfigured) return null;
   if (!cached) {
-    cached = createBrowserClient<Database>(env.supabaseUrl, env.supabaseAnonKey);
+    cached = createBrowserClient<Database>(
+      env.supabaseUrl,
+      env.supabaseAnonKey,
+    );
   }
   return cached;
 };

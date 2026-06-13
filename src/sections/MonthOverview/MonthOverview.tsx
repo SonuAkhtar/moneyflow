@@ -13,7 +13,12 @@ export const MonthOverview = () => {
 
   const stats = [
     { key: "earned", label: "Earned", value: monthIncome, tone: "in" as const },
-    { key: "spent", label: "Spent", value: monthExpenses, tone: "out" as const },
+    {
+      key: "spent",
+      label: "Spent",
+      value: monthExpenses,
+      tone: "out" as const,
+    },
     { key: "saved", label: "Saving", value: monthSaved, tone: "save" as const },
   ];
 

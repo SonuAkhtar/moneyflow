@@ -30,8 +30,8 @@ const VerifyInner = () => {
         <MailCheck size={28} />
       </span>
       <p className={styles.success_text}>
-        We sent a verification link to <strong>{email}</strong>. Confirm your email to unlock
-        your dashboard.
+        We sent a verification link to <strong>{email}</strong>. Confirm your
+        email to unlock your dashboard.
       </p>
       <Button fullWidth loading={sending} onClick={resend}>
         Resend email
@@ -45,7 +45,10 @@ const VerifyInner = () => {
 
 export default function VerifyPage() {
   return (
-    <AuthLayout title="Verify your email" subtitle="One quick step to secure your account.">
+    <AuthLayout
+      title="Verify your email"
+      subtitle="One quick step to secure your account."
+    >
       <Suspense fallback={null}>
         <VerifyInner />
       </Suspense>

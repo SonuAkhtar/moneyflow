@@ -11,7 +11,10 @@ import type { Transaction } from "@/types";
 import styles from "./OtherIncomeManager.module.scss";
 
 const dayLabel = (iso: string) =>
-  new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  new Date(iso).toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+  });
 
 export const OtherIncomeManager = () => {
   const transactions = useFinanceStore((s) => s.transactions);
@@ -60,35 +63,32 @@ export const OtherIncomeManager = () => {
           </button>
 
           {items.map((t) => {
-                const meta = getCategoryMeta(t.category);
-                const Icon = meta.icon;
-                return (
-                  <button
-                    key={t.id}
-                    type="button"
-                    className={styles.row}
-                    onClick={() => setEditing(t)}
-                  >
-                    <span
-                      className={styles.row_icon}
-                      style={{ color: meta.color }}
-                    >
-                      <Icon size={16} />
-                    </span>
-                    <span className={styles.row_text}>
-                      <span className={styles.row_label}>
-                        {t.note || meta.label}
-                      </span>
-                      <span className={styles.row_sub}>
-                        {meta.label} · {dayLabel(t.occurredAt)}
-                      </span>
-                    </span>
-                    <span className={styles.row_value}>
-                      +{formatCurrency(t.amount, currency)}
-                    </span>
-                  </button>
-                );
-              })}
+            const meta = getCategoryMeta(t.category);
+            const Icon = meta.icon;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                className={styles.row}
+                onClick={() => setEditing(t)}
+              >
+                <span className={styles.row_icon} style={{ color: meta.color }}>
+                  <Icon size={16} />
+                </span>
+                <span className={styles.row_text}>
+                  <span className={styles.row_label}>
+                    {t.note || meta.label}
+                  </span>
+                  <span className={styles.row_sub}>
+                    {meta.label} · {dayLabel(t.occurredAt)}
+                  </span>
+                </span>
+                <span className={styles.row_value}>
+                  +{formatCurrency(t.amount, currency)}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </Collapsible>
 

@@ -1,7 +1,7 @@
-import { emiRepo } from "@/services/repositories";
+import { accountRepo, emiRepo } from "@/services/repositories";
 import { isoNow } from "@/utils";
-import type { Emi } from "@/types";
-import { newId } from "./helpers";
+import type { Account, Emi, EmiPayment } from "@/types";
+import { applyBalance, newId } from "./helpers";
 import type { FinanceState, SliceCreator } from "./types";
 
 type EmisSlice = Pick<
@@ -54,41 +54,110 @@ export const createEmisSlice: SliceCreator<EmisSlice> = (
 
   deleteEmi: (id) => {
     const s = get();
-    set({ emis: s.emis.filter((e) => e.id !== id) });
-    sync(() => emiRepo.remove(id));
+    const emi = s.emis.find((e) => e.id === id);
+    // Refund every payment that was deducted from a bank.
+    let accounts = s.accounts;
+    const dirtyIds = new Set<string>();
+    for (const p of emi?.payments ?? []) {
+      if (!p.accountId) continue;
+      accounts = applyBalance(accounts, p.accountId, p.amount);
+      dirtyIds.add(p.accountId);
+    }
+    set({ emis: s.emis.filter((e) => e.id !== id), accounts });
+    const dirty = [...dirtyIds]
+      .map((aid) => accounts.find((a) => a.id === aid))
+      .filter((a): a is Account => Boolean(a));
+    sync(() =>
+      Promise.all([
+        emiRepo.remove(id),
+        ...dirty.map((a) => accountRepo.save(a)),
+      ]).then(() => undefined),
+    );
   },
 
   addEmiPayment: (emiId, input) => {
     const s = get();
-    const payment = { id: newId(), month: input.month, amount: input.amount };
+    const payment: EmiPayment = {
+      id: newId(),
+      month: input.month,
+      paidOn: input.paidOn ?? `${input.month}-01`,
+      amount: input.amount,
+      accountId: input.accountId ?? null,
+    };
+    // Deduct the payment from the selected bank, like an expense.
+    const accounts = payment.accountId
+      ? applyBalance(s.accounts, payment.accountId, -payment.amount)
+      : s.accounts;
     set({
       emis: s.emis.map((e) =>
         e.id === emiId
           ? { ...e, payments: [payment, ...(e.payments ?? [])] }
           : e,
       ),
+      accounts,
     });
-    sync(() => emiRepo.savePayment(payment, emiId, ownerId()));
+    const account = payment.accountId
+      ? accounts.find((a) => a.id === payment.accountId)
+      : undefined;
+    sync(() =>
+      Promise.all([
+        emiRepo.savePayment(payment, emiId, ownerId()),
+        ...(account ? [accountRepo.save(account)] : []),
+      ]).then(() => undefined),
+    );
   },
 
   updateEmiPayment: (emiId, paymentId, patch) => {
     const s = get();
-    let updated: { id: string; month: string; amount: number } | undefined;
-    const emis = s.emis.map((e) => {
-      if (e.id !== emiId) return e;
-      const payments = (e.payments ?? []).map((p) => {
-        if (p.id !== paymentId) return p;
-        updated = { ...p, ...patch };
-        return updated;
-      });
-      return { ...e, payments };
+    const emi = s.emis.find((e) => e.id === emiId);
+    const old = emi?.payments?.find((p) => p.id === paymentId);
+    if (!old) return;
+    const updated: EmiPayment = { ...old, ...patch };
+
+    // Refund the old deduction, then apply the new one.
+    let accounts = s.accounts;
+    if (old.accountId)
+      accounts = applyBalance(accounts, old.accountId, old.amount);
+    if (updated.accountId)
+      accounts = applyBalance(accounts, updated.accountId, -updated.amount);
+
+    set({
+      emis: s.emis.map((e) =>
+        e.id === emiId
+          ? {
+              ...e,
+              payments: (e.payments ?? []).map((p) =>
+                p.id === paymentId ? updated : p,
+              ),
+            }
+          : e,
+      ),
+      accounts,
     });
-    set({ emis });
-    if (updated) sync(() => emiRepo.savePayment(updated!, emiId, ownerId()));
+
+    const ids = [old.accountId, updated.accountId].filter((v): v is string =>
+      Boolean(v),
+    );
+    const dirty = ids
+      .filter((v, i) => ids.indexOf(v) === i)
+      .map((id) => accounts.find((a) => a.id === id))
+      .filter((a): a is Account => Boolean(a));
+    sync(() =>
+      Promise.all([
+        emiRepo.savePayment(updated, emiId, ownerId()),
+        ...dirty.map((a) => accountRepo.save(a)),
+      ]).then(() => undefined),
+    );
   },
 
   deleteEmiPayment: (emiId, paymentId) => {
     const s = get();
+    const emi = s.emis.find((e) => e.id === emiId);
+    const payment = emi?.payments?.find((p) => p.id === paymentId);
+    // Refund the deducted amount back to the bank.
+    const accounts = payment?.accountId
+      ? applyBalance(s.accounts, payment.accountId, payment.amount)
+      : s.accounts;
     set({
       emis: s.emis.map((e) =>
         e.id === emiId
@@ -98,7 +167,16 @@ export const createEmisSlice: SliceCreator<EmisSlice> = (
             }
           : e,
       ),
+      accounts,
     });
-    sync(() => emiRepo.removePayment(paymentId));
+    const account = payment?.accountId
+      ? accounts.find((a) => a.id === payment.accountId)
+      : undefined;
+    sync(() =>
+      Promise.all([
+        emiRepo.removePayment(paymentId),
+        ...(account ? [accountRepo.save(account)] : []),
+      ]).then(() => undefined),
+    );
   },
 });

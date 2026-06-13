@@ -32,7 +32,9 @@
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
   background: var(--surface-card-solid);
-  transition: border-color 0.18s ease, transform 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    transform 0.18s ease;
 
   &--active {
     border-color: var(--accent);
@@ -55,4 +57,3 @@
     line-height: 1.2;
   }
 }
-

@@ -20,7 +20,8 @@ const NOT_CONFIGURED: AuthResult = {
     "Supabase isn't configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local and restart.",
 };
 
-const isEmail = (value: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value.trim());
+const isEmail = (value: string) =>
+  /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value.trim());
 
 const authRedirectBase = (): string =>
   typeof window !== "undefined" ? window.location.origin : env.appUrl;
@@ -41,7 +42,8 @@ export const authService = {
       { uname: username } as never,
     );
     if (rpcError) return { ok: false, message: rpcError.message };
-    if (available === false) return { ok: false, message: "That username is taken" };
+    if (available === false)
+      return { ok: false, message: "That username is taken" };
 
     const { data, error } = await supabase.auth.signUp({
       email: input.email,
@@ -68,12 +70,12 @@ export const authService = {
 
     let email = input.identifier.trim();
     if (!isEmail(email)) {
-      const { data, error } = await supabase.rpc(
-        "email_for_username",
-        { uname: email.toLowerCase() } as never,
-      );
+      const { data, error } = await supabase.rpc("email_for_username", {
+        uname: email.toLowerCase(),
+      } as never);
       if (error) return { ok: false, message: error.message };
-      if (!data) return { ok: false, message: "No account found for that username" };
+      if (!data)
+        return { ok: false, message: "No account found for that username" };
       email = data as string;
     }
 

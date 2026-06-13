@@ -42,7 +42,9 @@ export const BankPickerSheet = ({
     }
   >
     {banks.length === 0 ? (
-      <p className={styles.empty}>Add a savings bank under Total savings first.</p>
+      <p className={styles.empty}>
+        Add a savings bank under Total savings first.
+      </p>
     ) : (
       <Select
         label="Savings bank"

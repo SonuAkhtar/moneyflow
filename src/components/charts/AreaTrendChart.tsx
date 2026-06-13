@@ -60,15 +60,34 @@ export const AreaTrendChart = ({
 }: AreaTrendChartProps) => (
   <div className={styles.chart} style={{ height }}>
     <ResponsiveContainer width="100%" height="100%">
-      <AreaChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: -18 }}>
+      <AreaChart
+        data={data}
+        margin={{ top: 8, right: 4, bottom: 0, left: -18 }}
+      >
         <defs>
           <linearGradient id="grad-income" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--chart-income)" stopOpacity={0.5} />
-            <stop offset="100%" stopColor="var(--chart-income)" stopOpacity={0} />
+            <stop
+              offset="0%"
+              stopColor="var(--chart-income)"
+              stopOpacity={0.5}
+            />
+            <stop
+              offset="100%"
+              stopColor="var(--chart-income)"
+              stopOpacity={0}
+            />
           </linearGradient>
           <linearGradient id="grad-expense" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--chart-expense)" stopOpacity={0.45} />
-            <stop offset="100%" stopColor="var(--chart-expense)" stopOpacity={0} />
+            <stop
+              offset="0%"
+              stopColor="var(--chart-expense)"
+              stopOpacity={0.45}
+            />
+            <stop
+              offset="100%"
+              stopColor="var(--chart-expense)"
+              stopOpacity={0}
+            />
           </linearGradient>
         </defs>
         <CartesianGrid

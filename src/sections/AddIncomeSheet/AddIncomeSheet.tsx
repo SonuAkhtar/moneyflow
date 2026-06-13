@@ -89,10 +89,18 @@ const Form = ({ transaction, onClose }: FormProps) => {
     };
     if (transaction) {
       updateTransaction(transaction.id, input);
-      toast({ title: "Income updated", description: `${symbol}${value}`, variant: "success" });
+      toast({
+        title: "Income updated",
+        description: `${symbol}${value}`,
+        variant: "success",
+      });
     } else {
       addTransaction(input);
-      toast({ title: "Income added", description: `${symbol}${value}`, variant: "success" });
+      toast({
+        title: "Income added",
+        description: `${symbol}${value}`,
+        variant: "success",
+      });
     }
     onClose();
   };
@@ -107,7 +115,12 @@ const Form = ({ transaction, onClose }: FormProps) => {
 
   return (
     <div className={styles.form}>
-      <AmountField value={amount} onChange={setAmount} symbol={symbol} tone="success" />
+      <AmountField
+        value={amount}
+        onChange={setAmount}
+        symbol={symbol}
+        tone="success"
+      />
 
       <div className={styles.field}>
         <span className={styles.label}>Type</span>

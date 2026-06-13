@@ -1,4 +1,11 @@
-import { Banknote, Building2, CreditCard, Landmark, PiggyBank, Wallet } from "lucide-react";
+import {
+  Banknote,
+  Building2,
+  CreditCard,
+  Landmark,
+  PiggyBank,
+  Wallet,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export interface BankPreset {

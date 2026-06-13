@@ -52,13 +52,17 @@ export const profileToUpdate = (
   if (patch.phone !== undefined) out.phone = patch.phone;
   if (patch.avatarUrl !== undefined) out.avatar_url = patch.avatarUrl;
   if (patch.currency !== undefined) out.currency = patch.currency;
-  if (patch.monthlySalary !== undefined) out.monthly_salary = patch.monthlySalary;
-  if (patch.savingsTarget !== undefined) out.savings_target = patch.savingsTarget;
+  if (patch.monthlySalary !== undefined)
+    out.monthly_salary = patch.monthlySalary;
+  if (patch.savingsTarget !== undefined)
+    out.savings_target = patch.savingsTarget;
   if (patch.onboardingComplete !== undefined)
     out.onboarding_complete = patch.onboardingComplete;
   if (patch.streakCount !== undefined) out.streak_count = patch.streakCount;
-  if (patch.majorAccountId !== undefined) out.major_account_id = patch.majorAccountId;
-  if (patch.dailyAccountId !== undefined) out.daily_account_id = patch.dailyAccountId;
+  if (patch.majorAccountId !== undefined)
+    out.major_account_id = patch.majorAccountId;
+  if (patch.dailyAccountId !== undefined)
+    out.daily_account_id = patch.dailyAccountId;
   return out as TablesInsert<"profiles">;
 };
 
@@ -114,10 +118,7 @@ export const transactionToRow = (
   occurred_at: t.occurredAt,
 });
 
-export const rowToEmi = (
-  r: Tables<"emis">,
-  payments: EmiPayment[],
-): Emi => ({
+export const rowToEmi = (r: Tables<"emis">, payments: EmiPayment[]): Emi => ({
   id: r.id,
   userId: r.user_id,
   accountId: r.account_id,
@@ -156,7 +157,9 @@ export const emiToRow = (e: Emi): TablesInsert<"emis"> => ({
 export const rowToEmiPayment = (r: Tables<"emi_payments">): EmiPayment => ({
   id: r.id,
   month: r.month,
+  paidOn: r.paid_on ?? `${r.month}-01`,
   amount: n(r.amount),
+  accountId: r.account_id ?? null,
 });
 
 export const emiPaymentToRow = (
@@ -167,10 +170,11 @@ export const emiPaymentToRow = (
   id: p.id,
   emi_id: emiId,
   user_id: userId,
+  account_id: p.accountId,
   month: p.month,
+  paid_on: p.paidOn,
   amount: p.amount,
 });
-
 
 export const rowToBorrowing = (
   r: Tables<"borrowings">,

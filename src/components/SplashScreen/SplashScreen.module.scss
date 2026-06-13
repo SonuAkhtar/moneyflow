@@ -9,9 +9,12 @@
   gap: var(--space-3);
   overflow: hidden;
   background:
-    radial-gradient(60% 50% at 50% 38%, rgba(124, 92, 240, 0.18), transparent 70%),
-    var(--gradient-mesh),
-    var(--surface-base);
+    radial-gradient(
+      60% 50% at 50% 38%,
+      rgba(124, 92, 240, 0.18),
+      transparent 70%
+    ),
+    var(--gradient-mesh), var(--surface-base);
 
   &_aura {
     position: absolute;

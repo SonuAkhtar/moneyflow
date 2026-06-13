@@ -78,7 +78,7 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const resolvedName = type === "Other" ? customName.trim() : type;
-  const canSave = Boolean(Number(amount)) && Boolean(resolvedName);
+  const canSave = Number(amount) > 0 && Boolean(resolvedName);
 
   const switchPaidMode = (mode: PaidMode) => {
     if (mode === paidMode) return;
@@ -106,7 +106,9 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
     const paidM = Math.max(0, paidRaw);
     if (!isLoan) {
       const invested =
-        paidMode === "amount" ? Math.max(0, Math.round(paidNum)) : paidM * monthly;
+        paidMode === "amount"
+          ? Math.max(0, Math.round(paidNum))
+          : paidM * monthly;
       return {
         totalMonths: 0,
         paidMonths: paidM,
@@ -133,7 +135,7 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
 
   const submit = () => {
     const value = Number(amount);
-    if (!value || !resolvedName) return;
+    if (!(value > 0) || !resolvedName) return;
     const sched = schedule();
     const month = startDate ? startDate.slice(0, 7) : currentMonthKey();
     const due = clampDay(Math.floor(Number(startDate.slice(8, 10)) || 1));
@@ -145,7 +147,11 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
         dueDay: due,
         ...sched,
       });
-      toast({ title: "Updated", description: resolvedName, variant: "success" });
+      toast({
+        title: "Updated",
+        description: resolvedName,
+        variant: "success",
+      });
     } else {
       addEmi({
         name: resolvedName,

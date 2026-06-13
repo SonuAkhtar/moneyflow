@@ -12,7 +12,8 @@ export const useToast = () => {
   const pushToast = useUiStore((s) => s.pushToast);
 
   return useCallback(
-    ({ variant = "info", ...rest }: ToastInput) => pushToast({ variant, ...rest }),
+    ({ variant = "info", ...rest }: ToastInput) =>
+      pushToast({ variant, ...rest }),
     [pushToast],
   );
 };

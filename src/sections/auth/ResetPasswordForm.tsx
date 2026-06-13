@@ -11,7 +11,10 @@ import { Button } from "@/components/Button/Button";
 import { authService } from "@/services/auth.service";
 import { getBrowserSupabase } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/useToast";
-import { resetPasswordSchema, type ResetPasswordValues } from "@/utils/validation";
+import {
+  resetPasswordSchema,
+  type ResetPasswordValues,
+} from "@/utils/validation";
 import { ROUTES } from "@/constants";
 import styles from "./auth.module.scss";
 

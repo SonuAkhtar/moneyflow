@@ -32,13 +32,19 @@ export const AddBorrowingPaymentSheet = ({
   currency,
 }: AddBorrowingPaymentSheetProps) => {
   const addBorrowingPayment = useFinanceStore((s) => s.addBorrowingPayment);
-  const updateBorrowingPayment = useFinanceStore((s) => s.updateBorrowingPayment);
-  const deleteBorrowingPayment = useFinanceStore((s) => s.deleteBorrowingPayment);
+  const updateBorrowingPayment = useFinanceStore(
+    (s) => s.updateBorrowingPayment,
+  );
+  const deleteBorrowingPayment = useFinanceStore(
+    (s) => s.deleteBorrowingPayment,
+  );
   const toast = useToast();
   const isEdit = Boolean(payment);
 
   const [amount, setAmount] = useState(payment ? String(payment.amount) : "");
-  const [paidOn, setPaidOn] = useState(payment?.paidOn?.slice(0, 10) ?? todayKey());
+  const [paidOn, setPaidOn] = useState(
+    payment?.paidOn?.slice(0, 10) ?? todayKey(),
+  );
   const [note, setNote] = useState(payment?.note ?? "");
   const [confirmOpen, setConfirmOpen] = useState(false);
 

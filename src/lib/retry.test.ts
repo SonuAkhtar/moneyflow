@@ -11,7 +11,9 @@ describe("error classification", () => {
   });
   it("does not flag permanent errors as transient", () => {
     expect(isTransientError(new Error("duplicate key value"))).toBe(false);
-    expect(isTransientError(new Error("violates row-level security"))).toBe(false);
+    expect(isTransientError(new Error("violates row-level security"))).toBe(
+      false,
+    );
   });
   it("flags auth errors", () => {
     expect(isAuthError(new Error("JWT expired"))).toBe(true);

@@ -1,4 +1,5 @@
 import { fetchSnapshot, profileRepo } from "@/services/repositories";
+import { setActiveCurrency } from "@/utils";
 import { emptyState, type FinanceState, type SliceCreator } from "./types";
 
 type CoreSlice = Pick<FinanceState, "hydrate" | "resetAll" | "updateProfile">;
@@ -11,6 +12,7 @@ export const createCoreSlice: SliceCreator<CoreSlice> = (
   hydrate: async (userId) => {
     try {
       const snap = await fetchSnapshot(userId);
+      setActiveCurrency(snap.profile?.currency);
       set({
         initialized: true,
         hasHydrated: true,
@@ -35,6 +37,7 @@ export const createCoreSlice: SliceCreator<CoreSlice> = (
   updateProfile: (patch) => {
     const s = get();
     if (!s.profile) return;
+    if (patch.currency !== undefined) setActiveCurrency(patch.currency);
     set({ profile: { ...s.profile, ...patch } });
     const uid = s.profile.id;
     sync(() => profileRepo.update(uid, patch));

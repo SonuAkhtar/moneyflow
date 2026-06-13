@@ -84,9 +84,7 @@ export const ComingUp = () => {
         paid: false,
       });
     }
-    return out
-      .sort((x, y) => x.date.getTime() - y.date.getTime())
-      .slice(0, 4);
+    return out.sort((x, y) => x.date.getTime() - y.date.getTime()).slice(0, 4);
   }, [emis, borrowings, thisMonth]);
 
   if (items.length === 0) return null;
@@ -100,7 +98,11 @@ export const ComingUp = () => {
           const Icon = meta.icon;
           const days = daysUntil(item.date);
           const when =
-            days <= 0 ? "Due today" : days === 1 ? "Tomorrow" : `In ${days} days`;
+            days <= 0
+              ? "Due today"
+              : days === 1
+                ? "Tomorrow"
+                : `In ${days} days`;
           return (
             <div key={item.id} className={styles.row}>
               <span className={styles.row_icon} style={{ color: meta.color }}>

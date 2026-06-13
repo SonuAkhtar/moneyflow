@@ -28,7 +28,12 @@ export const SheetActions = ({
         <Trash2 size={18} />
       </button>
     )}
-    <Button size="lg" className={styles.save} onClick={onSave} disabled={disabled}>
+    <Button
+      size="lg"
+      className={styles.save}
+      onClick={onSave}
+      disabled={disabled}
+    >
       {saveLabel}
     </Button>
   </div>

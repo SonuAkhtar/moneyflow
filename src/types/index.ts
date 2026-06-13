@@ -91,7 +91,9 @@ export interface Emi {
 export interface EmiPayment {
   id: string;
   month: string;
+  paidOn: string;
   amount: number;
+  accountId: string | null;
 }
 
 export interface Borrowing {

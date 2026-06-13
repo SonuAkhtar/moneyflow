@@ -3,6 +3,7 @@
 import { startOfMonth, subMonths } from "date-fns";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireBrowserSupabase } from "@/lib/supabase/client";
+import { logger } from "@/lib/logger";
 import { INITIAL_HISTORY_MONTHS } from "@/constants";
 import {
   accountToRow,
@@ -31,7 +32,8 @@ import type {
   Transaction,
 } from "@/types";
 
-const sb = (): SupabaseClient => requireBrowserSupabase() as unknown as SupabaseClient;
+const sb = (): SupabaseClient =>
+  requireBrowserSupabase() as unknown as SupabaseClient;
 
 const fail = (context: string, message?: string): never => {
   throw new Error(`${context}: ${message ?? "unknown error"}`);
@@ -76,7 +78,8 @@ function makeRepo<T extends { id: string }>(
     ): Promise<T[]> {
       let query = sb().from(table).select("*").eq("user_id", userId);
       if (opts?.since) query = query.gte(opts.since.column, opts.since.value);
-      if (orderBy) query = query.order(orderBy.column, { ascending: orderBy.ascending });
+      if (orderBy)
+        query = query.order(orderBy.column, { ascending: orderBy.ascending });
       const { data, error } = await query;
       if (error) fail(`${table}.list`, error.message);
       return ((data ?? []) as any[]).map(fromRow);
@@ -93,7 +96,11 @@ function makeRepo<T extends { id: string }>(
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-export const accountRepo = makeRepo<Account>("accounts", accountToRow, rowToAccount);
+export const accountRepo = makeRepo<Account>(
+  "accounts",
+  accountToRow,
+  rowToAccount,
+);
 
 export const transactionRepo = makeRepo<Transaction>(
   "transactions",
@@ -111,21 +118,30 @@ export const emiRepo = {
     const { error } = await sb().from("emis").delete().eq("id", id);
     if (error) fail("emiRepo.remove", error.message);
   },
-  async savePayment(payment: EmiPayment, emiId: string, userId: string): Promise<void> {
+  async savePayment(
+    payment: EmiPayment,
+    emiId: string,
+    userId: string,
+  ): Promise<void> {
     const { error } = await sb()
       .from("emi_payments")
       .upsert(emiPaymentToRow(payment, emiId, userId));
     if (error) fail("emiRepo.savePayment", error.message);
   },
   async removePayment(paymentId: string): Promise<void> {
-    const { error } = await sb().from("emi_payments").delete().eq("id", paymentId);
+    const { error } = await sb()
+      .from("emi_payments")
+      .delete()
+      .eq("id", paymentId);
     if (error) fail("emiRepo.removePayment", error.message);
   },
 };
 
 export const borrowingRepo = {
   async save(borrowing: Borrowing): Promise<void> {
-    const { error } = await sb().from("borrowings").upsert(borrowingToRow(borrowing));
+    const { error } = await sb()
+      .from("borrowings")
+      .upsert(borrowingToRow(borrowing));
     if (error) fail("borrowingRepo.save", error.message);
   },
   async remove(id: string): Promise<void> {
@@ -177,7 +193,9 @@ export async function fetchSnapshot(userId: string): Promise<FinanceSnapshot> {
   ] = await Promise.all([
     profileRepo.get(userId),
     accountRepo.list(userId),
-    transactionRepo.list(userId, { since: { column: "occurred_at", value: since } }),
+    transactionRepo.list(userId, {
+      since: { column: "occurred_at", value: since },
+    }),
     client.from("emis").select("*").eq("user_id", userId),
     client.from("emi_payments").select("*").eq("user_id", userId),
     client.from("borrowings").select("*").eq("user_id", userId),
@@ -185,7 +203,8 @@ export async function fetchSnapshot(userId: string): Promise<FinanceSnapshot> {
   ]);
 
   if (emiRows.error) fail("fetchSnapshot.emis", emiRows.error.message);
-  if (emiPaymentRows.error) fail("fetchSnapshot.emi_payments", emiPaymentRows.error.message);
+  if (emiPaymentRows.error)
+    fail("fetchSnapshot.emi_payments", emiPaymentRows.error.message);
 
   const paymentsByEmi = new Map<string, EmiPayment[]>();
   for (const row of emiPaymentRows.data ?? []) {
@@ -198,6 +217,13 @@ export async function fetchSnapshot(userId: string): Promise<FinanceSnapshot> {
   );
 
   let borrowings: Borrowing[] = [];
+  if (borrowingRows.error)
+    logger.error("fetchSnapshot.borrowings", borrowingRows.error.message);
+  if (borrowingPaymentRows.error)
+    logger.error(
+      "fetchSnapshot.borrowing_payments",
+      borrowingPaymentRows.error.message,
+    );
   if (!borrowingRows.error && !borrowingPaymentRows.error) {
     const paymentsByBorrowing = new Map<string, BorrowingPayment[]>();
     for (const row of borrowingPaymentRows.data ?? []) {

@@ -21,7 +21,10 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         ref={ref}
         id={id}
         rows={rows}
-        className={cn(styles.field_input, error && styles["field_input--error"])}
+        className={cn(
+          styles.field_input,
+          error && styles["field_input--error"],
+        )}
         {...rest}
       />
       {error && <span className={styles.field_error}>{error}</span>}

@@ -46,12 +46,22 @@ export interface FinanceState {
   deleteEmi: (id: string) => void;
   addEmiPayment: (
     emiId: string,
-    input: { month: string; amount: number },
+    input: {
+      month: string;
+      amount: number;
+      paidOn?: string;
+      accountId?: string | null;
+    },
   ) => void;
   updateEmiPayment: (
     emiId: string,
     paymentId: string,
-    patch: { month?: string; amount?: number },
+    patch: {
+      month?: string;
+      amount?: number;
+      paidOn?: string;
+      accountId?: string | null;
+    },
   ) => void;
   deleteEmiPayment: (emiId: string, paymentId: string) => void;
 

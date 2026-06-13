@@ -5,7 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, ArrowRight, AtSign, Lock, Mail, User } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRight,
+  AtSign,
+  Lock,
+  Mail,
+  User,
+} from "lucide-react";
 import { Input } from "@/components/Input/Input";
 import { Button } from "@/components/Button/Button";
 import { authService } from "@/services/auth.service";
@@ -55,7 +62,9 @@ export const SignupForm = () => {
       return;
     }
     if (result.needsVerification) {
-      router.replace(`${ROUTES.verify}?email=${encodeURIComponent(values.email)}`);
+      router.replace(
+        `${ROUTES.verify}?email=${encodeURIComponent(values.email)}`,
+      );
       return;
     }
     setUser({
@@ -114,7 +123,10 @@ export const SignupForm = () => {
         {[0, 1, 2, 3].map((i) => (
           <span
             key={i}
-            className={cn(styles.strength_bar, i < strength && styles["strength_bar--on"])}
+            className={cn(
+              styles.strength_bar,
+              i < strength && styles["strength_bar--on"],
+            )}
           />
         ))}
       </div>
@@ -127,7 +139,13 @@ export const SignupForm = () => {
         error={errors.confirmPassword?.message}
         {...register("confirmPassword")}
       />
-      <Button type="submit" size="lg" fullWidth loading={isSubmitting} iconRight={ArrowRight}>
+      <Button
+        type="submit"
+        size="lg"
+        fullWidth
+        loading={isSubmitting}
+        iconRight={ArrowRight}
+      >
         Create account
       </Button>
       <p className={styles.footer}>

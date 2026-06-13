@@ -13,7 +13,10 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, hint, icon: Icon, className, type = "text", id, ...rest }, ref) => {
+  (
+    { label, error, hint, icon: Icon, className, type = "text", id, ...rest },
+    ref,
+  ) => {
     const [reveal, setReveal] = useState(false);
     const isPassword = type === "password";
     const resolvedType = isPassword ? (reveal ? "text" : "password") : type;
