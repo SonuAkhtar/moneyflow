@@ -50,7 +50,8 @@ export const createBorrowingsSlice: SliceCreator<BorrowingsSlice> = (
   deleteBorrowing: (id) => {
     const s = get();
     set({ borrowings: s.borrowings.filter((b) => b.id !== id) });
-    sync(() => borrowingRepo.remove(id));
+    const uid = ownerId();
+    sync(() => borrowingRepo.remove(id, uid));
   },
 
   addBorrowingPayment: (borrowingId, input) => {
@@ -100,6 +101,7 @@ export const createBorrowingsSlice: SliceCreator<BorrowingsSlice> = (
           : b,
       ),
     });
-    sync(() => borrowingRepo.removePayment(paymentId));
+    const uid = ownerId();
+    sync(() => borrowingRepo.removePayment(paymentId, uid));
   },
 });

@@ -13,15 +13,32 @@ import styles from "@/sections/auth/auth.module.scss";
 
 const VerifyInner = () => {
   const params = useSearchParams();
-  const email = params.get("email") ?? "your inbox";
+  const emailParam = params.get("email");
+  const email = emailParam ?? "your inbox";
   const toast = useToast();
   const [sending, setSending] = useState(false);
 
   const resend = async () => {
+    if (!emailParam) {
+      toast({
+        title: "We don't have your email",
+        description: "Sign up again to get a fresh verification link.",
+        variant: "error",
+      });
+      return;
+    }
     setSending(true);
-    await authService.resetPassword(email);
+    const result = await authService.resendVerification(emailParam);
     setSending(false);
-    toast({ title: "Verification email sent", variant: "success" });
+    if (result.ok) {
+      toast({ title: "Verification email sent", variant: "success" });
+    } else {
+      toast({
+        title: "Couldn't resend",
+        description: result.message,
+        variant: "error",
+      });
+    }
   };
 
   return (

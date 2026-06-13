@@ -10,7 +10,7 @@ import { useFinanceStore } from "@/store/financeStore";
 import { useSpendAccounts } from "@/hooks/useSpendAccounts";
 import { useToast } from "@/hooks/useToast";
 import { AmountField } from "@/components/AmountField/AmountField";
-import { formatCurrency, getCurrencySymbol } from "@/utils";
+import { dateInputToIso, formatCurrency, getCurrencySymbol } from "@/utils";
 import { QUICK_EXPENSE_CATEGORIES } from "@/constants";
 import type { CategoryId } from "@/types";
 import styles from "./AddExpenseSheet.module.scss";
@@ -85,7 +85,7 @@ const ExpenseForm = ({
       category,
       merchant: merchant || undefined,
       isBigExpense: big,
-      occurredAt: new Date(date).toISOString(),
+      occurredAt: dateInputToIso(date),
     });
     toast({
       title: "Expense added",

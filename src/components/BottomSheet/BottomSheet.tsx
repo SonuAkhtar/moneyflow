@@ -18,8 +18,6 @@ interface BottomSheetProps {
   className?: string;
 }
 
-// Reference-counted scroll lock so stacked sheets don't unlock the page when
-// only one of them closes.
 let scrollLockCount = 0;
 let savedOverflow = "";
 const lockScroll = () => {
@@ -34,7 +32,6 @@ const unlockScroll = () => {
   if (scrollLockCount === 0) document.body.style.overflow = savedOverflow;
 };
 
-// Stack of open sheets so only the topmost one reacts to Escape.
 const escapeStack: Array<() => void> = [];
 
 const FOCUSABLE =
@@ -100,7 +97,6 @@ export const BottomSheet = ({
     };
     window.addEventListener("keydown", onKey);
 
-    // Move focus into the sheet unless a child already grabbed it (autoFocus).
     const focusTimer = window.setTimeout(() => {
       const panel = panelRef.current;
       if (panel && !panel.contains(document.activeElement)) {

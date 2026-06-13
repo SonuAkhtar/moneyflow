@@ -42,7 +42,6 @@ export const useFinanceMetrics = (
 
   return useMemo(() => {
     const { income, expenses } = monthTxns.totals;
-    // Only loan EMIs are a debt burden; SIPs are voluntary investments.
     const emiBurden = sumBy(
       emis.filter((e) => e.status === "active" && emiKind(e) === "loan"),
       (e) => e.monthlyAmount,

@@ -16,7 +16,6 @@ export const useUiStore = create<UiState>((set) => ({
   toasts: [],
   pushToast: (toast) =>
     set((s) => {
-      // Skip an identical toast already on screen (e.g. a retrying sync).
       const duplicate = s.toasts.some(
         (t) =>
           t.title === toast.title &&

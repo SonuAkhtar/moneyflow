@@ -6,7 +6,7 @@ import type { Database } from "./database.types";
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
 const AUTH_PATHS = ["/login", "/signup", "/forgot-password"];
-const RECOVERY_PATHS = ["/verify", "/reset-password"];
+const RECOVERY_PATHS = ["/verify", "/reset-password", "/auth/callback"];
 const PUBLIC_PATHS = ["/offline"];
 
 const startsWithAny = (path: string, prefixes: string[]) =>

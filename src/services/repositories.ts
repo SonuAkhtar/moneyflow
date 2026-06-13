@@ -88,8 +88,12 @@ function makeRepo<T extends { id: string }>(
       const { error } = await sb().from(table).upsert(toRow(entity));
       if (error) fail(`${table}.save`, error.message);
     },
-    async remove(id: string): Promise<void> {
-      const { error } = await sb().from(table).delete().eq("id", id);
+    async remove(id: string, userId: string): Promise<void> {
+      const { error } = await sb()
+        .from(table)
+        .delete()
+        .eq("id", id)
+        .eq("user_id", userId);
       if (error) fail(`${table}.remove`, error.message);
     },
   };
@@ -114,8 +118,12 @@ export const emiRepo = {
     const { error } = await sb().from("emis").upsert(emiToRow(emi));
     if (error) fail("emiRepo.save", error.message);
   },
-  async remove(id: string): Promise<void> {
-    const { error } = await sb().from("emis").delete().eq("id", id);
+  async remove(id: string, userId: string): Promise<void> {
+    const { error } = await sb()
+      .from("emis")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", userId);
     if (error) fail("emiRepo.remove", error.message);
   },
   async savePayment(
@@ -128,11 +136,12 @@ export const emiRepo = {
       .upsert(emiPaymentToRow(payment, emiId, userId));
     if (error) fail("emiRepo.savePayment", error.message);
   },
-  async removePayment(paymentId: string): Promise<void> {
+  async removePayment(paymentId: string, userId: string): Promise<void> {
     const { error } = await sb()
       .from("emi_payments")
       .delete()
-      .eq("id", paymentId);
+      .eq("id", paymentId)
+      .eq("user_id", userId);
     if (error) fail("emiRepo.removePayment", error.message);
   },
 };
@@ -144,8 +153,12 @@ export const borrowingRepo = {
       .upsert(borrowingToRow(borrowing));
     if (error) fail("borrowingRepo.save", error.message);
   },
-  async remove(id: string): Promise<void> {
-    const { error } = await sb().from("borrowings").delete().eq("id", id);
+  async remove(id: string, userId: string): Promise<void> {
+    const { error } = await sb()
+      .from("borrowings")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", userId);
     if (error) fail("borrowingRepo.remove", error.message);
   },
   async savePayment(
@@ -158,11 +171,12 @@ export const borrowingRepo = {
       .upsert(borrowingPaymentToRow(payment, borrowingId, userId));
     if (error) fail("borrowingRepo.savePayment", error.message);
   },
-  async removePayment(paymentId: string): Promise<void> {
+  async removePayment(paymentId: string, userId: string): Promise<void> {
     const { error } = await sb()
       .from("borrowing_payments")
       .delete()
-      .eq("id", paymentId);
+      .eq("id", paymentId)
+      .eq("user_id", userId);
     if (error) fail("borrowingRepo.removePayment", error.message);
   },
 };

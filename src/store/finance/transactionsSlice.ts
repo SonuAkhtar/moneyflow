@@ -55,9 +55,10 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
     });
 
     const account = accounts.find((a) => a.id === txn.accountId);
+    const uid = ownerId();
     sync(() =>
       Promise.all([
-        transactionRepo.remove(id),
+        transactionRepo.remove(id, uid),
         ...(account ? [accountRepo.save(account)] : []),
       ]).then(() => undefined),
     );

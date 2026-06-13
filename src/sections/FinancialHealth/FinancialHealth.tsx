@@ -86,7 +86,7 @@ export const FinancialHealth = () => {
           </svg>
           <div className={styles.ring_center}>
             <span className={styles.ring_score}>
-              {hasActivity ? metrics.healthScore : "—"}
+              {hasActivity ? metrics.healthScore : "-"}
             </span>
             <span className={styles.ring_max}>/ 100</span>
           </div>

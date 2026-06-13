@@ -10,7 +10,7 @@ import { CategoryPicker } from "@/components/CategoryPicker/CategoryPicker";
 import { ConfirmDialog } from "@/components/ConfirmDialog/ConfirmDialog";
 import { useFinanceStore } from "@/store/financeStore";
 import { useToast } from "@/hooks/useToast";
-import { getCurrencySymbol } from "@/utils";
+import { dateInputToIso, getCurrencySymbol } from "@/utils";
 import { QUICK_EXPENSE_CATEGORIES } from "@/constants";
 import type { CategoryId, Transaction } from "@/types";
 import styles from "./EditTransactionSheet.module.scss";
@@ -72,7 +72,7 @@ const EditForm = ({ transaction, onClose }: EditFormProps) => {
       category,
       merchant: merchant || undefined,
       isBigExpense: transaction.isBigExpense,
-      occurredAt: new Date(date).toISOString(),
+      occurredAt: dateInputToIso(date),
     });
     toast({
       title: "Expense updated",

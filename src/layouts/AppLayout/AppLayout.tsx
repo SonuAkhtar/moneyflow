@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { m } from "framer-motion";
 import type { User } from "@supabase/supabase-js";
@@ -32,6 +32,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
   const profile = useFinanceStore((s) => s.profile);
   const hasHydrated = useFinanceStore((s) => s.hasHydrated);
   const hydratedFor = useRef<string | null>(null);
+  const [rehydrated, setRehydrated] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -64,17 +65,24 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
   }, [setUser, resetAll]);
 
   useEffect(() => {
-    void useFinanceStore.persist.rehydrate();
+    let active = true;
+    void Promise.resolve(useFinanceStore.persist.rehydrate()).finally(() => {
+      if (active) setRehydrated(true);
+    });
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
+    if (!rehydrated) return;
     if (status === "authed" && user && hydratedFor.current !== user.id) {
       hydratedFor.current = user.id;
       const cached = useFinanceStore.getState().profile;
       if (cached && cached.id !== user.id) resetAll();
       void hydrate(user.id);
     }
-  }, [status, user, hydrate, resetAll]);
+  }, [rehydrated, status, user, hydrate, resetAll]);
 
   useEffect(() => {
     if (status === "anon") router.replace(ROUTES.login);

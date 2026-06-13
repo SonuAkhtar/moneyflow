@@ -12,8 +12,6 @@ interface AmountFieldProps {
   tone?: "success" | "danger";
 }
 
-// Keep only digits and a single decimal point so values like "1e3", "-5",
-// letters, or "1.2.3" can't reach the store via Number().
 const sanitizeAmount = (raw: string): string => {
   const cleaned = raw.replace(/[^0-9.]/g, "");
   const dot = cleaned.indexOf(".");

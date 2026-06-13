@@ -12,7 +12,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog/ConfirmDialog";
 import { useFinanceStore } from "@/store/financeStore";
 import { useSpendAccounts } from "@/hooks/useSpendAccounts";
 import { useToast } from "@/hooks/useToast";
-import { formatCurrency, getCurrencySymbol } from "@/utils";
+import { dateInputToIso, formatCurrency, getCurrencySymbol } from "@/utils";
 import type { CategoryId, Transaction } from "@/types";
 import styles from "./AddIncomeSheet.module.scss";
 
@@ -85,7 +85,7 @@ const Form = ({ transaction, onClose }: FormProps) => {
       amount: value,
       category,
       note: note || undefined,
-      occurredAt: new Date(date).toISOString(),
+      occurredAt: dateInputToIso(date),
     };
     if (transaction) {
       updateTransaction(transaction.id, input);

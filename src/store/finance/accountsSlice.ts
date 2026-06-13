@@ -82,14 +82,11 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (
     const major = s.majorAccountId === id ? null : s.majorAccountId;
     const daily = s.dailyAccountId === id ? null : s.dailyAccountId;
 
-    // Cascade: drop this account's transactions so they stop feeding totals.
     const removedTxnIds = s.transactions
       .filter((t) => t.accountId === id)
       .map((t) => t.id);
     const transactions = s.transactions.filter((t) => t.accountId !== id);
 
-    // Detach EMI/SIP payments paid from this (now-gone) account so later
-    // edits/deletes don't try to refund a missing bank.
     const detachedPayments: { payment: EmiPayment; emiId: string }[] = [];
     const emis = s.emis.map((e) => {
       if (!(e.payments ?? []).some((p) => p.accountId === id)) return e;
@@ -112,9 +109,9 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (
 
     const uid = ownerId();
     sync(async () => {
-      await accountRepo.remove(id);
+      await accountRepo.remove(id, uid);
       await Promise.all(
-        removedTxnIds.map((tid) => transactionRepo.remove(tid)),
+        removedTxnIds.map((tid) => transactionRepo.remove(tid, uid)),
       );
       await Promise.all(
         detachedPayments.map(({ payment, emiId }) =>

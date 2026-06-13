@@ -50,7 +50,7 @@ export const authService = {
       password: input.password,
       options: {
         data: { full_name: input.fullName, username },
-        emailRedirectTo: `${authRedirectBase()}/verify`,
+        emailRedirectTo: `${authRedirectBase()}/auth/callback?next=/`,
       },
     });
     if (error) return { ok: false, message: error.message };
@@ -102,7 +102,23 @@ export const authService = {
     const supabase = getBrowserSupabase();
     if (!supabase) return NOT_CONFIGURED;
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${authRedirectBase()}/reset-password`,
+      redirectTo: `${authRedirectBase()}/auth/callback?next=/reset-password`,
+    });
+    if (error) return { ok: false, message: error.message };
+    return { ok: true, email };
+  },
+
+  async resendVerification(email: string): Promise<AuthResult> {
+    const supabase = getBrowserSupabase();
+    if (!supabase) return NOT_CONFIGURED;
+    if (!isEmail(email))
+      return { ok: false, message: "Enter a valid email address" };
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: {
+        emailRedirectTo: `${authRedirectBase()}/auth/callback?next=/`,
+      },
     });
     if (error) return { ok: false, message: error.message };
     return { ok: true, email };

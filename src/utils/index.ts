@@ -52,13 +52,15 @@ export const emiStartMonth = (e: Emi): string =>
   e.startMonth ?? monthKey(e.createdAt);
 
 export const emiPaidAmount = (e: Emi): number => {
-  // SIP "invested" = the opening baseline (principal) plus every logged
-  // contribution; loans track progress by paid months.
   if (emiKind(e) === "sip") {
     const logged = (e.payments ?? []).reduce((acc, p) => acc + p.amount, 0);
     return e.principal + logged;
   }
-  return emiPaidMonths(e) * e.monthlyAmount;
+  const months =
+    e.totalMonths > 0
+      ? Math.min(emiPaidMonths(e), e.totalMonths)
+      : emiPaidMonths(e);
+  return months * e.monthlyAmount;
 };
 
 export const cn = (...inputs: ClassValue[]): string => clsx(inputs);
@@ -71,9 +73,6 @@ export const createId = (prefix = "id"): string => {
   return `${prefix}_${random}`;
 };
 
-// The user's chosen currency, kept in a module variable so the many no-arg
-// callers of getCurrencySymbol()/formatCurrency() reflect it without threading
-// it through every component. Set from the profile on hydrate/update.
 let ACTIVE_CURRENCY: string = CURRENCY.code;
 
 export const setActiveCurrency = (code: string | null | undefined): void => {
@@ -160,8 +159,6 @@ export const dateKey = (date: Date | string = new Date()): string => {
 
 export const currentDateKey = (): string => dateKey(new Date());
 
-// Consecutive days (ending today, or yesterday if today has no activity yet)
-// that have at least one transaction.
 export const currentStreak = (transactions: Transaction[]): number => {
   if (transactions.length === 0) return 0;
   const days = new Set(transactions.map((t) => dateKey(t.occurredAt)));
@@ -201,6 +198,9 @@ export const dayShort = (date: string | Date): string => {
 };
 
 export const isoNow = (): string => new Date().toISOString();
+
+export const dateInputToIso = (dateStr: string): string =>
+  new Date(`${dateStr}T12:00:00`).toISOString();
 
 export const savingsRate = (income: number, expenses: number): number => {
   if (income <= 0) return 0;

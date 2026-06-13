@@ -11,9 +11,6 @@ export interface BalancePoint {
 
 const round = (n: number) => Math.round(n * 100) / 100;
 
-// A balance-affecting event on the timeline. `id` is set only for real
-// transactions (the rows we emit a trail point for); EMI/SIP payment
-// deductions are folded in (id: null) so per-row balances stay accurate.
 interface TrailEvent {
   id: string | null;
   at: number;
@@ -29,7 +26,6 @@ export const useBalanceTrail = (): Map<string, BalancePoint> => {
   return useMemo(() => {
     const map = new Map<string, BalancePoint>();
 
-    // EMI/SIP payments reduce a bank's balance but aren't transactions.
     const emiEventsByAccount = new Map<string, TrailEvent[]>();
     for (const emi of emis) {
       for (const p of emi.payments ?? []) {
@@ -45,8 +41,6 @@ export const useBalanceTrail = (): Map<string, BalancePoint> => {
       const events: TrailEvent[] = transactions
         .filter((t) => t.accountId === account.id && t.category !== "salary")
         .map((t): TrailEvent => {
-          // Income and savings-deposit transfers add to the balance; expenses
-          // and withdrawals subtract. Mirrors the store's applyBalance signs.
           const isInflow =
             t.type === "income" ||
             (t.type === "transfer" && t.note === SAVINGS_DEPOSIT_NOTE);

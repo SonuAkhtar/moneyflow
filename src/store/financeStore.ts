@@ -21,8 +21,6 @@ const noopStorage: StateStorage = {
   removeItem: () => undefined,
 };
 
-// Older caches stored EMI payments without `paidOn`/`accountId`. Backfill them
-// so rehydrated data matches the current EmiPayment shape.
 type LegacyEmiPayment = {
   id: string;
   month: string;
@@ -80,10 +78,8 @@ export const useFinanceStore = create<FinanceState>()(
         borrowings: s.borrowings,
       }),
       onRehydrateStorage: () => (state) => {
-        if (state?.profile) {
-          setActiveCurrency(state.profile.currency);
-          useFinanceStore.setState({ hasHydrated: true });
-        }
+        if (state?.profile) setActiveCurrency(state.profile.currency);
+        useFinanceStore.setState({ hasHydrated: true });
       },
     },
   ),

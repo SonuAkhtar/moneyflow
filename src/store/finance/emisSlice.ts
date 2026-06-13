@@ -55,7 +55,6 @@ export const createEmisSlice: SliceCreator<EmisSlice> = (
   deleteEmi: (id) => {
     const s = get();
     const emi = s.emis.find((e) => e.id === id);
-    // Refund every payment that was deducted from a bank.
     let accounts = s.accounts;
     const dirtyIds = new Set<string>();
     for (const p of emi?.payments ?? []) {
@@ -67,9 +66,10 @@ export const createEmisSlice: SliceCreator<EmisSlice> = (
     const dirty = [...dirtyIds]
       .map((aid) => accounts.find((a) => a.id === aid))
       .filter((a): a is Account => Boolean(a));
+    const uid = ownerId();
     sync(() =>
       Promise.all([
-        emiRepo.remove(id),
+        emiRepo.remove(id, uid),
         ...dirty.map((a) => accountRepo.save(a)),
       ]).then(() => undefined),
     );
@@ -84,7 +84,6 @@ export const createEmisSlice: SliceCreator<EmisSlice> = (
       amount: input.amount,
       accountId: input.accountId ?? null,
     };
-    // Deduct the payment from the selected bank, like an expense.
     const accounts = payment.accountId
       ? applyBalance(s.accounts, payment.accountId, -payment.amount)
       : s.accounts;
@@ -114,7 +113,6 @@ export const createEmisSlice: SliceCreator<EmisSlice> = (
     if (!old) return;
     const updated: EmiPayment = { ...old, ...patch };
 
-    // Refund the old deduction, then apply the new one.
     let accounts = s.accounts;
     if (old.accountId)
       accounts = applyBalance(accounts, old.accountId, old.amount);
@@ -154,7 +152,6 @@ export const createEmisSlice: SliceCreator<EmisSlice> = (
     const s = get();
     const emi = s.emis.find((e) => e.id === emiId);
     const payment = emi?.payments?.find((p) => p.id === paymentId);
-    // Refund the deducted amount back to the bank.
     const accounts = payment?.accountId
       ? applyBalance(s.accounts, payment.accountId, payment.amount)
       : s.accounts;
@@ -172,9 +169,10 @@ export const createEmisSlice: SliceCreator<EmisSlice> = (
     const account = payment?.accountId
       ? accounts.find((a) => a.id === payment.accountId)
       : undefined;
+    const uid = ownerId();
     sync(() =>
       Promise.all([
-        emiRepo.removePayment(paymentId),
+        emiRepo.removePayment(paymentId, uid),
         ...(account ? [accountRepo.save(account)] : []),
       ]).then(() => undefined),
     );

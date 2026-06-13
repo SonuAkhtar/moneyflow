@@ -33,8 +33,6 @@ const CURRENCIES = [
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_AVATAR_DIM = 256;
 
-// Downscale + re-encode the picked image so we store a small data URL instead
-// of a multi-MB original on the profile row.
 const compressAvatar = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
