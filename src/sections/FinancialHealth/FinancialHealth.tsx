@@ -51,7 +51,10 @@ export const FinancialHealth = () => {
     : C;
   const targetPct =
     target > 0
-      ? Math.min(100, Math.round((metrics.monthSaved / target) * 100))
+      ? Math.max(
+          0,
+          Math.min(100, Math.round((metrics.monthSaved / target) * 100)),
+        )
       : 0;
 
   return (

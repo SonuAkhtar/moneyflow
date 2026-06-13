@@ -67,10 +67,14 @@ export const SignupForm = () => {
       );
       return;
     }
+    if (!result.userId) {
+      setServerError("Unable to create account");
+      return;
+    }
     setUser({
-      id: result.userId ?? "local",
-      email: values.email,
-      fullName: values.fullName,
+      id: result.userId,
+      email: result.email ?? values.email,
+      fullName: result.fullName ?? values.fullName,
       username: result.username ?? values.username,
     });
     router.replace(ROUTES.onboarding);

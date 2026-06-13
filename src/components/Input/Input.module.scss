@@ -26,7 +26,7 @@
       background var(--dur-fast) var(--ease-smooth);
 
     &:focus-within {
-      border-color: var(--border-lime);
+      border-color: var(--border-focus);
       box-shadow: 0 0 0 3px rgba(78, 206, 110, 0.14);
       background: rgba(255, 255, 255, 0.06);
     }

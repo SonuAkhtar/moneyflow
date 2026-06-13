@@ -22,6 +22,10 @@ export const PullToRefresh = ({ onRefresh, children }: PullToRefreshProps) => {
   const pulling = useRef(false);
   const distance = useRef(0);
   const refreshingRef = useRef(false);
+  const onRefreshRef = useRef(onRefresh);
+  useEffect(() => {
+    onRefreshRef.current = onRefresh;
+  }, [onRefresh]);
 
   useEffect(() => {
     const begin = (e: TouchEvent) => {
@@ -62,7 +66,7 @@ export const PullToRefresh = ({ onRefresh, children }: PullToRefreshProps) => {
         refreshingRef.current = true;
         setRefreshing(true);
         animate(y, REST, spring);
-        void Promise.resolve(onRefresh()).finally(() => {
+        void Promise.resolve(onRefreshRef.current()).finally(() => {
           refreshingRef.current = false;
           setRefreshing(false);
           animate(y, 0, spring);
@@ -84,7 +88,7 @@ export const PullToRefresh = ({ onRefresh, children }: PullToRefreshProps) => {
       window.removeEventListener("touchend", end);
       window.removeEventListener("touchcancel", end);
     };
-  }, [onRefresh, y]);
+  }, [y]);
 
   const rotate = useTransform(y, [0, MAX_PULL], [0, 300]);
   const opacity = useTransform(y, [0, THRESHOLD * 0.4, THRESHOLD], [0, 0.5, 1]);

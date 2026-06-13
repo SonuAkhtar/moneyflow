@@ -1,43 +1,62 @@
 :root {
   color-scheme: light;
 
-  --color-lime: #c9ec5b;
-  --color-neon-green: #d7f27e;
-  --color-neon-orange: #f5803c;
+  --brand-50: #e8fbf2;
+  --brand-100: #c6f4dd;
+  --brand-200: #92e9c0;
+  --brand-300: #5fdca2;
+  --brand-400: #34ce89;
+  --brand-500: #16c784;
+  --brand-600: #0fb174;
+  --brand-700: #0c9462;
+  --brand-800: #0a7650;
+  --brand-900: #064a33;
+  --on-brand: #04150d;
 
-  --color-ember: #e4574d;
+  --gain: #16c784;
+  --loss: #f2555a;
+  --warn: #f4b740;
+  --info: #4c8dff;
+  --heat: #ff8a4c;
 
-  --color-success: #1f9d57;
-  --color-danger: #e4574d;
-  --color-warning: #f5a623;
-  --color-info: #3d8bff;
+  --color-lime: var(--brand-500);
+  --color-neon-green: var(--brand-400);
+  --color-neon-orange: var(--heat);
+  --color-ember: var(--loss);
 
-  --chart-income: #16a34a;
-  --chart-saved: #16a34a;
-  --chart-expense: #ef7c2e;
+  --color-success: var(--gain);
+  --color-danger: var(--loss);
+  --color-warning: var(--warn);
+  --color-info: var(--info);
 
-  --text-inverse: #07120b;
+  --chart-income: var(--gain);
+  --chart-saved: var(--brand-500);
+  --chart-expense: var(--heat);
+  --chart-grid: var(--border-subtle);
+  --chart-axis: var(--text-tertiary);
 
-  --gradient-lime: linear-gradient(135deg, #d7f27e 0%, #b9e34a 100%);
-  --gradient-orange: linear-gradient(135deg, #f5803c 0%, #e25a44 100%);
+  --text-inverse: var(--on-brand);
+
+  --gradient-lime: linear-gradient(135deg, #34ce89 0%, #0fb174 100%);
+  --gradient-orange: linear-gradient(135deg, #ff8a4c 0%, #f2693a 100%);
 
   --gradient-spectrum: linear-gradient(
     90deg,
-    #ff4d4d 0%,
-    #ff8a1a 20%,
-    #ffd23e 40%,
-    #4ece6e 62%,
+    #f2555a 0%,
+    #ff8a4c 22%,
+    #f4b740 42%,
+    #16c784 64%,
     #2bd4c4 82%,
-    #3d8bff 100%
+    #4c8dff 100%
   );
   --gradient-emergency: linear-gradient(
     135deg,
-    rgba(228, 87, 77, 0.42) 0%,
+    rgba(242, 85, 90, 0.42) 0%,
     rgba(150, 40, 38, 0.52) 100%
   );
 
-  --shadow-glow-lime: 0 12px 44px rgba(170, 210, 70, 0.32);
-  --shadow-glow-orange: 0 12px 44px rgba(229, 90, 68, 0.24);
+  --shadow-glow-lime: 0 12px 44px rgba(22, 199, 132, 0.28);
+  --shadow-glow-orange: 0 12px 44px rgba(255, 138, 76, 0.24);
 
   --radius-xs: 8px;
   --radius-sm: 12px;
@@ -70,6 +89,9 @@
   --font-3xl: 2.25rem;
   --font-4xl: 3rem;
 
+  --font-display:
+    var(--font-logo), "Space Grotesk", var(--font-inter), "Inter", sans-serif;
+
   --weight-regular: 400;
   --weight-medium: 500;
   --weight-semibold: 600;
@@ -81,102 +103,110 @@
   --dur-base: 240ms;
   --dur-slow: 420ms;
 
-  --surface-base: #f3f0fa;
+  --paper-0: #ffffff;
+  --paper-50: #fafbfc;
+  --paper-100: #f4f6f8;
+  --paper-200: #eceff2;
+
+  --surface-base: var(--paper-100);
   --surface-elevated: #ffffff;
   --surface-raised: #ffffff;
   --surface-card: rgba(255, 255, 255, 0.7);
   --surface-card-solid: #ffffff;
   --surface-glass: rgba(255, 255, 255, 0.6);
-  --surface-chrome: rgba(247, 244, 253, 0.94);
-  --surface-input: rgba(91, 60, 150, 0.05);
-  --surface-overlay: rgba(40, 28, 66, 0.36);
+  --surface-chrome: rgba(250, 251, 252, 0.94);
+  --surface-input: rgba(16, 24, 32, 0.04);
+  --surface-overlay: rgba(12, 18, 24, 0.36);
 
-  --border-subtle: rgba(70, 50, 120, 0.08);
-  --border-glass: rgba(70, 50, 120, 0.1);
-  --border-strong: rgba(70, 50, 120, 0.16);
-  --border-lime: rgba(124, 92, 240, 0.5);
+  --border-subtle: rgba(16, 24, 32, 0.06);
+  --border-glass: rgba(16, 24, 32, 0.1);
+  --border-strong: rgba(16, 24, 32, 0.16);
+  --border-focus: rgba(22, 199, 132, 0.5);
 
-  --text-primary: #1d1630;
-  --text-secondary: rgba(29, 22, 48, 0.72);
-  --text-tertiary: rgba(29, 22, 48, 0.6);
+  --text-primary: #0e1116;
+  --text-secondary: rgba(14, 17, 22, 0.7);
+  --text-tertiary: rgba(14, 17, 22, 0.56);
 
-  --accent: #6d4ed6;
-  --accent-bg: rgba(124, 92, 240, 0.12);
+  --accent: var(--brand-500);
+  --accent-bg: rgba(22, 199, 132, 0.12);
 
   --gradient-card: linear-gradient(
     160deg,
     rgba(255, 255, 255, 0.92) 0%,
-    rgba(247, 244, 253, 0.82) 100%
+    rgba(244, 246, 248, 0.82) 100%
   );
   --gradient-hero:
     radial-gradient(
       120% 120% at 0% 0%,
-      rgba(124, 92, 240, 0.3) 0%,
+      rgba(22, 199, 132, 0.22) 0%,
       transparent 48%
     ),
     radial-gradient(
       120% 120% at 100% 0%,
-      rgba(242, 176, 142, 0.32) 0%,
+      rgba(255, 138, 76, 0.18) 0%,
       transparent 44%
     );
   --gradient-mesh:
     radial-gradient(
       80% 80% at 18% 8%,
-      rgba(124, 92, 240, 0.2) 0%,
+      rgba(22, 199, 132, 0.16) 0%,
       transparent 52%
     ),
     radial-gradient(
       70% 70% at 92% 16%,
-      rgba(242, 176, 142, 0.2) 0%,
+      rgba(255, 138, 76, 0.12) 0%,
       transparent 55%
     ),
     radial-gradient(
       90% 90% at 50% 100%,
-      rgba(201, 236, 91, 0.16) 0%,
+      rgba(52, 206, 137, 0.12) 0%,
       transparent 60%
     );
 
-  --shadow-card: 0 12px 30px rgba(45, 30, 80, 0.1);
-  --shadow-float: 0 22px 54px rgba(45, 30, 80, 0.18);
-  --shadow-soft: 0 4px 16px rgba(45, 30, 80, 0.08);
+  --shadow-card: 0 12px 30px rgba(16, 24, 32, 0.1);
+  --shadow-float: 0 22px 54px rgba(16, 24, 32, 0.16);
+  --shadow-soft: 0 4px 16px rgba(16, 24, 32, 0.08);
   --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --color-lime: #4ece6e;
-  --color-neon-green: #7eea90;
+  --ink-950: #0a0b0d;
+  --ink-900: #0e1014;
+  --ink-850: #131519;
+  --ink-800: #181b21;
+  --ink-750: #1e222a;
 
-  --gradient-lime: linear-gradient(135deg, #5ad277 0%, #2faa58 100%);
-  --shadow-glow-lime: 0 14px 50px rgba(78, 206, 110, 0.3);
-  --shadow-glow-orange: 0 14px 50px rgba(229, 90, 68, 0.28);
+  --color-lime: var(--brand-400);
 
-  --surface-base: #0b0c0e;
-  --surface-elevated: #131419;
-  --surface-raised: #181a20;
+  --gradient-lime: linear-gradient(135deg, #34ce89 0%, #16c784 100%);
+  --shadow-glow-lime: 0 14px 50px rgba(52, 206, 137, 0.3);
+  --shadow-glow-orange: 0 14px 50px rgba(255, 138, 76, 0.26);
+
+  --chart-saved: var(--brand-400);
+
+  --surface-base: var(--ink-950);
+  --surface-elevated: var(--ink-850);
+  --surface-raised: var(--ink-800);
   --surface-card: rgba(32, 35, 41, 0.55);
-  --surface-card-solid: #1b1e24;
+  --surface-card-solid: var(--ink-800);
   --surface-glass: rgba(255, 255, 255, 0.05);
-  --surface-chrome: rgba(15, 17, 22, 0.92);
+  --surface-chrome: rgba(13, 15, 19, 0.92);
   --surface-input: rgba(255, 255, 255, 0.055);
   --surface-overlay: rgba(6, 7, 9, 0.74);
 
   --border-subtle: rgba(255, 255, 255, 0.07);
   --border-glass: rgba(255, 255, 255, 0.1);
   --border-strong: rgba(255, 255, 255, 0.16);
-  --border-lime: rgba(78, 206, 110, 0.38);
+  --border-focus: rgba(52, 206, 137, 0.42);
 
   --text-primary: #f3f5f4;
   --text-secondary: rgba(243, 245, 244, 0.74);
-  --text-tertiary: rgba(243, 245, 244, 0.6);
+  --text-tertiary: rgba(243, 245, 244, 0.58);
 
-  --chart-income: #4ece6e;
-  --chart-saved: #4ece6e;
-  --chart-expense: #f5803c;
-
-  --accent: #4ece6e;
-  --accent-bg: rgba(78, 206, 110, 0.15);
+  --accent: var(--brand-400);
+  --accent-bg: rgba(52, 206, 137, 0.15);
 
   --gradient-card: linear-gradient(
     160deg,
@@ -186,28 +216,28 @@
   --gradient-hero:
     radial-gradient(
       120% 120% at 0% 0%,
-      rgba(78, 206, 110, 0.18) 0%,
+      rgba(52, 206, 137, 0.18) 0%,
       transparent 45%
     ),
     radial-gradient(
       120% 120% at 100% 0%,
-      rgba(229, 90, 68, 0.12) 0%,
+      rgba(255, 138, 76, 0.12) 0%,
       transparent 42%
     );
   --gradient-mesh:
     radial-gradient(
       80% 80% at 20% 10%,
-      rgba(78, 206, 110, 0.12) 0%,
+      rgba(52, 206, 137, 0.12) 0%,
       transparent 50%
     ),
     radial-gradient(
       70% 70% at 90% 20%,
-      rgba(245, 128, 60, 0.09) 0%,
+      rgba(255, 138, 76, 0.09) 0%,
       transparent 55%
     ),
     radial-gradient(
       90% 90% at 50% 100%,
-      rgba(78, 206, 110, 0.07) 0%,
+      rgba(52, 206, 137, 0.07) 0%,
       transparent 60%
     );
 
@@ -238,6 +268,8 @@ body {
   color: var(--text-primary);
   font-size: var(--font-md);
   line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior-y: none;
@@ -292,6 +324,16 @@ h4 {
   line-height: 1.18;
   letter-spacing: -0.02em;
   font-weight: var(--weight-bold);
+}
+
+h1 {
+  font-family: var(--font-display);
+  letter-spacing: -0.03em;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
 }
 
 input,

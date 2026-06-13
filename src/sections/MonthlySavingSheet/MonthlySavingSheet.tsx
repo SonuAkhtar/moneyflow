@@ -7,7 +7,13 @@ import { Button } from "@/components/Button/Button";
 import { AmountField } from "@/components/AmountField/AmountField";
 import { useFinanceStore } from "@/store/financeStore";
 import { useToast } from "@/hooks/useToast";
-import { bankMonthFlow, cn, currentMonthKey, formatCurrency } from "@/utils";
+import {
+  accountMonthDelta,
+  bankMonthFlow,
+  cn,
+  currentMonthKey,
+  formatCurrency,
+} from "@/utils";
 import type { Account } from "@/types";
 import styles from "./MonthlySavingSheet.module.scss";
 
@@ -40,8 +46,10 @@ const Form = ({
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
   const toast = useToast();
 
-  const flow = bankMonthFlow(account.id, transactions, currentMonthKey());
-  const savedTillLastMonth = account.balance - flow.net;
+  const month = currentMonthKey();
+  const flow = bankMonthFlow(account.id, transactions, month);
+  const savedTillLastMonth =
+    account.balance - accountMonthDelta(account.id, transactions, month);
 
   const [mode, setMode] = useState<"add" | "take">("add");
   const [amount, setAmount] = useState("");

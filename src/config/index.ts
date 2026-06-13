@@ -13,8 +13,8 @@ export const siteConfig = {
   name: APP.name,
   title: `${APP.name} - ${APP.tagline}`,
   description: APP.description,
-  themeColor: "#0b0c0e",
-  accentColor: "#4ece6e",
+  themeColor: "#0a0b0d",
+  accentColor: "#16c784",
   keywords: [
     "finance",
     "expense tracker",

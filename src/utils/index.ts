@@ -32,7 +32,6 @@ export const accountMonthDelta = (
     if (t.accountId !== accountId) continue;
     if (monthKey(t.occurredAt) !== month) continue;
     if (t.type === "income") {
-      if (t.category === "salary") continue;
       delta += t.amount;
     } else if (t.type === "transfer" && t.note === SAVINGS_DEPOSIT_NOTE) {
       delta += t.amount;
@@ -234,6 +233,8 @@ export const healthBand = (score: number): HealthBand => {
   return "poor";
 };
 
+export const round2 = (value: number): number => Math.round(value * 100) / 100;
+
 export const sumBy = <T>(items: T[], selector: (item: T) => number): number =>
   items.reduce((acc, item) => acc + selector(item), 0);
 
@@ -249,10 +250,10 @@ export const groupSum = <T>(
   }, {});
 
 export const borrowingRepaid = (b: Borrowing): number =>
-  sumBy(b.payments ?? [], (p) => p.amount);
+  round2(sumBy(b.payments ?? [], (p) => p.amount));
 
 export const borrowingOutstanding = (b: Borrowing): number =>
-  Math.max(0, Math.round((b.amount - borrowingRepaid(b)) * 100) / 100);
+  Math.max(0, round2(b.amount - borrowingRepaid(b)));
 
 export const borrowingSettled = (b: Borrowing): boolean =>
-  borrowingRepaid(b) >= b.amount;
+  borrowingOutstanding(b) <= 0;

@@ -112,12 +112,23 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
         monthKey(t.occurredAt) === month,
     );
     if (existing) {
+      const accounts = applyBalance(
+        s.accounts,
+        existing.accountId,
+        amount - existing.amount,
+      );
       const transactions = s.transactions.map((t) =>
         t.id === existing.id ? { ...t, amount } : t,
       );
-      set({ transactions });
+      set({ transactions, accounts });
       const updatedTxn = transactions.find((t) => t.id === existing.id);
-      if (updatedTxn) sync(() => transactionRepo.save(updatedTxn));
+      const account = accounts.find((a) => a.id === existing.accountId);
+      sync(() =>
+        Promise.all([
+          ...(updatedTxn ? [transactionRepo.save(updatedTxn)] : []),
+          ...(account ? [accountRepo.save(account)] : []),
+        ]).then(() => undefined),
+      );
       return;
     }
     const base = s.accounts.find((a) => a.isPrimary) ?? s.accounts[0];
@@ -137,7 +148,14 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
       occurredAt,
       createdAt: isoNow(),
     };
-    set({ transactions: [txn, ...s.transactions] });
-    sync(() => transactionRepo.save(txn));
+    const accounts = applyBalance(s.accounts, base.id, amount);
+    set({ transactions: [txn, ...s.transactions], accounts });
+    const account = accounts.find((a) => a.id === base.id);
+    sync(() =>
+      Promise.all([
+        transactionRepo.save(txn),
+        ...(account ? [accountRepo.save(account)] : []),
+      ]).then(() => undefined),
+    );
   },
 });

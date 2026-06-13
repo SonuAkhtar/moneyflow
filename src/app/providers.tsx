@@ -11,11 +11,9 @@ import { ErrorBoundary } from "@/components/ErrorBoundary/ErrorBoundary";
 import { useThemeStore } from "@/store/themeStore";
 
 export const Providers = ({ children }: { children: ReactNode }) => {
-  const syncFromDocument = useThemeStore((s) => s.syncFromDocument);
-
   useEffect(() => {
-    syncFromDocument();
-  }, [syncFromDocument]);
+    useThemeStore.getState().syncFromDocument();
+  }, []);
 
   return (
     <LazyMotion features={loadMotionFeatures} strict>

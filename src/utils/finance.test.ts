@@ -119,9 +119,9 @@ describe("accountMonthDelta", () => {
     expect(accountMonthDelta("acc-1", txns, "2026-05")).toBe(1150);
   });
 
-  it("excludes salary income (recorded but never credited to a balance)", () => {
+  it("includes salary income credited to the account", () => {
     const txns = [tx({ type: "income", category: "salary", amount: 5000 })];
-    expect(accountMonthDelta("acc-1", txns, "2026-05")).toBe(0);
+    expect(accountMonthDelta("acc-1", txns, "2026-05")).toBe(5000);
   });
 
   it("ignores other accounts and other months", () => {

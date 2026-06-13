@@ -10,14 +10,27 @@ const RECOVERY_PATHS = ["/verify", "/reset-password", "/auth/callback"];
 const PUBLIC_PATHS = ["/offline"];
 
 const startsWithAny = (path: string, prefixes: string[]) =>
-  prefixes.some(
-    (p) => path === p || path.startsWith(`${p}/`) || path.startsWith(p),
-  );
+  prefixes.some((p) => path === p || path.startsWith(`${p}/`));
 
 export const updateSession = async (request: NextRequest) => {
   let response = NextResponse.next({ request });
 
-  if (!isSupabaseConfigured) return response;
+  const path = request.nextUrl.pathname;
+  const onAuthPath = startsWithAny(path, AUTH_PATHS);
+  const onRecoveryPath = startsWithAny(path, RECOVERY_PATHS);
+  const onPublicPath = startsWithAny(path, PUBLIC_PATHS);
+  const isOpenPath = onAuthPath || onRecoveryPath || onPublicPath;
+
+  if (!isSupabaseConfigured) {
+    if (process.env.NODE_ENV !== "production" || isOpenPath) return response;
+    if (path.startsWith("/api")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
 
   const supabase = createServerClient<Database>(
     env.supabaseUrl,
@@ -43,11 +56,6 @@ export const updateSession = async (request: NextRequest) => {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const path = request.nextUrl.pathname;
-  const onAuthPath = startsWithAny(path, AUTH_PATHS);
-  const onRecoveryPath = startsWithAny(path, RECOVERY_PATHS);
-  const onPublicPath = startsWithAny(path, PUBLIC_PATHS);
 
   const redirectTo = (pathname: string) => {
     const url = request.nextUrl.clone();

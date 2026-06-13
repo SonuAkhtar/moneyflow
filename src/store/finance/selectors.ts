@@ -1,4 +1,10 @@
-import { SAVINGS_DEPOSIT_NOTE, emiKind, monthKey, sumBy } from "@/utils";
+import {
+  SAVINGS_DEPOSIT_NOTE,
+  emiKind,
+  monthKey,
+  round2,
+  sumBy,
+} from "@/utils";
 import type { Emi, Transaction } from "@/types";
 
 export interface MonthBuckets {
@@ -28,11 +34,13 @@ export const monthBuckets = (
 };
 
 export const totalsOf = (buckets: MonthBuckets): MonthTotals => ({
-  income: sumBy(buckets.income, (t) => t.amount),
-  expenses: sumBy(buckets.expenses, (t) => t.amount),
-  savingsDeposits: sumBy(
-    buckets.transfers.filter((t) => t.note === SAVINGS_DEPOSIT_NOTE),
-    (t) => t.amount,
+  income: round2(sumBy(buckets.income, (t) => t.amount)),
+  expenses: round2(sumBy(buckets.expenses, (t) => t.amount)),
+  savingsDeposits: round2(
+    sumBy(
+      buckets.transfers.filter((t) => t.note === SAVINGS_DEPOSIT_NOTE),
+      (t) => t.amount,
+    ),
   ),
 });
 
@@ -42,13 +50,15 @@ export const monthTotals = (
 ): MonthTotals => totalsOf(monthBuckets(transactions, month));
 
 export const loanEmiPaidInMonth = (emis: Emi[], month: string): number =>
-  sumBy(
-    emis.filter((e) => emiKind(e) === "loan"),
-    (e) =>
-      sumBy(
-        (e.payments ?? []).filter((p) => p.month === month),
-        (p) => p.amount,
-      ),
+  round2(
+    sumBy(
+      emis.filter((e) => emiKind(e) === "loan"),
+      (e) =>
+        sumBy(
+          (e.payments ?? []).filter((p) => p.month === month),
+          (p) => p.amount,
+        ),
+    ),
   );
 
 export const salaryTotalsByMonth = (

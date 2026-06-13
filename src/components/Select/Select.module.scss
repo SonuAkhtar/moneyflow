@@ -22,7 +22,7 @@
     transition: border-color var(--dur-fast) var(--ease-smooth);
 
     &:focus-within {
-      border-color: var(--border-lime);
+      border-color: var(--border-focus);
     }
 
     &--error {

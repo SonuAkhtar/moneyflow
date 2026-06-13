@@ -122,14 +122,14 @@ describe("financeStore mutations (optimistic reducer)", () => {
     expect(useFinanceStore.getState().accounts[0]!.balance).toBe(500);
   });
 
-  it("setSalary records a salary income txn WITHOUT touching the account balance", () => {
+  it("setSalary records a salary income txn and credits the account balance", () => {
     seed({ accounts: [account(0)] });
     useFinanceStore.getState().setSalary(currentMonthKey(), 5000);
     const s = useFinanceStore.getState();
     expect(
       s.transactions.some((t) => t.category === "salary" && t.amount === 5000),
     ).toBe(true);
-    expect(s.accounts[0]!.balance).toBe(0);
+    expect(s.accounts[0]!.balance).toBe(5000);
   });
 
   it("addSavingDeposit records a transfer and raises the balance", () => {

@@ -24,7 +24,7 @@
     transition: border-color var(--dur-fast) var(--ease-smooth);
 
     &:focus {
-      border-color: var(--border-lime);
+      border-color: var(--border-focus);
       box-shadow: 0 0 0 3px rgba(198, 244, 50, 0.12);
     }
 

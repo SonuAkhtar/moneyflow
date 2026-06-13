@@ -31,15 +31,14 @@ export const LoginForm = () => {
   const submit = handleSubmit(async (values) => {
     setServerError(null);
     const result = await authService.signIn(values);
-    if (!result.ok) {
+    if (!result.ok || !result.userId) {
       setServerError(result.message ?? "Unable to sign in");
       return;
     }
     setUser({
-      id: result.userId ?? "local",
-      email: result.email ?? values.identifier,
-      fullName:
-        result.fullName || result.username || values.identifier || "Member",
+      id: result.userId,
+      email: result.email ?? "",
+      fullName: result.fullName || result.username || "Member",
       username: result.username ?? null,
     });
     router.replace(ROUTES.home);

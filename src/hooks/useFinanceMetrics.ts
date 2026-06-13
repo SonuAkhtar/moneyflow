@@ -49,9 +49,9 @@ export const useFinanceMetrics = (
     const totalBalance = sumBy(accounts, (a) => a.balance);
     const emiPaid = loanEmiPaidInMonth(emis, month);
     const totalSpent = expenses + emiPaid;
-    const saved = Math.max(0, income - totalSpent);
+    const saved = income - totalSpent;
     const score = computeHealthScore({
-      income: income || 1,
+      income,
       expenses,
       savings: saved,
       emiBurden,
@@ -64,7 +64,7 @@ export const useFinanceMetrics = (
       monthSaved: Math.round(saved * 100) / 100,
       savingsRate:
         income > 0
-          ? Math.round(Math.max(0, Math.min(100, (saved / income) * 100)))
+          ? Math.round(Math.max(-100, Math.min(100, (saved / income) * 100)))
           : 0,
       emiBurden: Math.round(emiBurden * 100) / 100,
       healthScore: score,
