@@ -47,6 +47,12 @@
     font-size: var(--font-sm);
     font-weight: var(--weight-semibold);
     font-variant-numeric: tabular-nums;
+    color: var(--color-success);
+  }
+
+  &_edit {
+    color: var(--text-tertiary);
+    flex-shrink: 0;
   }
 
   &_add {
@@ -57,6 +63,11 @@
     font-weight: var(--weight-medium);
     color: var(--accent);
   }
+}
+
+.trail {
+  color: var(--color-success);
+  font-variant-numeric: tabular-nums;
 }
 
 .editor {

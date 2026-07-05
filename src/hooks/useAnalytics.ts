@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useFinanceStore } from "@/store/financeStore";
 import { useMonthTransactions } from "./useMonthTransactions";
-import { monthTotals } from "@/store/finance/selectors";
+import { loanEmiPaidInMonth, monthTotals } from "@/store/finance/selectors";
 import { getCategoryMeta } from "@/constants/categories";
 import {
   currentMonthKey,
@@ -40,6 +40,7 @@ export const useAnalytics = (
   month: string = currentMonthKey(),
 ): AnalyticsData => {
   const transactions = useFinanceStore((s) => s.transactions);
+  const emis = useFinanceStore((s) => s.emis);
   const monthTxns = useMonthTransactions(month);
 
   return useMemo(() => {
@@ -66,15 +67,13 @@ export const useAnalytics = (
       .sort((a, b) => b.value - a.value);
 
     const monthlyTrend: TrendPoint[] = lastNMonthKeys(6).map((key) => {
-      const { income, expenses, savingsDeposits } = monthTotals(
-        transactions,
-        key,
-      );
+      const { income, expenses } = monthTotals(transactions, key);
+      const spent = expenses + loanEmiPaidInMonth(emis, key);
       return {
         label: shortMonthLabel(`${key}-01`),
         income: Math.round(income),
-        expenses: Math.round(expenses),
-        saved: Math.round(Math.max(0, income - expenses) + savingsDeposits),
+        expenses: Math.round(spent),
+        saved: Math.round(income - spent),
       };
     });
 
@@ -106,7 +105,7 @@ export const useAnalytics = (
       .slice(0, 5);
 
     return { categoryBreakdown, monthlyTrend, dailySpend, topMerchants };
-  }, [transactions, monthTxns]);
+  }, [transactions, emis, monthTxns]);
 };
 
 export const currentMonthTitle = (): string => monthLabel(currentMonthKey());

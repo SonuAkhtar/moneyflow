@@ -49,7 +49,6 @@ describe("computeHealthScore", () => {
   it("returns a score within 0-100", () => {
     const score = computeHealthScore({
       income: 1000,
-      expenses: 600,
       savings: 400,
       emiBurden: 100,
     });

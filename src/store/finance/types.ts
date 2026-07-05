@@ -4,6 +4,7 @@ import type {
   AccountInput,
   Borrowing,
   BorrowingInput,
+  CategoryId,
   Emi,
   EmiInput,
   Profile,
@@ -21,6 +22,10 @@ export interface FinanceState {
   transactions: Transaction[];
   emis: Emi[];
   borrowings: Borrowing[];
+  budgets: Partial<Record<CategoryId, number>>;
+
+  setBudget: (category: CategoryId, amount: number) => void;
+  removeBudget: (category: CategoryId) => void;
 
   hydrate: (userId: string) => Promise<void>;
   resetAll: () => void;
@@ -39,7 +44,7 @@ export interface FinanceState {
   addSavingDeposit: (accountId: string, amount: number) => void;
   addSavingWithdrawal: (accountId: string, amount: number) => void;
 
-  setSalary: (month: string, amount: number) => void;
+  setSalary: (month: string, amount: number, accountId?: string) => void;
 
   addEmi: (input: EmiInput) => void;
   updateEmi: (id: string, patch: Partial<Emi>) => void;
@@ -89,6 +94,7 @@ export const emptyState = {
   transactions: [],
   emis: [],
   borrowings: [],
+  budgets: {},
 } satisfies Partial<FinanceState>;
 
 export type FinanceSet = StoreApi<FinanceState>["setState"];

@@ -16,11 +16,13 @@ import { AddEmiSheet } from "@/sections/AddEmiSheet/AddEmiSheet";
 import { AddEmiPaymentSheet } from "@/sections/AddEmiPaymentSheet/AddEmiPaymentSheet";
 import { useFinanceStore } from "@/store/financeStore";
 import {
+  currentMonthKey,
   emiKind,
   emiPaidAmount,
   emiPaidMonths,
   emiStartMonth,
   formatCurrency,
+  lastNMonthKeys,
   monthLabel,
   sumBy,
 } from "@/utils";
@@ -53,6 +55,7 @@ interface EmiListProps {
 interface ChildTarget {
   emiId: string;
   payment: EmiPayment | null;
+  month?: string;
 }
 
 export const EmiList = ({ kind }: EmiListProps) => {
@@ -70,6 +73,9 @@ export const EmiList = ({ kind }: EmiListProps) => {
     (e) => e.status === "active" && emiKind(e) === kind,
   );
   const totalPaid = sumBy(active, emiPaidAmount);
+
+  const sipMonths = kind === "sip" ? [...lastNMonthKeys(6)].reverse() : [];
+  const thisMonth = currentMonthKey();
 
   const openAdd = () => {
     setEditing(null);
@@ -200,47 +206,97 @@ export const EmiList = ({ kind }: EmiListProps) => {
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                     >
-                      {payments.length > 0 ? (
-                        payments.map((p) => (
+                      {kind === "sip" ? (
+                        sipMonths.map((month) => {
+                          const p = payments.find((pp) => pp.month === month);
+                          return (
+                            <button
+                              key={month}
+                              type="button"
+                              className={styles.child}
+                              onClick={() =>
+                                setChildTarget({
+                                  emiId: emi.id,
+                                  payment: p ?? null,
+                                  month,
+                                })
+                              }
+                            >
+                              <span className={styles.child_month}>
+                                {monthLabel(month)}
+                                {month === thisMonth && (
+                                  <span className={styles.child_tag}>
+                                    Current
+                                  </span>
+                                )}
+                              </span>
+                              <span className={styles.child_right}>
+                                {p ? (
+                                  <>
+                                    <span className={styles.child_amount}>
+                                      {formatCurrency(p.amount, currency)}
+                                    </span>
+                                    <Pencil
+                                      size={14}
+                                      className={styles.child_edit}
+                                      aria-hidden
+                                    />
+                                  </>
+                                ) : (
+                                  <span className={styles.child_add}>
+                                    <Plus size={14} />
+                                    Add
+                                  </span>
+                                )}
+                              </span>
+                            </button>
+                          );
+                        })
+                      ) : (
+                        <>
+                          {payments.length > 0 ? (
+                            payments.map((p) => (
+                              <button
+                                key={p.id}
+                                type="button"
+                                className={styles.child}
+                                onClick={() =>
+                                  setChildTarget({ emiId: emi.id, payment: p })
+                                }
+                              >
+                                <span className={styles.child_month}>
+                                  {monthLabel(p.month)}
+                                </span>
+                                <span className={styles.child_right}>
+                                  <span className={styles.child_amount}>
+                                    {formatCurrency(p.amount, currency)}
+                                  </span>
+                                  <Pencil
+                                    size={14}
+                                    className={styles.child_edit}
+                                    aria-hidden
+                                  />
+                                </span>
+                              </button>
+                            ))
+                          ) : (
+                            <span className={styles.child_empty}>
+                              No payments logged yet
+                            </span>
+                          )}
                           <button
-                            key={p.id}
                             type="button"
-                            className={styles.child}
+                            className={styles.childAdd}
+                            aria-label={meta.addChild}
                             onClick={() =>
-                              setChildTarget({ emiId: emi.id, payment: p })
+                              setChildTarget({ emiId: emi.id, payment: null })
                             }
                           >
-                            <span className={styles.child_month}>
-                              {monthLabel(p.month)}
-                            </span>
-                            <span className={styles.child_right}>
-                              <span className={styles.child_amount}>
-                                {formatCurrency(p.amount, currency)}
-                              </span>
-                              <Pencil
-                                size={14}
-                                className={styles.child_edit}
-                                aria-hidden
-                              />
-                            </span>
+                            <Plus size={15} />
+                            Add
                           </button>
-                        ))
-                      ) : (
-                        <span className={styles.child_empty}>
-                          No payments logged yet
-                        </span>
+                        </>
                       )}
-                      <button
-                        type="button"
-                        className={styles.childAdd}
-                        aria-label={meta.addChild}
-                        onClick={() =>
-                          setChildTarget({ emiId: emi.id, payment: null })
-                        }
-                      >
-                        <Plus size={15} />
-                        Add
-                      </button>
                     </m.div>
                   )}
                 </AnimatePresence>
@@ -263,11 +319,15 @@ export const EmiList = ({ kind }: EmiListProps) => {
       />
 
       <AddEmiPaymentSheet
-        key={childTarget?.payment?.id ?? `${childTarget?.emiId ?? "none"}-new`}
+        key={
+          childTarget?.payment?.id ??
+          `${childTarget?.emiId ?? "none"}-${childTarget?.month ?? "new"}`
+        }
         open={childTarget !== null}
         kind={kind}
         emiId={childTarget?.emiId ?? null}
         payment={childTarget?.payment ?? null}
+        defaultMonth={childTarget?.month ?? null}
         onClose={() => setChildTarget(null)}
       />
     </section>

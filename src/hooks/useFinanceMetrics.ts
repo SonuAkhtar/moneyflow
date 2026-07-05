@@ -52,7 +52,6 @@ export const useFinanceMetrics = (
     const saved = income - totalSpent;
     const score = computeHealthScore({
       income,
-      expenses,
       savings: saved,
       emiBurden,
     });

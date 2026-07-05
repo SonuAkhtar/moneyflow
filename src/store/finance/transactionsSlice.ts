@@ -24,7 +24,7 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
       type: input.type,
       amount: input.amount,
       category: input.category,
-      note: input.note ?? null,
+      note: input.note?.trim() || null,
       merchant: input.merchant ?? null,
       isBigExpense: input.isBigExpense ?? input.amount > BIG_EXPENSE_THRESHOLD,
       occurredAt: input.occurredAt,
@@ -80,7 +80,7 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
       type: input.type,
       amount: input.amount,
       category: input.category,
-      note: input.note ?? old.note,
+      note: input.note !== undefined ? input.note.trim() || null : old.note,
       merchant: input.merchant ?? null,
       isBigExpense: input.isBigExpense ?? old.isBigExpense,
       occurredAt: input.occurredAt,
@@ -103,7 +103,7 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
     );
   },
 
-  setSalary: (month, amount) => {
+  setSalary: (month, amount, accountId) => {
     const s = get();
     const existing = s.transactions.find(
       (t) =>
@@ -112,26 +112,39 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
         monthKey(t.occurredAt) === month,
     );
     if (existing) {
-      const accounts = applyBalance(
-        s.accounts,
-        existing.accountId,
-        amount - existing.amount,
-      );
+      const targetId =
+        (accountId &&
+          s.accounts.some((a) => a.id === accountId) &&
+          accountId) ||
+        existing.accountId;
+      let accounts = s.accounts;
+      if (targetId === existing.accountId) {
+        accounts = applyBalance(accounts, targetId, amount - existing.amount);
+      } else {
+        accounts = applyBalance(accounts, existing.accountId, -existing.amount);
+        accounts = applyBalance(accounts, targetId, amount);
+      }
       const transactions = s.transactions.map((t) =>
-        t.id === existing.id ? { ...t, amount } : t,
+        t.id === existing.id ? { ...t, amount, accountId: targetId } : t,
       );
       set({ transactions, accounts });
       const updatedTxn = transactions.find((t) => t.id === existing.id);
-      const account = accounts.find((a) => a.id === existing.accountId);
+      const dirtyAccounts = [existing.accountId, targetId]
+        .filter((v, i, arr) => arr.indexOf(v) === i)
+        .map((aid) => accounts.find((a) => a.id === aid))
+        .filter((a): a is Account => Boolean(a));
       sync(() =>
         Promise.all([
           ...(updatedTxn ? [transactionRepo.save(updatedTxn)] : []),
-          ...(account ? [accountRepo.save(account)] : []),
+          ...dirtyAccounts.map((a) => accountRepo.save(a)),
         ]).then(() => undefined),
       );
       return;
     }
-    const base = s.accounts.find((a) => a.isPrimary) ?? s.accounts[0];
+    const base =
+      (accountId && s.accounts.find((a) => a.id === accountId)) ??
+      s.accounts.find((a) => a.isPrimary) ??
+      s.accounts[0];
     if (!base) return;
     const [year, m] = month.split("-").map(Number);
     const occurredAt = new Date(year ?? 0, (m ?? 1) - 1, 1, 9).toISOString();

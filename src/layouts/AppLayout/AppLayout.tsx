@@ -8,9 +8,11 @@ import { AppHeader } from "@/components/AppHeader/AppHeader";
 import { BottomNav } from "@/components/BottomNav/BottomNav";
 import { PullToRefresh } from "@/components/PullToRefresh/PullToRefresh";
 import { SplashScreen } from "@/components/SplashScreen/SplashScreen";
+import { Button } from "@/components/Button/Button";
 import { getBrowserSupabase } from "@/lib/supabase/client";
 import { useAuthStore, type SessionUser } from "@/store/authStore";
 import { useFinanceStore } from "@/store/financeStore";
+import { useSignOut } from "@/hooks/useSignOut";
 import { ROUTES } from "@/constants";
 import styles from "./AppLayout.module.scss";
 
@@ -31,6 +33,8 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
   const resetAll = useFinanceStore((s) => s.resetAll);
   const profile = useFinanceStore((s) => s.profile);
   const hasHydrated = useFinanceStore((s) => s.hasHydrated);
+  const initialized = useFinanceStore((s) => s.initialized);
+  const signOut = useSignOut();
   const hydratedFor = useRef<string | null>(null);
   const [rehydrated, setRehydrated] = useState(false);
 
@@ -88,16 +92,60 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
     if (status === "anon") router.replace(ROUTES.login);
   }, [status, router]);
 
-  if (status === "anon" || !profile || !hasHydrated) {
+  const ownedProfile =
+    profile && user && profile.id === user.id ? profile : null;
+  const needsOnboarding = Boolean(
+    initialized && ownedProfile && !ownedProfile.onboardingComplete,
+  );
+
+  useEffect(() => {
+    if (needsOnboarding) router.replace(ROUTES.onboarding);
+  }, [needsOnboarding, router]);
+
+  if (status === "authed" && user && initialized && !profile) {
+    return (
+      <div
+        style={{
+          minHeight: "100dvh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "16px",
+          padding: "24px",
+          textAlign: "center",
+        }}
+      >
+        <p style={{ color: "var(--text-secondary)", maxWidth: "280px" }}>
+          We couldn&apos;t load your account. Please sign in again.
+        </p>
+        <Button size="md" onClick={() => void signOut()}>
+          Sign out
+        </Button>
+      </div>
+    );
+  }
+
+  if (status !== "authed" || !ownedProfile || !hasHydrated || needsOnboarding) {
     return <SplashScreen />;
   }
 
+  const routeKey = pathname.startsWith("/savings")
+    ? "savings"
+    : pathname.startsWith("/analytics")
+      ? "analytics"
+      : pathname.startsWith("/emi")
+        ? "emi"
+        : pathname.startsWith("/profile")
+          ? "profile"
+          : "home";
+
   return (
-    <div className={styles.shell}>
-      <div className={styles.shell_glow} aria-hidden />
+    <div className={styles.shell} data-route={routeKey}>
+      <div className={styles.shell_canvas} aria-hidden />
       <div className={styles.shell_inner}>
         <AppHeader />
-        <PullToRefresh onRefresh={() => hydrate(profile.id)}>
+        <PullToRefresh onRefresh={() => hydrate(ownedProfile.id)}>
           <m.main
             key={pathname}
             className={styles.shell_main}

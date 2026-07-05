@@ -10,7 +10,13 @@ import { ConfirmDialog } from "@/components/ConfirmDialog/ConfirmDialog";
 import { useFinanceStore } from "@/store/financeStore";
 import { useSpendAccounts } from "@/hooks/useSpendAccounts";
 import { useToast } from "@/hooks/useToast";
-import { currentDateKey, formatCurrency, monthKey, monthLabel } from "@/utils";
+import {
+  currentDateKey,
+  currentMonthKey,
+  formatCurrency,
+  monthKey,
+  monthLabel,
+} from "@/utils";
 import type { EmiKind, EmiPayment } from "@/types";
 import styles from "./AddEmiPaymentSheet.module.scss";
 
@@ -20,6 +26,7 @@ interface AddEmiPaymentSheetProps {
   emiId: string | null;
   payment: EmiPayment | null;
   kind: EmiKind;
+  defaultMonth?: string | null;
 }
 
 export const AddEmiPaymentSheet = ({
@@ -28,6 +35,7 @@ export const AddEmiPaymentSheet = ({
   emiId,
   payment,
   kind,
+  defaultMonth = null,
 }: AddEmiPaymentSheetProps) => {
   const addEmiPayment = useFinanceStore((s) => s.addEmiPayment);
   const updateEmiPayment = useFinanceStore((s) => s.updateEmiPayment);
@@ -42,7 +50,10 @@ export const AddEmiPaymentSheet = ({
 
   const [amount, setAmount] = useState(payment ? String(payment.amount) : "");
   const [paidOn, setPaidOn] = useState(
-    payment?.paidOn?.slice(0, 10) ?? currentDateKey(),
+    payment?.paidOn?.slice(0, 10) ??
+      (defaultMonth && defaultMonth !== currentMonthKey()
+        ? `${defaultMonth}-01`
+        : currentDateKey()),
   );
   const [bankId, setBankId] = useState(defaultBankId);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -105,6 +116,7 @@ export const AddEmiPaymentSheet = ({
         <Input
           label="Payment date"
           type="date"
+          max={currentDateKey()}
           value={paidOn}
           onChange={(e) => setPaidOn(e.target.value)}
         />

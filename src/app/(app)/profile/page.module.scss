@@ -48,22 +48,15 @@
 
 .savings {
   position: relative;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
   padding: var(--space-5);
   border-radius: var(--radius-lg);
-  background:
-    radial-gradient(
-      130% 120% at 100% 0%,
-      rgba(43, 212, 196, 0.22) 0%,
-      transparent 55%
-    ),
-    linear-gradient(155deg, #16352b 0%, #112a22 48%, #0c1c16 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: var(--shadow-float);
-  color: #eef6ef;
+  background: var(--surface-card-solid);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card);
+  color: var(--text-primary);
 
   &_head {
     display: flex;
@@ -72,19 +65,20 @@
   }
 
   &_label {
-    font-size: var(--font-xs);
-    font-weight: var(--weight-medium);
-    color: rgba(238, 246, 239, 0.6);
+    font-size: var(--font-2xs);
+    font-weight: var(--weight-semibold);
+    color: var(--text-tertiary);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.1em;
   }
 
   &_total {
+    font-family: var(--num-font);
     font-size: var(--font-3xl);
-    font-weight: var(--weight-bold);
+    font-weight: var(--weight-semibold);
     font-variant-numeric: tabular-nums;
-    letter-spacing: -0.03em;
-    color: #6ee88a;
+    letter-spacing: -0.02em;
+    color: var(--color-success);
   }
 
   &_grid {
@@ -99,8 +93,8 @@
     gap: 3px;
     padding: var(--space-3);
     border-radius: var(--radius-md);
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--surface-input);
+    border: 1px solid var(--border-subtle);
     min-width: 0;
   }
 
@@ -110,28 +104,29 @@
     gap: var(--space-2);
     font-size: var(--font-xs);
     font-weight: var(--weight-semibold);
-    color: rgba(238, 246, 239, 0.72);
+    color: var(--text-secondary);
 
     svg {
-      color: rgba(238, 246, 239, 0.72);
+      color: var(--text-secondary);
     }
   }
 
   &_cellValue {
+    font-family: var(--num-font);
     font-size: var(--font-lg);
-    font-weight: var(--weight-bold);
+    font-weight: var(--weight-semibold);
     font-variant-numeric: tabular-nums;
-    color: #eef6ef;
+    color: var(--text-primary);
     @include truncate(1);
   }
 
   &_cellSub {
     font-size: var(--font-xs);
-    color: rgba(238, 246, 239, 0.5);
+    color: var(--text-tertiary);
     @include truncate(1);
 
     &--up {
-      color: #6ee88a;
+      color: var(--color-success);
       font-weight: var(--weight-medium);
     }
   }
@@ -190,6 +185,6 @@
 
 .actions {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+  justify-content: center;
+  padding: var(--space-1) 0 var(--space-6);
 }

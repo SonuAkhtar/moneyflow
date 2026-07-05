@@ -126,6 +126,7 @@ export const AddBorrowingSheet = ({
         <Input
           label="Borrowed on"
           type="date"
+          max={todayKey()}
           value={borrowedOn}
           onChange={(e) => setBorrowedOn(e.target.value)}
         />

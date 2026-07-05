@@ -53,6 +53,9 @@ const EditForm = ({ transaction, onClose }: EditFormProps) => {
   const deleteTransaction = useFinanceStore((s) => s.deleteTransaction);
   const toast = useToast();
   const symbol = getCurrencySymbol();
+  const isIncome = transaction.type === "income";
+  const noun = isIncome ? "Income" : "Expense";
+  const today = new Date().toISOString().slice(0, 10);
 
   const [amount, setAmount] = useState(String(transaction.amount));
   const [category, setCategory] = useState<CategoryId>(transaction.category);
@@ -75,7 +78,7 @@ const EditForm = ({ transaction, onClose }: EditFormProps) => {
       occurredAt: dateInputToIso(date),
     });
     toast({
-      title: "Expense updated",
+      title: `${noun} updated`,
       description: `${symbol}${value}`,
       variant: "success",
     });
@@ -84,7 +87,7 @@ const EditForm = ({ transaction, onClose }: EditFormProps) => {
 
   const confirmDelete = () => {
     deleteTransaction(transaction.id);
-    toast({ title: "Expense deleted", variant: "info" });
+    toast({ title: `${noun} deleted`, variant: "info" });
     setConfirmOpen(false);
     onClose();
   };
@@ -115,6 +118,7 @@ const EditForm = ({ transaction, onClose }: EditFormProps) => {
           <Input
             label="Date"
             type="date"
+            max={today}
             value={date}
             onChange={(e) => setDate(e.target.value)}
           />
@@ -123,6 +127,7 @@ const EditForm = ({ transaction, onClose }: EditFormProps) => {
         <Input
           label="Date"
           type="date"
+          max={today}
           value={date}
           onChange={(e) => setDate(e.target.value)}
         />
@@ -133,7 +138,7 @@ const EditForm = ({ transaction, onClose }: EditFormProps) => {
           type="button"
           className={styles.delete}
           onClick={() => setConfirmOpen(true)}
-          aria-label="Delete expense"
+          aria-label={`Delete ${isIncome ? "income" : "expense"}`}
         >
           <Trash2 size={18} />
         </button>
@@ -149,8 +154,12 @@ const EditForm = ({ transaction, onClose }: EditFormProps) => {
 
       <ConfirmDialog
         open={confirmOpen}
-        title="Delete this expense?"
-        message="This will remove the entry and restore the amount to your account balance."
+        title={`Delete this ${isIncome ? "income" : "expense"}?`}
+        message={
+          isIncome
+            ? "This will remove the entry and subtract the amount from your account balance."
+            : "This will remove the entry and add the amount back to your account balance."
+        }
         confirmLabel="Delete"
         onConfirm={confirmDelete}
         onCancel={() => setConfirmOpen(false)}

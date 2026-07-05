@@ -9,6 +9,7 @@ import { Button } from "@/components/Button/Button";
 import { SplashScreen } from "@/components/SplashScreen/SplashScreen";
 import { authService } from "@/services/auth.service";
 import { accountRepo, profileRepo } from "@/services/repositories";
+import { useFinanceStore } from "@/store/financeStore";
 import { useToast } from "@/hooks/useToast";
 import { ONBOARDING_STEPS, ROUTES } from "@/constants";
 import styles from "./OnboardingFlow.module.scss";
@@ -53,20 +54,18 @@ export const OnboardingFlow = () => {
         savingsTarget: Number(target) || 0,
         onboardingComplete: true,
       });
-      const name = accountName.trim();
-      if (name) {
-        await accountRepo.save({
-          id: crypto.randomUUID(),
-          userId,
-          name,
-          type: "savings",
-          balance: Number(balance) || 0,
-          institution: null,
-          colorTag: "#4ece6e",
-          isPrimary: true,
-          createdAt: new Date().toISOString(),
-        });
-      }
+      await accountRepo.save({
+        id: crypto.randomUUID(),
+        userId,
+        name: accountName.trim() || "Savings",
+        type: "savings",
+        balance: Number(balance) || 0,
+        institution: null,
+        colorTag: "#4ece6e",
+        isPrimary: true,
+        createdAt: new Date().toISOString(),
+      });
+      await useFinanceStore.getState().hydrate(userId);
       router.replace(ROUTES.home);
     } catch (err) {
       setSaving(false);

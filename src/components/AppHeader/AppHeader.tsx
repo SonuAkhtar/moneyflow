@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ChevronDown } from "lucide-react";
 import { Avatar } from "@/components/Avatar/Avatar";
 import { ProfileMenu } from "@/components/ProfileMenu/ProfileMenu";
 import { useFinanceStore } from "@/store/financeStore";
@@ -20,6 +21,8 @@ export const AppHeader = () => {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const firstName = profile?.fullName?.trim().split(" ")[0] ?? "";
 
   return (
     <header
@@ -42,15 +45,23 @@ export const AppHeader = () => {
       <div className={styles.header_avatar}>
         <button
           type="button"
+          className={cn(
+            styles.header_profile,
+            menuOpen && styles["header_profile--open"],
+          )}
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="Account menu"
           aria-expanded={menuOpen}
         >
-          <Avatar
-            name={profile?.fullName ?? "MF"}
-            src={profile?.avatarUrl}
-            size={42}
-          />
+          <span className={styles.header_avatarRing}>
+            <Avatar
+              name={profile?.fullName ?? "MF"}
+              src={profile?.avatarUrl}
+              size={30}
+            />
+          </span>
+          {firstName && <span className={styles.header_name}>{firstName}</span>}
+          <ChevronDown size={15} className={styles.header_chevron} />
         </button>
         <ProfileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
       </div>

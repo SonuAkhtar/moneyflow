@@ -1,6 +1,21 @@
 import { accountRepo, emiRepo } from "@/services/repositories";
-import { isoNow } from "@/utils";
+import { emiKind, isoNow } from "@/utils";
 import type { Account, Emi, EmiPayment } from "@/types";
+
+const withPaidMonths = (emi: Emi, paidMonths: number): Emi => {
+  const paid = Math.max(0, paidMonths);
+  const remainingMonths =
+    emi.totalMonths > 0
+      ? Math.max(0, emi.totalMonths - paid)
+      : emi.remainingMonths;
+  let status = emi.status;
+  if (emiKind(emi) === "loan" && emi.totalMonths > 0) {
+    status = paid >= emi.totalMonths ? "closed" : "active";
+  } else if (status === "closed" && paid < emi.totalMonths) {
+    status = "active";
+  }
+  return { ...emi, paidMonths: paid, remainingMonths, status };
+};
 import { applyBalance, newId } from "./helpers";
 import type { FinanceState, SliceCreator } from "./types";
 
@@ -87,20 +102,23 @@ export const createEmisSlice: SliceCreator<EmisSlice> = (
     const accounts = payment.accountId
       ? applyBalance(s.accounts, payment.accountId, -payment.amount)
       : s.accounts;
-    set({
-      emis: s.emis.map((e) =>
-        e.id === emiId
-          ? { ...e, payments: [payment, ...(e.payments ?? [])] }
-          : e,
-      ),
-      accounts,
-    });
+    const emis = s.emis.map((e) =>
+      e.id === emiId
+        ? withPaidMonths(
+            { ...e, payments: [payment, ...(e.payments ?? [])] },
+            (e.paidMonths ?? 0) + 1,
+          )
+        : e,
+    );
+    set({ emis, accounts });
+    const updatedEmi = emis.find((e) => e.id === emiId);
     const account = payment.accountId
       ? accounts.find((a) => a.id === payment.accountId)
       : undefined;
     sync(() =>
       Promise.all([
         emiRepo.savePayment(payment, emiId, ownerId()),
+        ...(updatedEmi ? [emiRepo.save(updatedEmi)] : []),
         ...(account ? [accountRepo.save(account)] : []),
       ]).then(() => undefined),
     );
@@ -152,27 +170,31 @@ export const createEmisSlice: SliceCreator<EmisSlice> = (
     const s = get();
     const emi = s.emis.find((e) => e.id === emiId);
     const payment = emi?.payments?.find((p) => p.id === paymentId);
-    const accounts = payment?.accountId
+    if (!payment) return;
+    const accounts = payment.accountId
       ? applyBalance(s.accounts, payment.accountId, payment.amount)
       : s.accounts;
-    set({
-      emis: s.emis.map((e) =>
-        e.id === emiId
-          ? {
+    const emis = s.emis.map((e) =>
+      e.id === emiId
+        ? withPaidMonths(
+            {
               ...e,
               payments: (e.payments ?? []).filter((p) => p.id !== paymentId),
-            }
-          : e,
-      ),
-      accounts,
-    });
-    const account = payment?.accountId
+            },
+            (e.paidMonths ?? 0) - 1,
+          )
+        : e,
+    );
+    set({ emis, accounts });
+    const updatedEmi = emis.find((e) => e.id === emiId);
+    const account = payment.accountId
       ? accounts.find((a) => a.id === payment.accountId)
       : undefined;
     const uid = ownerId();
     sync(() =>
       Promise.all([
         emiRepo.removePayment(paymentId, uid),
+        ...(updatedEmi ? [emiRepo.save(updatedEmi)] : []),
         ...(account ? [accountRepo.save(account)] : []),
       ]).then(() => undefined),
     );

@@ -1,15 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { m } from "framer-motion";
-import { Landmark, Plus } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Landmark, Plus } from "lucide-react";
 import { Card } from "@/components/Card/Card";
 import { SectionHeader } from "@/components/SectionHeader/SectionHeader";
 import { AddSavingsSheet } from "@/sections/AddSavingsSheet/AddSavingsSheet";
 import { useFinanceStore } from "@/store/financeStore";
 import {
-  accountMonthDelta,
   bankMonthFlow,
+  cn,
   currentMonthKey,
   sumBy,
   formatCurrency,
@@ -47,8 +47,16 @@ export const AccountsList = () => {
 
       <Card surface="gradient" glow="lime" className={styles.total}>
         <span className={styles.total_label}>Total saved</span>
-        <span className={styles.total_value}>
+        <span
+          className={cn(
+            styles.total_value,
+            total < 0 && styles["total_value--neg"],
+          )}
+        >
           {formatCurrency(total, currency)}
+        </span>
+        <span className={styles.total_meta}>
+          Across {banks.length} bank{banks.length === 1 ? "" : "s"}
         </span>
       </Card>
 
@@ -60,14 +68,16 @@ export const AccountsList = () => {
       >
         {banks.map((bank) => {
           const flow = bankMonthFlow(bank.id, transactions, month);
-          const lastMonth =
-            bank.balance - accountMonthDelta(bank.id, transactions, month);
+          const share =
+            total > 0 ? Math.round((bank.balance / total) * 100) : 0;
+          const fillWidth = Math.max(0, Math.min(100, share));
           return (
             <m.div key={bank.id} variants={listItem}>
               <Card
                 surface="solid"
                 interactive
                 className={styles.card}
+                style={{ "--bank": bank.colorTag } as CSSProperties}
                 role="button"
                 tabIndex={0}
                 aria-label={`Edit ${bank.name}`}
@@ -79,24 +89,52 @@ export const AccountsList = () => {
                   }
                 }}
               >
-                <span className={styles.card_icon}>
-                  <Landmark size={18} />
-                </span>
-                <span className={styles.card_name}>{bank.name}</span>
-                <span className={styles.card_balance}>
+                <div className={styles.card_head}>
+                  <span
+                    className={styles.card_icon}
+                    style={{
+                      background: `${bank.colorTag}1f`,
+                      color: bank.colorTag,
+                    }}
+                  >
+                    <Landmark size={15} />
+                  </span>
+                  <span className={styles.card_name}>{bank.name}</span>
+                </div>
+                <span
+                  className={cn(
+                    styles.card_balance,
+                    bank.balance < 0 && styles["card_balance--neg"],
+                  )}
+                >
                   {formatCurrency(bank.balance, currency)}
                 </span>
-                <span className={styles.card_meta}>
-                  Last mo {formatCurrency(lastMonth, currency)}
-                </span>
-                {flow.net !== 0 && (
+                <span className={styles.card_track}>
                   <span
-                    className={flow.net > 0 ? styles.card_in : styles.card_out}
-                  >
-                    {flow.net > 0 ? "+" : "-"}
-                    {formatCurrency(Math.abs(flow.net), currency)} this month
-                  </span>
-                )}
+                    className={styles.card_fill}
+                    style={{ width: `${fillWidth}%` }}
+                  />
+                </span>
+                <div className={styles.card_foot}>
+                  <span className={styles.card_share}>{share}% of savings</span>
+                  {flow.net !== 0 && (
+                    <span
+                      className={cn(
+                        styles.card_delta,
+                        flow.net > 0
+                          ? styles["card_delta--in"]
+                          : styles["card_delta--out"],
+                      )}
+                    >
+                      {flow.net > 0 ? (
+                        <ArrowUpRight size={11} />
+                      ) : (
+                        <ArrowDownRight size={11} />
+                      )}
+                      {formatCurrency(Math.abs(flow.net), currency)}
+                    </span>
+                  )}
+                </div>
               </Card>
             </m.div>
           );
@@ -108,7 +146,7 @@ export const AccountsList = () => {
           className={styles.add}
           onClick={() => setAddOpen(true)}
         >
-          <Plus size={22} />
+          <Plus size={18} />
           <span>Add bank</span>
         </m.button>
       </m.div>

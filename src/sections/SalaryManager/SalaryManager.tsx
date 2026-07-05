@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, Wallet } from "lucide-react";
+import { Pencil, Plus, Wallet } from "lucide-react";
 import { Collapsible } from "@/components/Collapsible/Collapsible";
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
 import { AmountField } from "@/components/AmountField/AmountField";
+import { Select } from "@/components/Select/Select";
 import { SheetActions } from "@/components/SheetActions/SheetActions";
 import { useFinanceStore } from "@/store/financeStore";
 import { salaryTotalsByMonth } from "@/store/finance/selectors";
@@ -29,6 +30,7 @@ export const SalaryManager = () => {
   const [open, setOpen] = useState(false);
   const [editMonth, setEditMonth] = useState<string | null>(null);
   const [amount, setAmount] = useState("");
+  const [bankId, setBankId] = useState("");
 
   const salaryByMonth = useMemo(
     () => salaryTotalsByMonth(transactions),
@@ -38,9 +40,19 @@ export const SalaryManager = () => {
   const months = useMemo(() => lastNMonthKeys(7).reverse(), []);
   const current = currentMonthKey();
 
+  const defaultBankId =
+    accounts.find((a) => a.isPrimary)?.id ?? accounts[0]?.id ?? "";
+
   const openEditor = (month: string) => {
     setEditMonth(month);
     setAmount(salaryByMonth[month] ? String(salaryByMonth[month]) : "");
+    const existing = transactions.find(
+      (t) =>
+        t.type === "income" &&
+        t.category === "salary" &&
+        monthKey(t.occurredAt) === month,
+    );
+    setBankId(existing?.accountId ?? defaultBankId);
   };
 
   const save = () => {
@@ -54,7 +66,7 @@ export const SalaryManager = () => {
       });
       return;
     }
-    setSalary(editMonth, Number(amount) || 0);
+    setSalary(editMonth, Number(amount) || 0, bankId || undefined);
     toast({
       title: "Salary updated",
       description: monthLabel(editMonth),
@@ -93,7 +105,11 @@ export const SalaryManager = () => {
         icon={<Wallet size={18} />}
         title="Monthly salary"
         caption="Current Month & Last 6 Months"
-        trailing={formatCurrency(salaryByMonth[current] ?? 0, currency)}
+        trailing={
+          <span className={styles.trail}>
+            {formatCurrency(salaryByMonth[current] ?? 0, currency)}
+          </span>
+        }
       >
         <div className={styles.list}>
           {months.map((month) => {
@@ -113,6 +129,7 @@ export const SalaryManager = () => {
                 {value > 0 ? (
                   <span className={styles.row_value}>
                     {formatCurrency(value, currency)}
+                    <Pencil size={13} className={styles.row_edit} aria-hidden />
                   </span>
                 ) : (
                   <span className={styles.row_add}>
@@ -135,10 +152,20 @@ export const SalaryManager = () => {
       >
         <div className={styles.editor}>
           <AmountField value={amount} onChange={setAmount} />
+          <Select
+            label="Deposit to"
+            value={bankId}
+            onChange={(e) => setBankId(e.target.value)}
+            options={accounts.map((a) => ({
+              label: `${a.name} · ${formatCurrency(a.balance, currency)}`,
+              value: a.id,
+            }))}
+          />
           <SheetActions
             onSave={save}
             onDelete={editorHasValue ? remove : undefined}
             saveLabel="Save salary"
+            disabled={Number(amount) <= 0}
           />
         </div>
       </BottomSheet>

@@ -14,6 +14,7 @@ import { createTransactionsSlice } from "./finance/transactionsSlice";
 import { createAccountsSlice } from "./finance/accountsSlice";
 import { createEmisSlice } from "./finance/emisSlice";
 import { createBorrowingsSlice } from "./finance/borrowingsSlice";
+import { createBudgetsSlice } from "./finance/budgetsSlice";
 
 const noopStorage: StateStorage = {
   getItem: () => null,
@@ -41,6 +42,7 @@ export const useFinanceStore = create<FinanceState>()(
         ...createAccountsSlice(set, get, helpers),
         ...createEmisSlice(set, get, helpers),
         ...createBorrowingsSlice(set, get, helpers),
+        ...createBudgetsSlice(set, get, helpers),
       };
     },
     {
@@ -76,6 +78,7 @@ export const useFinanceStore = create<FinanceState>()(
         transactions: s.transactions,
         emis: s.emis,
         borrowings: s.borrowings,
+        budgets: s.budgets,
       }),
       onRehydrateStorage: () => (state) => {
         if (state?.profile) setActiveCurrency(state.profile.currency);

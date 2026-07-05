@@ -15,8 +15,13 @@ interface AmountFieldProps {
 const sanitizeAmount = (raw: string): string => {
   const cleaned = raw.replace(/[^0-9.]/g, "");
   const dot = cleaned.indexOf(".");
-  if (dot === -1) return cleaned;
-  return cleaned.slice(0, dot + 1) + cleaned.slice(dot + 1).replace(/\./g, "");
+  const intPart = (dot === -1 ? cleaned : cleaned.slice(0, dot)).slice(0, 10);
+  if (dot === -1) return intPart;
+  const decPart = cleaned
+    .slice(dot + 1)
+    .replace(/\./g, "")
+    .slice(0, 2);
+  return `${intPart}.${decPart}`;
 };
 
 export const AmountField = ({

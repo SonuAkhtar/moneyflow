@@ -49,7 +49,9 @@ export const AddBorrowingPaymentSheet = ({
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const value = Number(amount) || 0;
-  const canSave = value > 0 && Boolean(paidOn) && Boolean(borrowingId);
+  const overpaying = !isEdit && value > outstanding + 0.001;
+  const canSave =
+    value > 0 && Boolean(paidOn) && Boolean(borrowingId) && !overpaying;
 
   const save = () => {
     if (!canSave || !borrowingId) return;
@@ -106,6 +108,7 @@ export const AddBorrowingPaymentSheet = ({
         <Input
           label="Paid on"
           type="date"
+          max={todayKey()}
           value={paidOn}
           onChange={(e) => setPaidOn(e.target.value)}
         />

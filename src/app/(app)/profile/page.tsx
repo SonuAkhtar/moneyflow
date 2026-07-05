@@ -12,6 +12,7 @@ import { FinancialHealth } from "@/sections/FinancialHealth/FinancialHealth";
 import { EditProfileSheet } from "@/sections/EditProfileSheet/EditProfileSheet";
 import { SalaryManager } from "@/sections/SalaryManager/SalaryManager";
 import { OtherIncomeManager } from "@/sections/OtherIncomeManager/OtherIncomeManager";
+import { DataExport } from "@/sections/DataExport/DataExport";
 import { useFinanceStore } from "@/store/financeStore";
 import { useSignOut } from "@/hooks/useSignOut";
 import { currentStreak, monthLabel } from "@/utils";
@@ -68,16 +69,8 @@ export default function ProfilePage() {
         <OtherIncomeManager />
       </m.div>
 
-      <m.div className={styles.actions} variants={listItem}>
-        <Button
-          variant="danger"
-          fullWidth
-          size="lg"
-          icon={LogOut}
-          onClick={signOut}
-        >
-          Sign out
-        </Button>
+      <m.div variants={listItem}>
+        <DataExport />
       </m.div>
 
       <m.div variants={listItem}>
@@ -108,6 +101,12 @@ export default function ProfilePage() {
             </span>
           </a>
         </Card>
+      </m.div>
+
+      <m.div className={styles.actions} variants={listItem}>
+        <Button variant="danger" size="sm" icon={LogOut} onClick={signOut}>
+          Sign out
+        </Button>
       </m.div>
 
       <EditProfileSheet open={editOpen} onClose={() => setEditOpen(false)} />

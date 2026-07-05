@@ -69,7 +69,7 @@ export const ResetPasswordForm = () => {
         </div>
       )}
       {!ready && configured && !serverError && (
-        <p className={styles.footer}>Opening your secure reset link…</p>
+        <p className={styles.footer}>Opening your secure reset link...</p>
       )}
       <Input
         label="New password"

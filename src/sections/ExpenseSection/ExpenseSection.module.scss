@@ -99,9 +99,9 @@
   gap: var(--space-1);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-pill);
-  background: #fff;
-  color: #1d1630;
+  background: var(--accent);
+  color: #fff;
   font-size: var(--font-xs);
   font-weight: var(--weight-bold);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  box-shadow: var(--shadow-soft);
 }

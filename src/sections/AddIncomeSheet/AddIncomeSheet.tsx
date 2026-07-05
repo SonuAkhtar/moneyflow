@@ -75,6 +75,8 @@ const Form = ({ transaction, onClose }: FormProps) => {
   );
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  const canSave = Number(amount) > 0 && Boolean(resolve(bankId));
+
   const save = () => {
     const value = Number(amount);
     const account = resolve(bankId);
@@ -84,7 +86,7 @@ const Form = ({ transaction, onClose }: FormProps) => {
       type: "income" as const,
       amount: value,
       category,
-      note: note || undefined,
+      note,
       occurredAt: dateInputToIso(date),
     };
     if (transaction) {
@@ -151,6 +153,7 @@ const Form = ({ transaction, onClose }: FormProps) => {
       <Input
         label="Date"
         type="date"
+        max={today()}
         value={date}
         onChange={(e) => setDate(e.target.value)}
       />
@@ -165,12 +168,17 @@ const Form = ({ transaction, onClose }: FormProps) => {
           >
             <Trash2 size={18} />
           </button>
-          <Button size="lg" className={styles.save} onClick={save}>
+          <Button
+            size="lg"
+            className={styles.save}
+            onClick={save}
+            disabled={!canSave}
+          >
             Save changes
           </Button>
         </div>
       ) : (
-        <Button size="lg" fullWidth onClick={save}>
+        <Button size="lg" fullWidth onClick={save} disabled={!canSave}>
           Add income
         </Button>
       )}

@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { AnimatePresence, m } from "framer-motion";
-import { ChevronRight, Landmark, Wallet } from "lucide-react";
+import { ChevronRight, Eye, EyeOff, Landmark, Wallet } from "lucide-react";
 import { Card } from "@/components/Card/Card";
 import { MonthlySavingSheet } from "@/sections/MonthlySavingSheet/MonthlySavingSheet";
 import { useFinanceStore } from "@/store/financeStore";
 import {
   accountMonthDelta,
   bankMonthFlow,
+  cn,
   currentMonthKey,
   formatCurrency,
   formatNumber,
@@ -18,16 +19,22 @@ import {
 import type { Account } from "@/types";
 import styles from "./SavingsAccordion.module.scss";
 
+const maskFor = (n: number) =>
+  "*".repeat(Math.max(1, String(Math.floor(Math.abs(n))).length));
+
 export const SavingsAccordion = () => {
   const accounts = useFinanceStore((s) => s.accounts);
   const transactions = useFinanceStore((s) => s.transactions);
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
   const [open, setOpen] = useState(false);
+  const [revealed, setRevealed] = useState(false);
   const [editing, setEditing] = useState<Account | null>(null);
 
   const banks = accounts.filter((a) => a.type === "savings");
   const total = sumBy(banks, (a) => a.balance);
   const month = currentMonthKey();
+
+  const toggleReveal = () => setRevealed((v) => !v);
 
   return (
     <Card surface="solid" padded={false} className={styles.accordion}>
@@ -43,11 +50,43 @@ export const SavingsAccordion = () => {
         <span className={styles.accordion_main}>
           <span className={styles.accordion_row}>
             <span className={styles.accordion_title}>Bank Savings</span>
-            <span className={styles.accordion_amount}>
-              <span className={styles.accordion_symbol}>
-                {getCurrencySymbol()}
+            <span className={styles.accordion_amountWrap}>
+              <span
+                className={cn(
+                  styles.accordion_amount,
+                  total < 0 && styles["accordion_amount--neg"],
+                )}
+              >
+                <span className={styles.accordion_symbol}>
+                  {getCurrencySymbol()}
+                </span>
+                {revealed ? (
+                  formatNumber(total)
+                ) : (
+                  <span className={styles.accordion_dots}>
+                    {maskFor(total)}
+                  </span>
+                )}
               </span>
-              {formatNumber(total)}
+              <span
+                role="button"
+                tabIndex={0}
+                className={styles.accordion_eye}
+                aria-label={revealed ? "Hide amounts" : "Show amounts"}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleReveal();
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleReveal();
+                  }
+                }}
+              >
+                {revealed ? <Eye size={16} /> : <EyeOff size={16} />}
+              </span>
             </span>
           </span>
           <span className={styles.accordion_subrow}>
@@ -93,22 +132,38 @@ export const SavingsAccordion = () => {
                     <span className={styles.row_text}>
                       <span className={styles.row_label}>{bank.name}</span>
                       <span className={styles.row_sub}>
-                        Last mo {formatCurrency(lastMonth, currency)}
-                        {flow.net !== 0 && (
-                          <span
-                            className={
-                              flow.net > 0 ? styles.row_in : styles.row_out
-                            }
-                          >
-                            {" · "}
-                            {flow.net > 0 ? "+" : "-"}
-                            {formatCurrency(Math.abs(flow.net), currency)}
-                          </span>
+                        {revealed ? (
+                          <>
+                            Last mo {formatCurrency(lastMonth, currency)}
+                            {flow.net !== 0 && (
+                              <span
+                                className={
+                                  flow.net > 0 ? styles.row_in : styles.row_out
+                                }
+                              >
+                                {" · "}
+                                {flow.net > 0 ? "+" : "-"}
+                                {formatCurrency(Math.abs(flow.net), currency)}
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            Last mo {getCurrencySymbol()}
+                            {maskFor(lastMonth)}
+                          </>
                         )}
                       </span>
                     </span>
-                    <span className={styles.row_amount}>
-                      {formatCurrency(bank.balance, currency)}
+                    <span
+                      className={cn(
+                        styles.row_amount,
+                        bank.balance < 0 && styles["row_amount--neg"],
+                      )}
+                    >
+                      {revealed
+                        ? formatCurrency(bank.balance, currency)
+                        : `${getCurrencySymbol()}${maskFor(bank.balance)}`}
                     </span>
                   </button>
                 );

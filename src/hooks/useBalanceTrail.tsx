@@ -39,7 +39,7 @@ const buildTrail = (
 
   for (const account of accounts) {
     const events: TrailEvent[] = transactions
-      .filter((t) => t.accountId === account.id && t.category !== "salary")
+      .filter((t) => t.accountId === account.id)
       .map((t): TrailEvent => {
         const isInflow =
           t.type === "income" ||

@@ -1,13 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import { Landmark } from "lucide-react";
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
 import { Input } from "@/components/Input/Input";
+import { Select } from "@/components/Select/Select";
 import { SheetActions } from "@/components/SheetActions/SheetActions";
 import { ConfirmDialog } from "@/components/ConfirmDialog/ConfirmDialog";
 import { useFinanceStore } from "@/store/financeStore";
 import { useToast } from "@/hooks/useToast";
-import { cn, formatCurrency, getCurrencySymbol } from "@/utils";
+import {
+  accountMonthDelta,
+  cn,
+  currentMonthKey,
+  formatCurrency,
+  getCurrencySymbol,
+} from "@/utils";
 import { BANK_PRESETS, getBankByName } from "@/constants/banks";
 import type { Account } from "@/types";
 import styles from "./AddSavingsSheet.module.scss";
@@ -18,6 +26,8 @@ interface AddSavingsSheetProps {
   account?: Account | null;
 }
 
+const toNum = (v: string) => Number(v) || 0;
+
 export const AddSavingsSheet = ({
   open,
   onClose,
@@ -26,10 +36,16 @@ export const AddSavingsSheet = ({
   const addAccount = useFinanceStore((s) => s.addAccount);
   const updateAccount = useFinanceStore((s) => s.updateAccount);
   const deleteAccount = useFinanceStore((s) => s.deleteAccount);
+  const transactions = useFinanceStore((s) => s.transactions);
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
   const toast = useToast();
   const symbol = getCurrencySymbol();
   const isEdit = Boolean(account);
+
+  const month = currentMonthKey();
+  const thisMonthDelta = account
+    ? accountMonthDelta(account.id, transactions, month)
+    : 0;
 
   const [bankId, setBankId] = useState(
     account
@@ -39,14 +55,33 @@ export const AddSavingsSheet = ({
   const [otherName, setOtherName] = useState(
     account && !getBankByName(account.name) ? account.name : "",
   );
-  const [amount, setAmount] = useState(account ? String(account.balance) : "");
+  const [current, setCurrent] = useState(
+    account ? String(account.balance) : "",
+  );
+  const [savedLast, setSavedLast] = useState(
+    account ? String(account.balance - thisMonthDelta) : "",
+  );
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const selectedBank =
     BANK_PRESETS.find((b) => b.id === bankId) ?? BANK_PRESETS[0]!;
   const bankName = bankId === "other" ? otherName.trim() : selectedBank.name;
-  const value = Number(amount) || 0;
-  const canSave = Boolean(bankName) && value > 0;
+
+  const onCurrentChange = (v: string) => {
+    setCurrent(v);
+    setSavedLast(String(toNum(v) - thisMonthDelta));
+  };
+  const onSavedLastChange = (v: string) => {
+    setSavedLast(v);
+    setCurrent(String(toNum(v) + thisMonthDelta));
+  };
+
+  const balanceField = isEdit ? current : savedLast;
+  const balanceValue = toNum(balanceField);
+  const canSave =
+    Boolean(bankName) &&
+    balanceField.trim() !== "" &&
+    (isEdit || balanceValue >= 0);
 
   const submit = () => {
     if (!canSave) return;
@@ -54,7 +89,7 @@ export const AddSavingsSheet = ({
       updateAccount(account.id, {
         name: bankName,
         institution: bankName,
-        balance: value,
+        balance: balanceValue,
         colorTag: selectedBank.color,
       });
       toast({
@@ -66,7 +101,7 @@ export const AddSavingsSheet = ({
       addAccount({
         name: bankName,
         type: "savings",
-        balance: value,
+        balance: balanceValue,
         institution: bankName,
         colorTag: selectedBank.color,
       });
@@ -92,37 +127,21 @@ export const AddSavingsSheet = ({
           onSave={submit}
           onDelete={isEdit ? () => setConfirmOpen(true) : undefined}
           saveLabel={
-            isEdit ? "Save changes" : `Add ${formatCurrency(value, currency)}`
+            isEdit
+              ? "Save changes"
+              : `Add ${formatCurrency(balanceValue, currency)}`
           }
           disabled={!canSave}
         />
       }
     >
       <div className={styles.form}>
-        <div className={styles.field}>
-          <span className={styles.label}>Bank</span>
-          <div className={styles.banks}>
-            {BANK_PRESETS.map((bank) => {
-              const active = bank.id === bankId;
-              return (
-                <button
-                  key={bank.id}
-                  type="button"
-                  className={cn(styles.bank, active && styles["bank--active"])}
-                  onClick={() => setBankId(bank.id)}
-                >
-                  <span
-                    className={styles.bank_icon}
-                    style={{ background: `${bank.color}24`, color: bank.color }}
-                  >
-                    <bank.icon size={18} />
-                  </span>
-                  <span className={styles.bank_name}>{bank.name}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        <Select
+          label="Bank"
+          value={bankId}
+          onChange={(e) => setBankId(e.target.value)}
+          options={BANK_PRESETS.map((b) => ({ label: b.name, value: b.id }))}
+        />
 
         {bankId === "other" && (
           <Input
@@ -133,14 +152,74 @@ export const AddSavingsSheet = ({
           />
         )}
 
-        <Input
-          label={`Saved till last month (${symbol})`}
-          type="number"
-          inputMode="decimal"
-          placeholder="0"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-        />
+        {isEdit && (
+          <div className={styles.hero}>
+            <span
+              className={styles.hero_icon}
+              style={{
+                background: `${selectedBank.color}22`,
+                color: selectedBank.color,
+              }}
+            >
+              <Landmark size={22} />
+            </span>
+            <div className={styles.hero_text}>
+              <span className={styles.hero_label}>Current balance</span>
+              <span
+                className={cn(
+                  styles.hero_value,
+                  balanceValue < 0 && styles["hero_value--neg"],
+                )}
+              >
+                {formatCurrency(balanceValue, currency)}
+              </span>
+            </div>
+            {thisMonthDelta !== 0 && (
+              <span
+                className={cn(
+                  styles.hero_chip,
+                  thisMonthDelta > 0
+                    ? styles["hero_chip--in"]
+                    : styles["hero_chip--out"],
+                )}
+              >
+                {thisMonthDelta > 0 ? "+" : "-"}
+                {formatCurrency(Math.abs(thisMonthDelta), currency)}
+                <span className={styles.hero_chipCaption}>this month</span>
+              </span>
+            )}
+          </div>
+        )}
+
+        {isEdit ? (
+          <div className={styles.fields}>
+            <Input
+              label={`Current balance (${symbol})`}
+              type="number"
+              inputMode="decimal"
+              placeholder="0"
+              value={current}
+              onChange={(e) => onCurrentChange(e.target.value)}
+            />
+            <Input
+              label={`Saved till last month (${symbol})`}
+              type="number"
+              inputMode="decimal"
+              placeholder="0"
+              value={savedLast}
+              onChange={(e) => onSavedLastChange(e.target.value)}
+            />
+          </div>
+        ) : (
+          <Input
+            label={`Saved till last month (${symbol})`}
+            type="number"
+            inputMode="decimal"
+            placeholder="0"
+            value={savedLast}
+            onChange={(e) => setSavedLast(e.target.value)}
+          />
+        )}
       </div>
 
       <ConfirmDialog

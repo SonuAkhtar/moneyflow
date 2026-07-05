@@ -21,13 +21,14 @@
   }
 
   &_paid {
+    font-family: var(--num-font);
     font-size: var(--font-xl);
-    font-weight: var(--weight-bold);
+    font-weight: var(--weight-semibold);
     font-variant-numeric: tabular-nums;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.02em;
     line-height: 1;
     color: var(--color-danger);
-    opacity: 0.8;
+    opacity: 0.85;
     flex-shrink: 0;
 
     &--sip {
@@ -260,11 +261,25 @@
   }
 
   &_month {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
     flex: 1;
     min-width: 0;
     font-size: var(--font-sm);
     font-weight: var(--weight-medium);
-    @include truncate(1);
+  }
+
+  &_tag {
+    font-size: var(--font-2xs);
+    font-weight: var(--weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    background: var(--accent-bg);
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-pill);
+    flex-shrink: 0;
   }
 
   &_right {
@@ -272,6 +287,15 @@
     align-items: center;
     gap: var(--space-2);
     flex-shrink: 0;
+  }
+
+  &_add {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--font-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--accent);
   }
 
   &_amount {
@@ -301,10 +325,10 @@
   margin: var(--space-1) 0;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-pill);
-  background: #fff;
-  color: #1d1630;
+  background: var(--accent);
+  color: #fff;
   font-size: var(--font-xs);
   font-weight: var(--weight-bold);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
+  box-shadow: var(--shadow-soft);
   touch-action: manipulation;
 }

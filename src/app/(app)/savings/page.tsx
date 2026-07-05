@@ -1,7 +1,7 @@
 "use client";
 
 import { m } from "framer-motion";
-import { Landmark, TrendingUp } from "lucide-react";
+import { Landmark, TrendingUp, Wallet } from "lucide-react";
 import { AccountsList } from "@/sections/AccountsList/AccountsList";
 import { EmiList } from "@/sections/EmiList/EmiList";
 import { useFinanceStore } from "@/store/financeStore";
@@ -45,12 +45,50 @@ export default function SavingsPage() {
     >
       <m.div variants={listItem}>
         <div className={styles.hero}>
+          <div className={styles.hero_top}>
+            <span className={styles.hero_chip} aria-hidden />
+            <span className={styles.hero_brand}>
+              <Wallet size={14} />
+              moneyFlow
+            </span>
+          </div>
+
           <div className={styles.hero_head}>
             <span className={styles.hero_label}>Total savings</span>
             <span className={styles.hero_total}>
               {formatCurrency(totalSavings, currency)}
             </span>
           </div>
+
+          {totalSavings > 0 && (
+            <div className={styles.hero_split}>
+              <span className={styles.hero_bar}>
+                <span
+                  className={styles.hero_barBanks}
+                  style={{ flexGrow: Math.max(0, banksTotal) }}
+                />
+                <span
+                  className={styles.hero_barSips}
+                  style={{ flexGrow: Math.max(0, sipTotal) }}
+                />
+              </span>
+              <div className={styles.hero_keys}>
+                <span className={styles.hero_key}>
+                  <span
+                    className={`${styles.hero_keyDot} ${styles["hero_keyDot--banks"]}`}
+                  />
+                  Banks
+                </span>
+                <span className={styles.hero_key}>
+                  <span
+                    className={`${styles.hero_keyDot} ${styles["hero_keyDot--sips"]}`}
+                  />
+                  SIPs
+                </span>
+              </div>
+            </div>
+          )}
+
           <div className={styles.hero_grid}>
             <div className={styles.hero_cell}>
               <span className={styles.hero_cellHead}>
@@ -61,12 +99,18 @@ export default function SavingsPage() {
               </span>
               <span
                 className={`${styles.hero_cellSub} ${
-                  banksThisMonth > 0 ? styles["hero_cellSub--up"] : ""
+                  banksThisMonth > 0
+                    ? styles["hero_cellSub--up"]
+                    : banksThisMonth < 0
+                      ? styles["hero_cellSub--down"]
+                      : ""
                 }`}
               >
                 {banksThisMonth > 0
                   ? `+${formatCurrency(banksThisMonth, currency)} this month`
-                  : "No deposits this month"}
+                  : banksThisMonth < 0
+                    ? `-${formatCurrency(Math.abs(banksThisMonth), currency)} this month`
+                    : "No deposits this month"}
               </span>
             </div>
             <div className={styles.hero_cell}>

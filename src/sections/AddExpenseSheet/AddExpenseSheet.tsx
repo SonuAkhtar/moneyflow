@@ -119,6 +119,7 @@ const ExpenseForm = ({
           <Input
             label="Date"
             type="date"
+            max={today()}
             value={date}
             onChange={(e) => setDate(e.target.value)}
           />
@@ -127,6 +128,7 @@ const ExpenseForm = ({
         <Input
           label="Date"
           type="date"
+          max={today()}
           value={date}
           onChange={(e) => setDate(e.target.value)}
         />

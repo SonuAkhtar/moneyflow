@@ -17,9 +17,6 @@ export const applyBalance = (
       : a,
   );
 
-export const changedFrom = <T>(next: T[], prev: T[]): T[] =>
-  next.filter((item) => !prev.includes(item));
-
 export const createMutationHelpers = (get: FinanceGet): MutationHelpers => {
   const ownerId = () => {
     const id = get().profile?.id;
@@ -49,14 +46,6 @@ export const createMutationHelpers = (get: FinanceGet): MutationHelpers => {
           return;
         }
         toastError(err instanceof Error ? err.message : "Sync failed");
-        const id = get().profile?.id;
-        if (id) {
-          try {
-            await get().hydrate(id);
-          } catch (rehydrateErr) {
-            logger.error("finance.sync.rehydrate", rehydrateErr);
-          }
-        }
       }
     })();
   };

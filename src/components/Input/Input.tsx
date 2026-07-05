@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useState, type InputHTMLAttributes } from "react";
+import { forwardRef, useId, useState, type InputHTMLAttributes } from "react";
 import { Eye, EyeOff, type LucideIcon } from "lucide-react";
 import { cn } from "@/utils";
 import styles from "./Input.module.scss";
@@ -18,13 +18,15 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     ref,
   ) => {
     const [reveal, setReveal] = useState(false);
+    const fallbackId = useId();
+    const inputId = id ?? fallbackId;
     const isPassword = type === "password";
     const resolvedType = isPassword ? (reveal ? "text" : "password") : type;
 
     return (
       <div className={cn(styles.field, className)}>
         {label && (
-          <label className={styles.field_label} htmlFor={id}>
+          <label className={styles.field_label} htmlFor={inputId}>
             {label}
           </label>
         )}
@@ -38,7 +40,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           {Icon && <Icon className={styles.field_icon} size={18} />}
           <input
             ref={ref}
-            id={id}
+            id={inputId}
             type={resolvedType}
             className={styles.field_input}
             {...rest}

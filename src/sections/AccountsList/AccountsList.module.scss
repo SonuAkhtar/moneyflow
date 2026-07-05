@@ -2,18 +2,31 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
 
   &_label {
-    font-size: var(--font-sm);
+    font-size: var(--font-xs);
+    font-weight: var(--weight-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
     color: var(--text-secondary);
   }
 
   &_value {
+    font-family: var(--num-font);
     font-size: var(--font-3xl);
-    font-weight: var(--weight-bold);
+    font-weight: var(--weight-semibold);
     letter-spacing: -0.02em;
     font-variant-numeric: tabular-nums;
+
+    &--neg {
+      color: var(--color-danger);
+    }
+  }
+
+  &_meta {
+    font-size: var(--font-xs);
+    color: var(--text-tertiary);
   }
 }
 
@@ -27,55 +40,114 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-2);
   overflow: hidden;
   width: 100%;
+  padding: var(--space-4) var(--space-3) var(--space-3);
   text-align: left;
+  transition:
+    transform var(--dur-fast) var(--ease-smooth),
+    box-shadow var(--dur-fast) var(--ease-smooth);
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    z-index: 2;
+    background: var(--bank, var(--accent));
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-float);
+  }
+
+  &_head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+  }
 
   &_icon {
     display: grid;
     place-items: center;
-    width: 34px;
-    height: 34px;
-    margin-bottom: var(--space-1);
-    border-radius: var(--radius-sm);
-    background: var(--accent-bg);
-    color: var(--accent);
+    width: 26px;
+    height: 26px;
+    border-radius: var(--radius-xs);
     flex-shrink: 0;
   }
 
   &_name {
-    font-size: var(--font-sm);
+    font-size: var(--font-xs);
     font-weight: var(--weight-semibold);
+    color: var(--text-secondary);
     @include truncate(1);
   }
 
   &_balance {
+    font-family: var(--num-font);
     font-size: var(--font-xl);
     font-weight: var(--weight-bold);
+    letter-spacing: -0.02em;
     font-variant-numeric: tabular-nums;
+    @include truncate(1);
+
+    &--neg {
+      color: var(--color-danger);
+    }
   }
 
-  &_meta {
-    font-size: var(--font-xs);
+  &_track {
+    display: block;
+    height: 5px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-input);
+    overflow: hidden;
+  }
+
+  &_fill {
+    display: block;
+    height: 100%;
+    min-width: 4px;
+    border-radius: inherit;
+    background: var(--bank, var(--accent));
+    transition: width var(--dur-slow) var(--ease-smooth);
+  }
+
+  &_foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+
+  &_share {
+    font-size: var(--font-2xs);
     color: var(--text-tertiary);
+    font-variant-numeric: tabular-nums;
     @include truncate(1);
   }
 
-  &_in,
-  &_out {
-    font-size: var(--font-xs);
+  &_delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+    font-size: var(--font-2xs);
     font-weight: var(--weight-semibold);
     font-variant-numeric: tabular-nums;
-    @include truncate(1);
-  }
+    flex-shrink: 0;
 
-  &_in {
-    color: var(--color-success);
-  }
+    &--in {
+      color: var(--color-success);
+    }
 
-  &_out {
-    color: var(--color-danger);
+    &--out {
+      color: var(--color-danger);
+    }
   }
 }
 
@@ -84,11 +156,21 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  min-height: 116px;
+  gap: var(--space-1);
+  min-height: 128px;
   border-radius: var(--radius-lg);
-  border: 1px dashed var(--border-strong);
+  border: 1.5px dashed var(--border-strong);
   color: var(--text-secondary);
-  font-size: var(--font-sm);
+  font-size: var(--font-xs);
   font-weight: var(--weight-medium);
+  transition:
+    border-color var(--dur-fast) var(--ease-smooth),
+    color var(--dur-fast) var(--ease-smooth),
+    background var(--dur-fast) var(--ease-smooth);
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-bg);
+  }
 }

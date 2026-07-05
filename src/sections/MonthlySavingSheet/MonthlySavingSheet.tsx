@@ -56,7 +56,7 @@ const Form = ({
   const value = Number(amount) || 0;
   const newBalance =
     mode === "add" ? account.balance + value : account.balance - value;
-  const canSave = value > 0 && newBalance >= 0;
+  const canSave = value > 0;
 
   const save = () => {
     if (!canSave) return;
@@ -154,7 +154,7 @@ const Form = ({
       <div className={styles.preview}>
         <span className={styles.preview_label}>New total</span>
         <span className={styles.preview_value}>
-          {formatCurrency(Math.max(0, newBalance), currency)}
+          {formatCurrency(newBalance, currency)}
         </span>
       </div>
 

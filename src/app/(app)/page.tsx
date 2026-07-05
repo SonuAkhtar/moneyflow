@@ -11,6 +11,11 @@ import { BalanceTrailProvider } from "@/hooks/useBalanceTrail";
 import { staggerContainer, listItem } from "@/themes/animations";
 import styles from "./page.module.scss";
 
+const cardTap = {
+  whileTap: { scale: 0.97 },
+  transition: { type: "spring" as const, stiffness: 500, damping: 18 },
+};
+
 export default function HomePage() {
   return (
     <BalanceTrailProvider>
@@ -24,23 +29,23 @@ export default function HomePage() {
           <GreetingHeader />
         </m.div>
 
-        <m.div variants={listItem}>
+        <m.div variants={listItem} {...cardTap}>
           <MonthOverview />
         </m.div>
 
-        <m.div variants={listItem}>
+        <m.div variants={listItem} {...cardTap}>
           <ComingUp />
         </m.div>
 
-        <m.div variants={listItem}>
+        <m.div variants={listItem} {...cardTap}>
           <SavingsAccordion />
         </m.div>
 
-        <m.div variants={listItem}>
+        <m.div variants={listItem} {...cardTap}>
           <MajorSpends />
         </m.div>
 
-        <m.div variants={listItem}>
+        <m.div variants={listItem} {...cardTap}>
           <DailySpends />
         </m.div>
       </m.div>

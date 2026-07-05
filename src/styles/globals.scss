@@ -35,9 +35,9 @@
   --chart-grid: var(--border-subtle);
   --chart-axis: var(--text-tertiary);
 
-  --text-inverse: var(--on-brand);
+  --text-inverse: #ffffff;
 
-  --gradient-lime: linear-gradient(135deg, #34ce89 0%, #0fb174 100%);
+  --gradient-lime: linear-gradient(135deg, #6fae12 0%, #609c00 100%);
   --gradient-orange: linear-gradient(135deg, #ff8a4c 0%, #f2693a 100%);
 
   --gradient-spectrum: linear-gradient(
@@ -55,7 +55,7 @@
     rgba(150, 40, 38, 0.52) 100%
   );
 
-  --shadow-glow-lime: 0 12px 44px rgba(22, 199, 132, 0.28);
+  --shadow-glow-lime: 0 12px 40px rgba(96, 156, 0, 0.26);
   --shadow-glow-orange: 0 12px 44px rgba(255, 138, 76, 0.24);
 
   --radius-xs: 8px;
@@ -70,9 +70,9 @@
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-7: 32px;
+  --space-5: 18px;
+  --space-6: 20px;
+  --space-7: 28px;
   --space-8: 40px;
   --space-9: 48px;
   --space-10: 64px;
@@ -80,14 +80,17 @@
 
   --font-2xs: 0.6875rem;
   --font-xs: 0.75rem;
-  --font-sm: 0.875rem;
-  --font-md: 1rem;
-  --font-lg: 1.125rem;
-  --font-subhead: 1.25rem;
-  --font-xl: 1.375rem;
-  --font-2xl: 1.75rem;
-  --font-3xl: 2.25rem;
-  --font-4xl: 3rem;
+  --font-sm: 0.8125rem;
+  --font-md: 0.9375rem;
+  --font-lg: 1.0625rem;
+  --font-subhead: 1.125rem;
+  --font-xl: 1.25rem;
+  --font-2xl: 1.5rem;
+  --font-3xl: 1.875rem;
+  --font-4xl: 2.25rem;
+
+  --font-inter: system-ui, sans-serif;
+  --font-logo: var(--font-app), system-ui, sans-serif;
 
   --font-display:
     var(--font-logo), "Space Grotesk", var(--font-inter), "Inter", sans-serif;
@@ -121,14 +124,14 @@
   --border-subtle: rgba(16, 24, 32, 0.06);
   --border-glass: rgba(16, 24, 32, 0.1);
   --border-strong: rgba(16, 24, 32, 0.16);
-  --border-focus: rgba(22, 199, 132, 0.5);
+  --border-focus: rgba(96, 156, 0, 0.5);
 
   --text-primary: #0e1116;
   --text-secondary: rgba(14, 17, 22, 0.7);
   --text-tertiary: rgba(14, 17, 22, 0.56);
 
-  --accent: var(--brand-500);
-  --accent-bg: rgba(22, 199, 132, 0.12);
+  --accent: #609c00;
+  --accent-bg: rgba(96, 156, 0, 0.12);
 
   --gradient-card: linear-gradient(
     160deg,
@@ -180,8 +183,8 @@
 
   --color-lime: var(--brand-400);
 
-  --gradient-lime: linear-gradient(135deg, #34ce89 0%, #16c784 100%);
-  --shadow-glow-lime: 0 14px 50px rgba(52, 206, 137, 0.3);
+  --gradient-lime: linear-gradient(135deg, #79bb18 0%, #609c00 100%);
+  --shadow-glow-lime: 0 14px 46px rgba(96, 156, 0, 0.32);
   --shadow-glow-orange: 0 14px 50px rgba(255, 138, 76, 0.26);
 
   --chart-saved: var(--brand-400);
@@ -199,14 +202,14 @@
   --border-subtle: rgba(255, 255, 255, 0.07);
   --border-glass: rgba(255, 255, 255, 0.1);
   --border-strong: rgba(255, 255, 255, 0.16);
-  --border-focus: rgba(52, 206, 137, 0.42);
+  --border-focus: rgba(96, 156, 0, 0.45);
 
   --text-primary: #f3f5f4;
   --text-secondary: rgba(243, 245, 244, 0.74);
   --text-tertiary: rgba(243, 245, 244, 0.58);
 
-  --accent: var(--brand-400);
-  --accent-bg: rgba(52, 206, 137, 0.15);
+  --accent: #7cb518;
+  --accent-bg: rgba(124, 181, 24, 0.16);
 
   --gradient-card: linear-gradient(
     160deg,
@@ -247,6 +250,86 @@
   --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
+:root {
+  --paper-canvas: #f5f1e8;
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)'/%3E%3C/svg%3E");
+  --num-font: var(--font-app), var(--font-inter), system-ui, sans-serif;
+
+  --surface-base: var(--paper-canvas);
+  --surface-elevated: #fffdf9;
+  --surface-raised: #fffdf9;
+  --surface-card: #fdfbf6;
+  --surface-card-solid: #fdfbf6;
+  --surface-glass: #fbf8f1;
+  --surface-chrome: rgba(250, 246, 238, 0.92);
+  --surface-input: rgba(60, 50, 35, 0.05);
+
+  --border-subtle: #e9e2d4;
+  --border-glass: #ddd4c2;
+  --border-strong: #cbbfa8;
+  --border-focus: rgba(96, 156, 0, 0.5);
+
+  --text-primary: #26221c;
+  --text-secondary: #5c554a;
+  --text-tertiary: #8a8070;
+
+  --accent: #609c00;
+  --accent-bg: rgba(96, 156, 0, 0.12);
+
+  --color-success: #2e7d5b;
+  --color-danger: #b23a3a;
+  --color-warning: #b7791f;
+  --color-info: #3f6f9e;
+
+  --shadow-card:
+    0 1px 2px rgba(60, 50, 35, 0.06), 0 2px 8px rgba(60, 50, 35, 0.06);
+  --shadow-float:
+    0 2px 4px rgba(60, 50, 35, 0.07), 0 10px 24px rgba(60, 50, 35, 0.09);
+  --shadow-soft:
+    0 1px 2px rgba(60, 50, 35, 0.05), 0 4px 12px rgba(60, 50, 35, 0.06);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-xl: 16px;
+  --radius-2xl: 18px;
+}
+
+:root[data-theme="dark"] {
+  --paper-canvas: #17140f;
+
+  --surface-base: var(--paper-canvas);
+  --surface-elevated: #241f18;
+  --surface-raised: #241f18;
+  --surface-card: #221e18;
+  --surface-card-solid: #221e18;
+  --surface-glass: rgba(237, 230, 216, 0.04);
+  --surface-chrome: rgba(23, 20, 15, 0.92);
+  --surface-input: rgba(237, 230, 216, 0.05);
+
+  --border-subtle: rgba(237, 230, 216, 0.09);
+  --border-glass: rgba(237, 230, 216, 0.12);
+  --border-strong: rgba(237, 230, 216, 0.18);
+
+  --text-primary: #ede6d8;
+  --text-secondary: rgba(237, 230, 216, 0.72);
+  --text-tertiary: rgba(237, 230, 216, 0.5);
+
+  --accent: #9ccc4a;
+  --accent-bg: rgba(156, 204, 74, 0.16);
+
+  --color-success: #7cc9a6;
+  --color-danger: #e08a7a;
+  --color-warning: #d9a94e;
+  --color-info: #7fa8cf;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 22px rgba(0, 0, 0, 0.42);
+  --shadow-float: 0 2px 6px rgba(0, 0, 0, 0.46), 0 14px 34px rgba(0, 0, 0, 0.5);
+  --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.36), 0 4px 14px rgba(0, 0, 0, 0.38);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
 *,
 *::before,
 *::after {
@@ -263,7 +346,7 @@ html {
 }
 
 body {
-  font-family: $font-sans;
+  font-family: var(--font-app), var(--font-inter), system-ui, sans-serif;
   background: var(--surface-base);
   color: var(--text-primary);
   font-size: var(--font-md);
@@ -321,13 +404,13 @@ h1,
 h2,
 h3,
 h4 {
+  font-family: var(--font-app), var(--font-inter), sans-serif;
   line-height: 1.18;
   letter-spacing: -0.02em;
   font-weight: var(--weight-bold);
 }
 
 h1 {
-  font-family: var(--font-display);
   letter-spacing: -0.03em;
 }
 
@@ -344,8 +427,8 @@ textarea {
 }
 
 ::selection {
-  background: var(--color-lime);
-  color: var(--text-inverse);
+  background: var(--accent);
+  color: #fff;
 }
 
 @media (prefers-reduced-motion: reduce) {

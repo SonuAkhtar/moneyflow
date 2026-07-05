@@ -6,17 +6,121 @@
   margin: 0 auto;
   overflow-x: clip;
 
-  &_glow {
+  --route-tint: var(--surface-base);
+
+  &[data-route="home"] {
+    --route-tint: #f5f1e8;
+  }
+  &[data-route="savings"] {
+    --route-tint: #edf3ec;
+  }
+  &[data-route="analytics"] {
+    --route-tint: #eef0f6;
+  }
+  &[data-route="emi"] {
+    --route-tint: #f4efe9;
+  }
+  &[data-route="profile"] {
+    --route-tint: #f1eef6;
+  }
+
+  :global(:root[data-theme="dark"]) & {
+    &[data-route="home"] {
+      --route-tint: #17140f;
+    }
+    &[data-route="savings"] {
+      --route-tint: #0e1512;
+    }
+    &[data-route="analytics"] {
+      --route-tint: #0d0f16;
+    }
+    &[data-route="emi"] {
+      --route-tint: #151210;
+    }
+    &[data-route="profile"] {
+      --route-tint: #110f16;
+    }
+  }
+
+  &_canvas {
     position: fixed;
     top: 0;
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
     max-width: $content-max;
-    height: 320px;
-    background: var(--gradient-hero);
+    height: 100dvh;
+    background: var(--route-tint);
     pointer-events: none;
     z-index: 0;
+    transition: background var(--dur-slow) var(--ease-smooth);
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: var(--paper-grain);
+      background-size: 140px 140px;
+      background-repeat: repeat;
+      opacity: 0.4;
+      mix-blend-mode: multiply;
+    }
+  }
+
+  :global(:root[data-theme="dark"]) &_canvas::after {
+    opacity: 0.55;
+    mix-blend-mode: screen;
+  }
+
+  &[data-route="home"] &_canvas::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.7;
+    background:
+      linear-gradient(
+        180deg,
+        transparent calc(33.33% - 2px),
+        rgba(92, 72, 45, 0.05) calc(33.33% - 1px),
+        rgba(255, 255, 255, 0.5) calc(33.33% + 0.5px),
+        transparent calc(33.33% + 2px),
+        transparent calc(66.66% - 2px),
+        rgba(92, 72, 45, 0.05) calc(66.66% - 1px),
+        rgba(255, 255, 255, 0.5) calc(66.66% + 0.5px),
+        transparent calc(66.66% + 2px)
+      ),
+      linear-gradient(
+        90deg,
+        transparent calc(50% - 2px),
+        rgba(92, 72, 45, 0.04) calc(50% - 1px),
+        rgba(255, 255, 255, 0.4) calc(50% + 0.5px),
+        transparent calc(50% + 2px)
+      );
+  }
+
+  :global(:root[data-theme="dark"]) &[data-route="home"] &_canvas::before {
+    opacity: 0.55;
+    background:
+      linear-gradient(
+        180deg,
+        transparent calc(33.33% - 2px),
+        rgba(0, 0, 0, 0.32) calc(33.33% - 1px),
+        rgba(255, 255, 255, 0.06) calc(33.33% + 0.5px),
+        transparent calc(33.33% + 2px),
+        transparent calc(66.66% - 2px),
+        rgba(0, 0, 0, 0.32) calc(66.66% - 1px),
+        rgba(255, 255, 255, 0.06) calc(66.66% + 0.5px),
+        transparent calc(66.66% + 2px)
+      ),
+      linear-gradient(
+        90deg,
+        transparent calc(50% - 2px),
+        rgba(0, 0, 0, 0.28) calc(50% - 1px),
+        rgba(255, 255, 255, 0.05) calc(50% + 0.5px),
+        transparent calc(50% + 2px)
+      );
   }
 
   &_inner {
