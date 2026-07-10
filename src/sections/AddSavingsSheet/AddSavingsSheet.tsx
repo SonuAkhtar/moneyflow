@@ -15,6 +15,7 @@ import {
   currentMonthKey,
   formatCurrency,
   getCurrencySymbol,
+  round2,
 } from "@/utils";
 import { BANK_PRESETS, getBankByName } from "@/constants/banks";
 import type { Account } from "@/types";
@@ -36,6 +37,8 @@ export const AddSavingsSheet = ({
   const addAccount = useFinanceStore((s) => s.addAccount);
   const updateAccount = useFinanceStore((s) => s.updateAccount);
   const deleteAccount = useFinanceStore((s) => s.deleteAccount);
+  const addSavingDeposit = useFinanceStore((s) => s.addSavingDeposit);
+  const addSavingWithdrawal = useFinanceStore((s) => s.addSavingWithdrawal);
   const transactions = useFinanceStore((s) => s.transactions);
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
   const toast = useToast();
@@ -67,17 +70,12 @@ export const AddSavingsSheet = ({
     BANK_PRESETS.find((b) => b.id === bankId) ?? BANK_PRESETS[0]!;
   const bankName = bankId === "other" ? otherName.trim() : selectedBank.name;
 
-  const onCurrentChange = (v: string) => {
-    setCurrent(v);
-    setSavedLast(String(toNum(v) - thisMonthDelta));
-  };
-  const onSavedLastChange = (v: string) => {
-    setSavedLast(v);
-    setCurrent(String(toNum(v) + thisMonthDelta));
-  };
+  const currentValue = toNum(current);
+  const savedLastValue = toNum(savedLast);
+  const liveDelta = round2(currentValue - savedLastValue);
 
   const balanceField = isEdit ? current : savedLast;
-  const balanceValue = toNum(balanceField);
+  const balanceValue = isEdit ? currentValue : savedLastValue;
   const canSave =
     Boolean(bankName) &&
     balanceField.trim() !== "" &&
@@ -86,10 +84,13 @@ export const AddSavingsSheet = ({
   const submit = () => {
     if (!canSave) return;
     if (account) {
+      const adjustment = round2(currentValue - savedLastValue - thisMonthDelta);
+      if (adjustment > 0.005) addSavingDeposit(account.id, adjustment);
+      else if (adjustment < -0.005) addSavingWithdrawal(account.id, -adjustment);
       updateAccount(account.id, {
         name: bankName,
         institution: bankName,
-        balance: balanceValue,
+        balance: currentValue,
         colorTag: selectedBank.color,
       });
       toast({
@@ -174,17 +175,17 @@ export const AddSavingsSheet = ({
                 {formatCurrency(balanceValue, currency)}
               </span>
             </div>
-            {thisMonthDelta !== 0 && (
+            {liveDelta !== 0 && (
               <span
                 className={cn(
                   styles.hero_chip,
-                  thisMonthDelta > 0
+                  liveDelta > 0
                     ? styles["hero_chip--in"]
                     : styles["hero_chip--out"],
                 )}
               >
-                {thisMonthDelta > 0 ? "+" : "-"}
-                {formatCurrency(Math.abs(thisMonthDelta), currency)}
+                {liveDelta > 0 ? "+" : "-"}
+                {formatCurrency(Math.abs(liveDelta), currency)}
                 <span className={styles.hero_chipCaption}>this month</span>
               </span>
             )}
@@ -199,7 +200,7 @@ export const AddSavingsSheet = ({
               inputMode="decimal"
               placeholder="0"
               value={current}
-              onChange={(e) => onCurrentChange(e.target.value)}
+              onChange={(e) => setCurrent(e.target.value)}
             />
             <Input
               label={`Saved till last month (${symbol})`}
@@ -207,7 +208,7 @@ export const AddSavingsSheet = ({
               inputMode="decimal"
               placeholder="0"
               value={savedLast}
-              onChange={(e) => onSavedLastChange(e.target.value)}
+              onChange={(e) => setSavedLast(e.target.value)}
             />
           </div>
         ) : (
