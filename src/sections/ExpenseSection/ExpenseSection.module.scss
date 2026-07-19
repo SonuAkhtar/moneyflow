@@ -85,6 +85,9 @@
   gap: 2px;
   max-height: 320px;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
   padding-bottom: var(--space-7);
   @include scrollbar-hide;
 }

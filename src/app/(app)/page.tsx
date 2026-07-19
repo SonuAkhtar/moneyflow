@@ -41,11 +41,11 @@ export default function HomePage() {
           <SavingsAccordion />
         </m.div>
 
-        <m.div variants={listItem} {...cardTap}>
+        <m.div variants={listItem}>
           <MajorSpends />
         </m.div>
 
-        <m.div variants={listItem} {...cardTap}>
+        <m.div variants={listItem}>
           <DailySpends />
         </m.div>
       </m.div>
