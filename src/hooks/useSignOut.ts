@@ -13,9 +13,12 @@ export const useSignOut = () => {
   const clearAuth = useAuthStore((s) => s.clear);
 
   return useCallback(async () => {
-    await authService.signOut();
-    clearAuth();
-    resetAll();
-    router.replace(ROUTES.login);
+    try {
+      await authService.signOut();
+    } finally {
+      clearAuth();
+      resetAll();
+      router.replace(ROUTES.login);
+    }
   }, [router, resetAll, clearAuth]);
 };

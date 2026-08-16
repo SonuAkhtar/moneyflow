@@ -7,7 +7,6 @@ import {
   emiPaidAmount,
   getCurrencySymbol,
   monthKey,
-  savingsRate,
   setActiveCurrency,
   sumBy,
   SAVINGS_DEPOSIT_NOTE,
@@ -33,15 +32,6 @@ describe("sumBy", () => {
 describe("monthKey", () => {
   it("formats an ISO date to YYYY-MM", () => {
     expect(monthKey("2026-05-17T09:00:00.000Z")).toBe("2026-05");
-  });
-});
-
-describe("savingsRate", () => {
-  it("is the saved share of income as a percent", () => {
-    expect(savingsRate(1000, 750)).toBe(25);
-  });
-  it("is 0 when there is no income", () => {
-    expect(savingsRate(0, 500)).toBe(0);
   });
 });
 

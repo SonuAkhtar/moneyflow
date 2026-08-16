@@ -28,9 +28,16 @@ export const ResetPasswordForm = () => {
   useEffect(() => {
     const supabase = getBrowserSupabase();
     if (!supabase) return;
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setReady(true);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (data.session) setReady(true);
+      })
+      .catch(() => {
+        setServerError(
+          "We couldn't open your reset link. Please request a new one.",
+        );
+      });
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (session && (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN")) {
         setReady(true);
@@ -62,7 +69,7 @@ export const ResetPasswordForm = () => {
   return (
     <form className={styles.form} onSubmit={submit}>
       {(serverError || !configured) && (
-        <div className={styles.alert}>
+        <div className={styles.alert} role="alert">
           <AlertCircle size={16} />
           {serverError ??
             "Supabase isn't configured. Add your keys to .env.local and restart."}

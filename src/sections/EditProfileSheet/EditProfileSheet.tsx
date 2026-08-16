@@ -99,7 +99,9 @@ const ProfileForm = ({ profile, onClose }: ProfileFormProps) => {
   const canSave = !nameError && !emailError;
 
   const onPickAvatar = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const input = event.target;
+    const file = input.files?.[0];
+    input.value = "";
     if (!file) return;
     if (file.size > 10_000_000) {
       toast({

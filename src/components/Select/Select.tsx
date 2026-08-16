@@ -16,6 +16,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ label, error, options, className, id, ...rest }, ref) => {
     const fallbackId = useId();
     const selectId = id ?? fallbackId;
+    const descId = `${selectId}-desc`;
     return (
       <div className={cn(styles.field, className)}>
         {label && (
@@ -33,6 +34,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             ref={ref}
             id={selectId}
             className={styles.field_select}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? descId : undefined}
             {...rest}
           >
             {options.map((option) => (
@@ -43,7 +46,11 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           </select>
           <ChevronDown className={styles.field_chevron} size={18} />
         </div>
-        {error && <span className={styles.field_error}>{error}</span>}
+        {error && (
+          <span id={descId} role="alert" className={styles.field_error}>
+            {error}
+          </span>
+        )}
       </div>
     );
   },

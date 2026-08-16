@@ -83,7 +83,7 @@ export const SignupForm = () => {
   return (
     <form className={styles.form} onSubmit={submit}>
       {serverError && (
-        <div className={styles.alert}>
+        <div className={styles.alert} role="alert">
           <AlertCircle size={16} />
           {serverError}
         </div>

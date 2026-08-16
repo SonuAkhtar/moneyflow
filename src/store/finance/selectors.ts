@@ -68,7 +68,7 @@ export const salaryTotalsByMonth = (
   for (const t of transactions) {
     if (t.type !== "income" || t.category !== "salary") continue;
     const key = monthKey(t.occurredAt);
-    map[key] = (map[key] ?? 0) + t.amount;
+    map[key] = round2((map[key] ?? 0) + t.amount);
   }
   return map;
 };

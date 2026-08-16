@@ -1,7 +1,7 @@
 import { borrowingRepo } from "@/services/repositories";
 import { isoNow } from "@/utils";
 import type { Borrowing, BorrowingPayment } from "@/types";
-import { newId } from "./helpers";
+import { makeRollback, newId } from "./helpers";
 import type { FinanceState, SliceCreator } from "./types";
 
 type BorrowingsSlice = Pick<
@@ -34,7 +34,10 @@ export const createBorrowingsSlice: SliceCreator<BorrowingsSlice> = (
       createdAt: isoNow(),
     };
     set({ borrowings: [borrowing, ...s.borrowings] });
-    sync(() => borrowingRepo.save(borrowing));
+    sync(
+      () => borrowingRepo.save(borrowing),
+      makeRollback(set, s, ["borrowings"]),
+    );
   },
 
   updateBorrowing: (id, patch) => {
@@ -44,14 +47,21 @@ export const createBorrowingsSlice: SliceCreator<BorrowingsSlice> = (
     );
     set({ borrowings });
     const updated = borrowings.find((b) => b.id === id);
-    if (updated) sync(() => borrowingRepo.save(updated));
+    if (updated)
+      sync(
+        () => borrowingRepo.save(updated),
+        makeRollback(set, s, ["borrowings"]),
+      );
   },
 
   deleteBorrowing: (id) => {
     const s = get();
     set({ borrowings: s.borrowings.filter((b) => b.id !== id) });
     const uid = ownerId();
-    sync(() => borrowingRepo.remove(id, uid));
+    sync(
+      () => borrowingRepo.remove(id, uid),
+      makeRollback(set, s, ["borrowings"]),
+    );
   },
 
   addBorrowingPayment: (borrowingId, input) => {
@@ -69,7 +79,10 @@ export const createBorrowingsSlice: SliceCreator<BorrowingsSlice> = (
           : b,
       ),
     });
-    sync(() => borrowingRepo.savePayment(payment, borrowingId, ownerId()));
+    sync(
+      () => borrowingRepo.savePayment(payment, borrowingId, ownerId()),
+      makeRollback(set, s, ["borrowings"]),
+    );
   },
 
   updateBorrowingPayment: (borrowingId, paymentId, patch) => {
@@ -86,7 +99,10 @@ export const createBorrowingsSlice: SliceCreator<BorrowingsSlice> = (
     });
     set({ borrowings });
     if (updated)
-      sync(() => borrowingRepo.savePayment(updated!, borrowingId, ownerId()));
+      sync(
+        () => borrowingRepo.savePayment(updated!, borrowingId, ownerId()),
+        makeRollback(set, s, ["borrowings"]),
+      );
   },
 
   deleteBorrowingPayment: (borrowingId, paymentId) => {
@@ -102,6 +118,9 @@ export const createBorrowingsSlice: SliceCreator<BorrowingsSlice> = (
       ),
     });
     const uid = ownerId();
-    sync(() => borrowingRepo.removePayment(paymentId, uid));
+    sync(
+      () => borrowingRepo.removePayment(paymentId, uid),
+      makeRollback(set, s, ["borrowings"]),
+    );
   },
 });

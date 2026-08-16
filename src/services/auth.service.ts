@@ -24,7 +24,8 @@ const isEmail = (value: string) =>
   /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value.trim());
 
 const authRedirectBase = (): string =>
-  typeof window !== "undefined" ? window.location.origin : env.appUrl;
+  env.appUrl ||
+  (typeof window !== "undefined" ? window.location.origin : "");
 
 export const authService = {
   isRemote(): boolean {

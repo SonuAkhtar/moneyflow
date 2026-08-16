@@ -16,7 +16,7 @@ const withPaidMonths = (emi: Emi, paidMonths: number): Emi => {
   }
   return { ...emi, paidMonths: paid, remainingMonths, status };
 };
-import { applyBalance, newId } from "./helpers";
+import { applyBalance, makeRollback, newId } from "./helpers";
 import type { FinanceState, SliceCreator } from "./types";
 
 type EmisSlice = Pick<
@@ -56,7 +56,7 @@ export const createEmisSlice: SliceCreator<EmisSlice> = (
       createdAt: isoNow(),
     };
     set({ emis: [emi, ...s.emis] });
-    sync(() => emiRepo.save(emi));
+    sync(() => emiRepo.save(emi), makeRollback(set, s, ["emis"]));
   },
 
   updateEmi: (id, patch) => {
@@ -64,7 +64,8 @@ export const createEmisSlice: SliceCreator<EmisSlice> = (
     const emis = s.emis.map((e) => (e.id === id ? { ...e, ...patch } : e));
     set({ emis });
     const updated = emis.find((e) => e.id === id);
-    if (updated) sync(() => emiRepo.save(updated));
+    if (updated)
+      sync(() => emiRepo.save(updated), makeRollback(set, s, ["emis"]));
   },
 
   deleteEmi: (id) => {
@@ -82,11 +83,13 @@ export const createEmisSlice: SliceCreator<EmisSlice> = (
       .map((aid) => accounts.find((a) => a.id === aid))
       .filter((a): a is Account => Boolean(a));
     const uid = ownerId();
-    sync(() =>
-      Promise.all([
-        emiRepo.remove(id, uid),
-        ...dirty.map((a) => accountRepo.save(a)),
-      ]).then(() => undefined),
+    sync(
+      () =>
+        Promise.all([
+          emiRepo.remove(id, uid),
+          ...dirty.map((a) => accountRepo.save(a)),
+        ]).then(() => undefined),
+      makeRollback(set, s, ["emis", "accounts"]),
     );
   },
 
@@ -115,12 +118,14 @@ export const createEmisSlice: SliceCreator<EmisSlice> = (
     const account = payment.accountId
       ? accounts.find((a) => a.id === payment.accountId)
       : undefined;
-    sync(() =>
-      Promise.all([
-        emiRepo.savePayment(payment, emiId, ownerId()),
-        ...(updatedEmi ? [emiRepo.save(updatedEmi)] : []),
-        ...(account ? [accountRepo.save(account)] : []),
-      ]).then(() => undefined),
+    sync(
+      () =>
+        Promise.all([
+          emiRepo.savePayment(payment, emiId, ownerId()),
+          ...(updatedEmi ? [emiRepo.save(updatedEmi)] : []),
+          ...(account ? [accountRepo.save(account)] : []),
+        ]).then(() => undefined),
+      makeRollback(set, s, ["emis", "accounts"]),
     );
   },
 
@@ -158,11 +163,13 @@ export const createEmisSlice: SliceCreator<EmisSlice> = (
       .filter((v, i) => ids.indexOf(v) === i)
       .map((id) => accounts.find((a) => a.id === id))
       .filter((a): a is Account => Boolean(a));
-    sync(() =>
-      Promise.all([
-        emiRepo.savePayment(updated, emiId, ownerId()),
-        ...dirty.map((a) => accountRepo.save(a)),
-      ]).then(() => undefined),
+    sync(
+      () =>
+        Promise.all([
+          emiRepo.savePayment(updated, emiId, ownerId()),
+          ...dirty.map((a) => accountRepo.save(a)),
+        ]).then(() => undefined),
+      makeRollback(set, s, ["emis", "accounts"]),
     );
   },
 
@@ -191,12 +198,14 @@ export const createEmisSlice: SliceCreator<EmisSlice> = (
       ? accounts.find((a) => a.id === payment.accountId)
       : undefined;
     const uid = ownerId();
-    sync(() =>
-      Promise.all([
-        emiRepo.removePayment(paymentId, uid),
-        ...(updatedEmi ? [emiRepo.save(updatedEmi)] : []),
-        ...(account ? [accountRepo.save(account)] : []),
-      ]).then(() => undefined),
+    sync(
+      () =>
+        Promise.all([
+          emiRepo.removePayment(paymentId, uid),
+          ...(updatedEmi ? [emiRepo.save(updatedEmi)] : []),
+          ...(account ? [accountRepo.save(account)] : []),
+        ]).then(() => undefined),
+      makeRollback(set, s, ["emis", "accounts"]),
     );
   },
 });

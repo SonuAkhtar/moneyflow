@@ -195,11 +195,6 @@ export const isoNow = (): string => new Date().toISOString();
 export const dateInputToIso = (dateStr: string): string =>
   new Date(`${dateStr}T12:00:00`).toISOString();
 
-export const savingsRate = (income: number, expenses: number): number => {
-  if (income <= 0) return 0;
-  return Math.max(0, Math.min(100, ((income - expenses) / income) * 100));
-};
-
 export interface HealthInput {
   income: number;
   savings: number;

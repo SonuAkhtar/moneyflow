@@ -6,7 +6,7 @@ import {
 } from "@/services/repositories";
 import { isoNow, SAVINGS_DEPOSIT_NOTE, SAVINGS_WITHDRAWAL_NOTE } from "@/utils";
 import type { Account, EmiPayment, Transaction } from "@/types";
-import { applyBalance, newId } from "./helpers";
+import { applyBalance, makeRollback, newId } from "./helpers";
 import type { FinanceState, SliceCreator } from "./types";
 
 type AccountsSlice = Pick<
@@ -26,15 +26,23 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (
   { ownerId, sync },
 ) => ({
   setMajorAccount: (id) => {
+    const s = get();
     set({ majorAccountId: id });
     const uid = ownerId();
-    sync(() => profileRepo.update(uid, { majorAccountId: id }));
+    sync(
+      () => profileRepo.update(uid, { majorAccountId: id }),
+      makeRollback(set, s, ["majorAccountId"]),
+    );
   },
 
   setDailyAccount: (id) => {
+    const s = get();
     set({ dailyAccountId: id });
     const uid = ownerId();
-    sync(() => profileRepo.update(uid, { dailyAccountId: id }));
+    sync(
+      () => profileRepo.update(uid, { dailyAccountId: id }),
+      makeRollback(set, s, ["dailyAccountId"]),
+    );
   },
 
   addAccount: (input) => {
@@ -64,7 +72,7 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (
             await accountRepo.save(a);
         }
       }
-    });
+    }, makeRollback(set, s, ["accounts"]));
   },
 
   updateAccount: (id, patch) => {
@@ -74,7 +82,11 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (
     );
     set({ accounts });
     const updated = accounts.find((a) => a.id === id);
-    if (updated) sync(() => accountRepo.save(updated));
+    if (updated)
+      sync(
+        () => accountRepo.save(updated),
+        makeRollback(set, s, ["accounts"]),
+      );
   },
 
   deleteAccount: (id) => {
@@ -108,23 +120,32 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (
     });
 
     const uid = ownerId();
-    sync(async () => {
-      await accountRepo.remove(id, uid);
-      await Promise.all(
-        removedTxnIds.map((tid) => transactionRepo.remove(tid, uid)),
-      );
-      await Promise.all(
-        detachedPayments.map(({ payment, emiId }) =>
-          emiRepo.savePayment(payment, emiId, uid),
-        ),
-      );
-      if (major !== s.majorAccountId || daily !== s.dailyAccountId) {
-        await profileRepo.update(uid, {
-          majorAccountId: major,
-          dailyAccountId: daily,
-        });
-      }
-    });
+    sync(
+      async () => {
+        await accountRepo.remove(id, uid);
+        await Promise.all(
+          removedTxnIds.map((tid) => transactionRepo.remove(tid, uid)),
+        );
+        await Promise.all(
+          detachedPayments.map(({ payment, emiId }) =>
+            emiRepo.savePayment(payment, emiId, uid),
+          ),
+        );
+        if (major !== s.majorAccountId || daily !== s.dailyAccountId) {
+          await profileRepo.update(uid, {
+            majorAccountId: major,
+            dailyAccountId: daily,
+          });
+        }
+      },
+      makeRollback(set, s, [
+        "accounts",
+        "transactions",
+        "emis",
+        "majorAccountId",
+        "dailyAccountId",
+      ]),
+    );
   },
 
   addSavingDeposit: (accountId, amount) => {
@@ -147,11 +168,13 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (
     const accounts = applyBalance(s.accounts, accountId, amount);
     set({ transactions: [txn, ...s.transactions], accounts });
     const updated = accounts.find((a) => a.id === accountId);
-    sync(() =>
-      Promise.all([
-        transactionRepo.save(txn),
-        ...(updated ? [accountRepo.save(updated)] : []),
-      ]).then(() => undefined),
+    sync(
+      () =>
+        Promise.all([
+          transactionRepo.save(txn),
+          ...(updated ? [accountRepo.save(updated)] : []),
+        ]).then(() => undefined),
+      makeRollback(set, s, ["transactions", "accounts"]),
     );
   },
 
@@ -175,11 +198,13 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (
     const accounts = applyBalance(s.accounts, accountId, -amount);
     set({ transactions: [txn, ...s.transactions], accounts });
     const updated = accounts.find((a) => a.id === accountId);
-    sync(() =>
-      Promise.all([
-        transactionRepo.save(txn),
-        ...(updated ? [accountRepo.save(updated)] : []),
-      ]).then(() => undefined),
+    sync(
+      () =>
+        Promise.all([
+          transactionRepo.save(txn),
+          ...(updated ? [accountRepo.save(updated)] : []),
+        ]).then(() => undefined),
+      makeRollback(set, s, ["transactions", "accounts"]),
     );
   },
 });

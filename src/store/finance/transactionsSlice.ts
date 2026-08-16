@@ -2,7 +2,7 @@ import { BIG_EXPENSE_THRESHOLD } from "@/constants";
 import { accountRepo, transactionRepo } from "@/services/repositories";
 import { isoNow, monthKey } from "@/utils";
 import type { Account, Transaction } from "@/types";
-import { applyBalance, newId } from "./helpers";
+import { applyBalance, balanceDelta, makeRollback, newId } from "./helpers";
 import type { FinanceState, SliceCreator } from "./types";
 
 type TransactionsSlice = Pick<
@@ -30,16 +30,18 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
       occurredAt: input.occurredAt,
       createdAt: isoNow(),
     };
-    const delta = input.type === "income" ? input.amount : -input.amount;
+    const delta = balanceDelta(txn.type, txn.amount, txn.note);
     const accounts = applyBalance(s.accounts, input.accountId, delta);
     set({ transactions: [txn, ...s.transactions], accounts });
 
     const account = accounts.find((a) => a.id === input.accountId);
-    sync(() =>
-      Promise.all([
-        transactionRepo.save(txn),
-        ...(account ? [accountRepo.save(account)] : []),
-      ]).then(() => undefined),
+    sync(
+      () =>
+        Promise.all([
+          transactionRepo.save(txn),
+          ...(account ? [accountRepo.save(account)] : []),
+        ]).then(() => undefined),
+      makeRollback(set, s, ["transactions", "accounts"]),
     );
   },
 
@@ -47,7 +49,7 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
     const s = get();
     const txn = s.transactions.find((t) => t.id === id);
     if (!txn) return;
-    const delta = txn.type === "income" ? -txn.amount : txn.amount;
+    const delta = -balanceDelta(txn.type, txn.amount, txn.note);
     const accounts = applyBalance(s.accounts, txn.accountId, delta);
     set({
       transactions: s.transactions.filter((t) => t.id !== id),
@@ -56,11 +58,13 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
 
     const account = accounts.find((a) => a.id === txn.accountId);
     const uid = ownerId();
-    sync(() =>
-      Promise.all([
-        transactionRepo.remove(id, uid),
-        ...(account ? [accountRepo.save(account)] : []),
-      ]).then(() => undefined),
+    sync(
+      () =>
+        Promise.all([
+          transactionRepo.remove(id, uid),
+          ...(account ? [accountRepo.save(account)] : []),
+        ]).then(() => undefined),
+      makeRollback(set, s, ["transactions", "accounts"]),
     );
   },
 
@@ -68,11 +72,6 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
     const s = get();
     const old = s.transactions.find((t) => t.id === id);
     if (!old) return;
-
-    const oldDelta = old.type === "income" ? old.amount : -old.amount;
-    let accounts = applyBalance(s.accounts, old.accountId, -oldDelta);
-    const newDelta = input.type === "income" ? input.amount : -input.amount;
-    accounts = applyBalance(accounts, input.accountId, newDelta);
 
     const updated: Transaction = {
       ...old,
@@ -86,6 +85,17 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
       occurredAt: input.occurredAt,
     };
 
+    let accounts = applyBalance(
+      s.accounts,
+      old.accountId,
+      -balanceDelta(old.type, old.amount, old.note),
+    );
+    accounts = applyBalance(
+      accounts,
+      updated.accountId,
+      balanceDelta(updated.type, updated.amount, updated.note),
+    );
+
     set({
       transactions: s.transactions.map((t) => (t.id === id ? updated : t)),
       accounts,
@@ -95,11 +105,13 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
       .filter((v, i, arr) => arr.indexOf(v) === i)
       .map((aid) => accounts.find((a) => a.id === aid))
       .filter((a): a is Account => Boolean(a));
-    sync(() =>
-      Promise.all([
-        transactionRepo.save(updated),
-        ...dirtyAccounts.map((a) => accountRepo.save(a)),
-      ]).then(() => undefined),
+    sync(
+      () =>
+        Promise.all([
+          transactionRepo.save(updated),
+          ...dirtyAccounts.map((a) => accountRepo.save(a)),
+        ]).then(() => undefined),
+      makeRollback(set, s, ["transactions", "accounts"]),
     );
   },
 
@@ -133,11 +145,13 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
         .filter((v, i, arr) => arr.indexOf(v) === i)
         .map((aid) => accounts.find((a) => a.id === aid))
         .filter((a): a is Account => Boolean(a));
-      sync(() =>
-        Promise.all([
-          ...(updatedTxn ? [transactionRepo.save(updatedTxn)] : []),
-          ...dirtyAccounts.map((a) => accountRepo.save(a)),
-        ]).then(() => undefined),
+      sync(
+        () =>
+          Promise.all([
+            ...(updatedTxn ? [transactionRepo.save(updatedTxn)] : []),
+            ...dirtyAccounts.map((a) => accountRepo.save(a)),
+          ]).then(() => undefined),
+        makeRollback(set, s, ["transactions", "accounts"]),
       );
       return;
     }
@@ -164,11 +178,13 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
     const accounts = applyBalance(s.accounts, base.id, amount);
     set({ transactions: [txn, ...s.transactions], accounts });
     const account = accounts.find((a) => a.id === base.id);
-    sync(() =>
-      Promise.all([
-        transactionRepo.save(txn),
-        ...(account ? [accountRepo.save(account)] : []),
-      ]).then(() => undefined),
+    sync(
+      () =>
+        Promise.all([
+          transactionRepo.save(txn),
+          ...(account ? [accountRepo.save(account)] : []),
+        ]).then(() => undefined),
+      makeRollback(set, s, ["transactions", "accounts"]),
     );
   },
 });

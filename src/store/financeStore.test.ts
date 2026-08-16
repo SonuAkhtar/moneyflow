@@ -140,6 +140,30 @@ describe("financeStore mutations (optimistic reducer)", () => {
     expect(s.transactions[0]!.type).toBe("transfer");
   });
 
+  it("editing a savings deposit re-bases the balance with the correct sign", () => {
+    seed({ accounts: [account(100)] });
+    const store = useFinanceStore.getState();
+    store.addSavingDeposit("acc1", 400);
+    const txn = useFinanceStore.getState().transactions[0]!;
+    store.updateTransaction(txn.id, {
+      accountId: "acc1",
+      type: "transfer",
+      amount: 600,
+      category: "transfer",
+      occurredAt: txn.occurredAt,
+    });
+    expect(useFinanceStore.getState().accounts[0]!.balance).toBe(700);
+  });
+
+  it("deleting a savings deposit removes its balance contribution", () => {
+    seed({ accounts: [account(100)] });
+    const store = useFinanceStore.getState();
+    store.addSavingDeposit("acc1", 400);
+    const id = useFinanceStore.getState().transactions[0]!.id;
+    store.deleteTransaction(id);
+    expect(useFinanceStore.getState().accounts[0]!.balance).toBe(100);
+  });
+
   it("updateTransaction re-bases the balance by the delta", () => {
     const store = useFinanceStore.getState();
     store.addTransaction({

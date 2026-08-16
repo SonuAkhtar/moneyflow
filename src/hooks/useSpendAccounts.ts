@@ -19,9 +19,7 @@ export const useSpendAccounts = (preferredId?: string | null) => {
     "";
 
   const resolve = (id: string): Account | undefined =>
-    accounts.find((a) => a.id === id) ??
-    accounts.find((a) => a.isPrimary) ??
-    accounts[0];
+    accounts.find((a) => a.id === id);
 
   return { accounts, banks, defaultBankId, resolve };
 };

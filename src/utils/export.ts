@@ -1,9 +1,11 @@
+import { format, parseISO } from "date-fns";
 import { getCategoryMeta } from "@/constants/categories";
 import type { Account, Borrowing, Emi, Profile, Transaction } from "@/types";
 
 const csvCell = (value: string | number): string => {
-  const text = String(value);
-  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+  let text = String(value);
+  if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
+  return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 };
 
 export const transactionsToCsv = (
@@ -24,7 +26,7 @@ export const transactionsToCsv = (
   const rows = [...transactions]
     .sort((a, b) => +new Date(b.occurredAt) - +new Date(a.occurredAt))
     .map((t) => [
-      t.occurredAt.slice(0, 10),
+      format(parseISO(t.occurredAt), "yyyy-MM-dd"),
       t.type,
       getCategoryMeta(t.category).label,
       t.amount,

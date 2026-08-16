@@ -25,17 +25,22 @@ interface DueItem {
   paid: boolean;
 }
 
+const clampToMonth = (year: number, month: number, dueDay: number): Date => {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const day = Math.min(Math.max(1, dueDay || 1), daysInMonth);
+  return new Date(year, month, day);
+};
+
 const nextDueDate = (dueDay: number): Date => {
   const now = new Date();
-  const day = Math.min(Math.max(1, dueDay || 1), 28);
-  const candidate = new Date(now.getFullYear(), now.getMonth(), day);
+  const candidate = clampToMonth(now.getFullYear(), now.getMonth(), dueDay);
   const todayMidnight = new Date(
     now.getFullYear(),
     now.getMonth(),
     now.getDate(),
   );
   if (candidate.getTime() < todayMidnight.getTime()) {
-    candidate.setMonth(candidate.getMonth() + 1);
+    return clampToMonth(now.getFullYear(), now.getMonth() + 1, dueDay);
   }
   return candidate;
 };

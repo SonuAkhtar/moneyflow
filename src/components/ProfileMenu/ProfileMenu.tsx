@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, m } from "framer-motion";
 import { LogOut } from "lucide-react";
 import { Avatar } from "@/components/Avatar/Avatar";
@@ -19,6 +19,30 @@ export const ProfileMenu = ({ open, onClose }: ProfileMenuProps) => {
   const profile = useFinanceStore((s) => s.profile);
   const signOut = useSignOut();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
+  useEffect(() => {
+    if (!open) return;
+    const timer = window.setTimeout(
+      () => menuRef.current?.querySelector<HTMLElement>("button")?.focus(),
+      0,
+    );
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onCloseRef.current();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      window.clearTimeout(timer);
+    };
+  }, [open]);
 
   return (
     <>
@@ -33,12 +57,14 @@ export const ProfileMenu = ({ open, onClose }: ProfileMenuProps) => {
               onClick={onClose}
             />
             <m.div
+              ref={menuRef}
               className={styles.menu}
               initial={{ opacity: 0, y: -8, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.96 }}
               transition={{ type: "spring", stiffness: 440, damping: 30 }}
               role="menu"
+              aria-label="Profile menu"
             >
               <div className={styles.menu_head}>
                 <Avatar
@@ -61,6 +87,7 @@ export const ProfileMenu = ({ open, onClose }: ProfileMenuProps) => {
 
               <button
                 type="button"
+                role="menuitem"
                 className={`${styles.menu_item} ${styles["menu_item--danger"]}`}
                 onClick={() => {
                   onClose();

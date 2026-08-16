@@ -79,7 +79,7 @@ export const AddSavingsSheet = ({
   const canSave =
     Boolean(bankName) &&
     balanceField.trim() !== "" &&
-    (isEdit || balanceValue >= 0);
+    (isEdit ? savedLast.trim() !== "" : balanceValue >= 0);
 
   const submit = () => {
     if (!canSave) return;

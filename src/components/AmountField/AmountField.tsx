@@ -37,6 +37,7 @@ export const AmountField = ({
     <input
       className={styles.amount_input}
       inputMode="decimal"
+      aria-label="Amount"
       placeholder={placeholder}
       value={value}
       onChange={(e) => onChange(sanitizeAmount(e.target.value))}

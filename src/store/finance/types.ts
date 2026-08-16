@@ -102,7 +102,7 @@ export type FinanceGet = StoreApi<FinanceState>["getState"];
 
 export interface MutationHelpers {
   ownerId: () => string;
-  sync: (work: () => Promise<void>) => void;
+  sync: (work: () => Promise<void>, rollback?: () => void) => void;
   toastError: (message: string) => void;
 }
 

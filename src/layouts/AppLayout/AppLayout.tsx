@@ -102,6 +102,32 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
     if (needsOnboarding) router.replace(ROUTES.onboarding);
   }, [needsOnboarding, router]);
 
+  useEffect(() => {
+    if (status !== "authed" || !hasHydrated) return;
+    const warm = () => {
+      void import("@/components/charts/AreaTrendChart");
+      void import("@/components/charts/CategoryDonut");
+      void import("@/components/charts/SpendBarChart");
+    };
+    const ric = (
+      window as unknown as {
+        requestIdleCallback?: (
+          cb: () => void,
+          opts?: { timeout: number },
+        ) => number;
+        cancelIdleCallback?: (id: number) => void;
+      }
+    ).requestIdleCallback;
+    const cic = (
+      window as unknown as { cancelIdleCallback?: (id: number) => void }
+    ).cancelIdleCallback;
+    const id = ric ? ric(warm, { timeout: 3000 }) : window.setTimeout(warm, 1500);
+    return () => {
+      if (ric && cic) cic(id);
+      else clearTimeout(id);
+    };
+  }, [status, hasHydrated]);
+
   if (status === "authed" && user && initialized && !profile) {
     return (
       <div

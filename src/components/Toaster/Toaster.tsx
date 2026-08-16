@@ -32,7 +32,16 @@ const ToastItem = ({ toast }: { toast: ToastMessage }) => {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -12, scale: 0.96 }}
       transition={{ type: "spring", stiffness: 380, damping: 30 }}
+      role={toast.variant === "error" ? "alert" : "status"}
+      tabIndex={0}
+      aria-label="Dismiss notification"
       onClick={() => dismiss(toast.id)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          dismiss(toast.id);
+        }
+      }}
     >
       <span className={styles.toast_icon}>
         <Icon size={18} />
@@ -52,7 +61,12 @@ export const Toaster = () => {
 
   return (
     <Portal>
-      <div className={styles.toaster}>
+      <div
+        className={styles.toaster}
+        role="region"
+        aria-label="Notifications"
+        aria-live="polite"
+      >
         <AnimatePresence>
           {toasts.map((toast) => (
             <ToastItem key={toast.id} toast={toast} />

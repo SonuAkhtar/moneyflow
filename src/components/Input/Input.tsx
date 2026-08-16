@@ -20,6 +20,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const [reveal, setReveal] = useState(false);
     const fallbackId = useId();
     const inputId = id ?? fallbackId;
+    const descId = `${inputId}-desc`;
     const isPassword = type === "password";
     const resolvedType = isPassword ? (reveal ? "text" : "password") : type;
 
@@ -43,6 +44,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             type={resolvedType}
             className={styles.field_input}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error || hint ? descId : undefined}
             {...rest}
           />
           {isPassword && (
@@ -57,9 +60,15 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
         {error ? (
-          <span className={styles.field_error}>{error}</span>
+          <span id={descId} role="alert" className={styles.field_error}>
+            {error}
+          </span>
         ) : (
-          hint && <span className={styles.field_hint}>{hint}</span>
+          hint && (
+            <span id={descId} className={styles.field_hint}>
+              {hint}
+            </span>
+          )
         )}
       </div>
     );
