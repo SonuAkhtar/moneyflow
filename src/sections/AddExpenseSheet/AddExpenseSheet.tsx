@@ -10,7 +10,12 @@ import { useFinanceStore } from "@/store/financeStore";
 import { useSpendAccounts } from "@/hooks/useSpendAccounts";
 import { useToast } from "@/hooks/useToast";
 import { AmountField } from "@/components/AmountField/AmountField";
-import { dateInputToIso, formatCurrency, getCurrencySymbol } from "@/utils";
+import {
+  accountLabel,
+  currentDateKey,
+  dateInputToIso,
+  getCurrencySymbol,
+} from "@/utils";
 import { QUICK_EXPENSE_CATEGORIES } from "@/constants";
 import type { CategoryId } from "@/types";
 import styles from "./AddExpenseSheet.module.scss";
@@ -24,7 +29,7 @@ interface AddExpenseSheetProps {
   accountId?: string;
 }
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = currentDateKey;
 
 export const AddExpenseSheet = ({
   open,
@@ -139,7 +144,7 @@ const ExpenseForm = ({
         value={bankId}
         onChange={(e) => setBankId(e.target.value)}
         options={banks.map((a) => ({
-          label: `${a.name} · ${formatCurrency(a.balance, currency)}`,
+          label: accountLabel(a, currency),
           value: a.id,
         }))}
       />

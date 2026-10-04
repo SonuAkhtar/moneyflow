@@ -8,7 +8,7 @@ import { SheetActions } from "@/components/SheetActions/SheetActions";
 import { ConfirmDialog } from "@/components/ConfirmDialog/ConfirmDialog";
 import { useFinanceStore } from "@/store/financeStore";
 import { useToast } from "@/hooks/useToast";
-import { formatCurrency } from "@/utils";
+import { currentDateKey, formatCurrency } from "@/utils";
 import type { BorrowingPayment } from "@/types";
 import styles from "./AddBorrowingPaymentSheet.module.scss";
 
@@ -21,7 +21,7 @@ interface AddBorrowingPaymentSheetProps {
   currency: string;
 }
 
-const todayKey = () => new Date().toISOString().slice(0, 10);
+const todayKey = currentDateKey;
 
 export const AddBorrowingPaymentSheet = ({
   open,

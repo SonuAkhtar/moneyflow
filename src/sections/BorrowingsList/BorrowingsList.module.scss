@@ -54,7 +54,7 @@
     transform var(--dur-fast) var(--ease-smooth);
 
   &:hover {
-    border-color: var(--accent);
+    border-color: var(--accent-text);
   }
 
   &:active {
@@ -68,7 +68,7 @@
     height: 44px;
     border-radius: var(--radius-md);
     background: var(--accent-bg);
-    color: var(--accent);
+    color: var(--accent-text);
     flex-shrink: 0;
   }
 

@@ -24,8 +24,7 @@ const isEmail = (value: string) =>
   /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value.trim());
 
 const authRedirectBase = (): string =>
-  env.appUrl ||
-  (typeof window !== "undefined" ? window.location.origin : "");
+  env.appUrl || (typeof window !== "undefined" ? window.location.origin : "");
 
 export const authService = {
   isRemote(): boolean {
@@ -69,16 +68,40 @@ export const authService = {
     const supabase = getBrowserSupabase();
     if (!supabase) return NOT_CONFIGURED;
 
-    let email = input.identifier.trim();
-    if (!isEmail(email)) {
-      const { data, error } = await supabase.rpc("email_for_username", {
-        uname: email.toLowerCase(),
-      } as never);
-      if (error) return { ok: false, message: error.message };
-      if (!data)
-        return { ok: false, message: "No account found for that username" };
-      email = data as string;
+    const identifier = input.identifier.trim();
+    if (!isEmail(identifier)) {
+      let body: {
+        ok?: boolean;
+        message?: string;
+        session?: { access_token: string; refresh_token: string };
+      } = {};
+      try {
+        const res = await fetch("/api/auth/sign-in", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: identifier,
+            password: input.password,
+          }),
+        });
+        body = await res.json();
+      } catch {
+        return { ok: false, message: "Network error - please try again" };
+      }
+      if (!body.ok || !body.session)
+        return { ok: false, message: body.message ?? "Unable to sign in" };
+      const { data, error } = await supabase.auth.setSession(body.session);
+      if (error || !data.user)
+        return { ok: false, message: error?.message ?? "Unable to sign in" };
+      return {
+        ok: true,
+        userId: data.user.id,
+        email: data.user.email ?? "",
+        username: (data.user.user_metadata?.username as string) ?? null,
+        fullName: (data.user.user_metadata?.full_name as string) ?? "",
+      };
     }
+    const email = identifier;
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -123,6 +146,41 @@ export const authService = {
     });
     if (error) return { ok: false, message: error.message };
     return { ok: true, email };
+  },
+
+  async updateEmail(email: string): Promise<AuthResult> {
+    const supabase = getBrowserSupabase();
+    if (!supabase) return NOT_CONFIGURED;
+    const { error } = await supabase.auth.updateUser(
+      { email },
+      { emailRedirectTo: `${authRedirectBase()}/auth/callback?next=/profile` },
+    );
+    if (error) return { ok: false, message: error.message };
+    return { ok: true, email };
+  },
+
+  async deleteAccount(): Promise<AuthResult> {
+    const supabase = getBrowserSupabase();
+    if (!supabase) return NOT_CONFIGURED;
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) return { ok: false, message: "Please sign in again first." };
+    try {
+      const res = await fetch("/api/account/delete", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const body = (await res.json()) as { ok?: boolean; message?: string };
+      if (!res.ok || !body.ok)
+        return {
+          ok: false,
+          message: body.message ?? "Couldn't delete account",
+        };
+    } catch {
+      return { ok: false, message: "Network error - please try again" };
+    }
+    await supabase.auth.signOut({ scope: "local" });
+    return { ok: true };
   },
 
   async updatePassword(password: string): Promise<AuthResult> {

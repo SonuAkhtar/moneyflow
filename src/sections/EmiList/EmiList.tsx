@@ -66,11 +66,15 @@ export const EmiList = ({ kind }: EmiListProps) => {
   const [editing, setEditing] = useState<Emi | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [childTarget, setChildTarget] = useState<ChildTarget | null>(null);
+  const [showClosed, setShowClosed] = useState(false);
 
   const meta = SECTION[kind];
   const Icon = meta.icon;
   const active = emis.filter(
     (e) => e.status === "active" && emiKind(e) === kind,
+  );
+  const closed = emis.filter(
+    (e) => e.status === "closed" && emiKind(e) === kind,
   );
   const totalPaid = sumBy(active, emiPaidAmount);
 
@@ -85,6 +89,195 @@ export const EmiList = ({ kind }: EmiListProps) => {
   const openEdit = (emi: Emi) => {
     setEditing(emi);
     setSheetOpen(true);
+  };
+
+  const renderCard = (emi: Emi, isClosed: boolean) => {
+    const paidMonths = emiPaidMonths(emi);
+    const hasSchedule = emi.totalMonths > 0;
+    const pct = hasSchedule
+      ? Math.min(100, (paidMonths / emi.totalMonths) * 100)
+      : 0;
+    const remainingMonths = Math.max(0, emi.totalMonths - paidMonths);
+    const paidAmount = emiPaidAmount(emi);
+    const payments = [...(emi.payments ?? [])].sort((a, b) =>
+      b.month.localeCompare(a.month),
+    );
+    const isOpen = expanded === emi.id;
+    return (
+      <Card key={emi.id} surface="solid" className={styles.item}>
+        <div className={styles.item_head}>
+          <button
+            type="button"
+            className={styles.item_main}
+            onClick={() => openEdit(emi)}
+            aria-label={`Edit ${emi.name}`}
+          >
+            <span className={styles.item_icon}>
+              <Icon size={18} />
+            </span>
+            <span className={styles.item_info}>
+              <span className={styles.item_name}>
+                {emi.name}
+                {isClosed && <Badge tone="lime">Closed</Badge>}
+              </span>
+              <span className={styles.item_sub}>
+                Started · {monthLabel(emiStartMonth(emi))}
+              </span>
+            </span>
+          </button>
+          <span
+            className={`${styles.item_amount} ${
+              kind === "sip" ? styles["item_amount--sip"] : ""
+            }`}
+          >
+            {formatCurrency(emi.monthlyAmount, currency)}
+            <span className={styles.item_per}>/mo</span>
+          </span>
+          <button
+            type="button"
+            className={styles.item_arrow}
+            onClick={() => setExpanded(isOpen ? null : emi.id)}
+            aria-label={isOpen ? "Hide payments" : "Show payments"}
+            aria-expanded={isOpen}
+          >
+            <m.span
+              animate={{ rotate: isOpen ? 90 : 0 }}
+              transition={{ duration: 0.2 }}
+              style={{ display: "grid" }}
+            >
+              <ChevronRight size={18} />
+            </m.span>
+          </button>
+        </div>
+
+        {kind === "loan" && hasSchedule && (
+          <>
+            <ProgressBar value={pct} tone="ocean" size="sm" />
+            <div className={styles.item_foot}>
+              <Badge tone="ocean">
+                {paidMonths}/{emi.totalMonths} paid
+              </Badge>
+              <span className={styles.item_remaining}>
+                {formatCurrency(paidAmount, currency)} paid · {remainingMonths}{" "}
+                mo left
+              </span>
+            </div>
+          </>
+        )}
+        {kind === "sip" && paidMonths > 0 && (
+          <div className={styles.item_foot}>
+            <Badge tone="ocean">{paidMonths} months</Badge>
+            <span className={styles.item_remaining}>
+              {formatCurrency(paidAmount, currency)} invested
+            </span>
+          </div>
+        )}
+
+        <AnimatePresence initial={false}>
+          {isOpen && (
+            <m.div
+              className={styles.children}
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            >
+              {kind === "sip" ? (
+                sipMonths.map((month) => {
+                  const p = payments.find((pp) => pp.month === month);
+                  return (
+                    <button
+                      key={month}
+                      type="button"
+                      className={styles.child}
+                      onClick={() =>
+                        setChildTarget({
+                          emiId: emi.id,
+                          payment: p ?? null,
+                          month,
+                        })
+                      }
+                    >
+                      <span className={styles.child_month}>
+                        {monthLabel(month)}
+                        {month === thisMonth && (
+                          <span className={styles.child_tag}>Current</span>
+                        )}
+                      </span>
+                      <span className={styles.child_right}>
+                        {p ? (
+                          <>
+                            <span className={styles.child_amount}>
+                              {formatCurrency(p.amount, currency)}
+                            </span>
+                            <Pencil
+                              size={14}
+                              className={styles.child_edit}
+                              aria-hidden
+                            />
+                          </>
+                        ) : (
+                          <span className={styles.child_add}>
+                            <Plus size={14} />
+                            Add
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                  );
+                })
+              ) : (
+                <>
+                  {payments.length > 0 ? (
+                    payments.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        className={styles.child}
+                        onClick={() =>
+                          setChildTarget({ emiId: emi.id, payment: p })
+                        }
+                      >
+                        <span className={styles.child_month}>
+                          {monthLabel(p.month)}
+                        </span>
+                        <span className={styles.child_right}>
+                          <span className={styles.child_amount}>
+                            {formatCurrency(p.amount, currency)}
+                          </span>
+                          <Pencil
+                            size={14}
+                            className={styles.child_edit}
+                            aria-hidden
+                          />
+                        </span>
+                      </button>
+                    ))
+                  ) : (
+                    <span className={styles.child_empty}>
+                      No payments logged yet
+                    </span>
+                  )}
+                  {!isClosed && (
+                    <button
+                      type="button"
+                      className={styles.childAdd}
+                      aria-label={meta.addChild}
+                      onClick={() =>
+                        setChildTarget({ emiId: emi.id, payment: null })
+                      }
+                    >
+                      <Plus size={15} />
+                      Add
+                    </button>
+                  )}
+                </>
+              )}
+            </m.div>
+          )}
+        </AnimatePresence>
+      </Card>
+    );
   };
 
   return (
@@ -103,7 +296,7 @@ export const EmiList = ({ kind }: EmiListProps) => {
         </span>
       </div>
 
-      {active.length === 0 ? (
+      {active.length === 0 && closed.length === 0 ? (
         <button type="button" className={styles.empty} onClick={openAdd}>
           <span className={styles.empty_icon}>
             <Icon size={20} />
@@ -118,191 +311,18 @@ export const EmiList = ({ kind }: EmiListProps) => {
         </button>
       ) : (
         <div className={styles.list}>
-          {active.map((emi) => {
-            const paidMonths = emiPaidMonths(emi);
-            const hasSchedule = emi.totalMonths > 0;
-            const pct = hasSchedule
-              ? Math.min(100, (paidMonths / emi.totalMonths) * 100)
-              : 0;
-            const remainingMonths = Math.max(0, emi.totalMonths - paidMonths);
-            const paidAmount = emiPaidAmount(emi);
-            const payments = [...(emi.payments ?? [])].sort((a, b) =>
-              b.month.localeCompare(a.month),
-            );
-            const isOpen = expanded === emi.id;
-            return (
-              <Card key={emi.id} surface="solid" className={styles.item}>
-                <div className={styles.item_head}>
-                  <button
-                    type="button"
-                    className={styles.item_main}
-                    onClick={() => openEdit(emi)}
-                    aria-label={`Edit ${emi.name}`}
-                  >
-                    <span className={styles.item_icon}>
-                      <Icon size={18} />
-                    </span>
-                    <span className={styles.item_info}>
-                      <span className={styles.item_name}>{emi.name}</span>
-                      <span className={styles.item_sub}>
-                        Started · {monthLabel(emiStartMonth(emi))}
-                      </span>
-                    </span>
-                  </button>
-                  <span
-                    className={`${styles.item_amount} ${
-                      kind === "sip" ? styles["item_amount--sip"] : ""
-                    }`}
-                  >
-                    {formatCurrency(emi.monthlyAmount, currency)}
-                    <span className={styles.item_per}>/mo</span>
-                  </span>
-                  <button
-                    type="button"
-                    className={styles.item_arrow}
-                    onClick={() => setExpanded(isOpen ? null : emi.id)}
-                    aria-label={isOpen ? "Hide payments" : "Show payments"}
-                    aria-expanded={isOpen}
-                  >
-                    <m.span
-                      animate={{ rotate: isOpen ? 90 : 0 }}
-                      transition={{ duration: 0.2 }}
-                      style={{ display: "grid" }}
-                    >
-                      <ChevronRight size={18} />
-                    </m.span>
-                  </button>
-                </div>
-
-                {kind === "loan" && hasSchedule && (
-                  <>
-                    <ProgressBar value={pct} tone="ocean" size="sm" />
-                    <div className={styles.item_foot}>
-                      <Badge tone="ocean">
-                        {paidMonths}/{emi.totalMonths} paid
-                      </Badge>
-                      <span className={styles.item_remaining}>
-                        {formatCurrency(paidAmount, currency)} paid ·{" "}
-                        {remainingMonths} mo left
-                      </span>
-                    </div>
-                  </>
-                )}
-                {kind === "sip" && paidMonths > 0 && (
-                  <div className={styles.item_foot}>
-                    <Badge tone="ocean">{paidMonths} months</Badge>
-                    <span className={styles.item_remaining}>
-                      {formatCurrency(paidAmount, currency)} invested
-                    </span>
-                  </div>
-                )}
-
-                <AnimatePresence initial={false}>
-                  {isOpen && (
-                    <m.div
-                      className={styles.children}
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                    >
-                      {kind === "sip" ? (
-                        sipMonths.map((month) => {
-                          const p = payments.find((pp) => pp.month === month);
-                          return (
-                            <button
-                              key={month}
-                              type="button"
-                              className={styles.child}
-                              onClick={() =>
-                                setChildTarget({
-                                  emiId: emi.id,
-                                  payment: p ?? null,
-                                  month,
-                                })
-                              }
-                            >
-                              <span className={styles.child_month}>
-                                {monthLabel(month)}
-                                {month === thisMonth && (
-                                  <span className={styles.child_tag}>
-                                    Current
-                                  </span>
-                                )}
-                              </span>
-                              <span className={styles.child_right}>
-                                {p ? (
-                                  <>
-                                    <span className={styles.child_amount}>
-                                      {formatCurrency(p.amount, currency)}
-                                    </span>
-                                    <Pencil
-                                      size={14}
-                                      className={styles.child_edit}
-                                      aria-hidden
-                                    />
-                                  </>
-                                ) : (
-                                  <span className={styles.child_add}>
-                                    <Plus size={14} />
-                                    Add
-                                  </span>
-                                )}
-                              </span>
-                            </button>
-                          );
-                        })
-                      ) : (
-                        <>
-                          {payments.length > 0 ? (
-                            payments.map((p) => (
-                              <button
-                                key={p.id}
-                                type="button"
-                                className={styles.child}
-                                onClick={() =>
-                                  setChildTarget({ emiId: emi.id, payment: p })
-                                }
-                              >
-                                <span className={styles.child_month}>
-                                  {monthLabel(p.month)}
-                                </span>
-                                <span className={styles.child_right}>
-                                  <span className={styles.child_amount}>
-                                    {formatCurrency(p.amount, currency)}
-                                  </span>
-                                  <Pencil
-                                    size={14}
-                                    className={styles.child_edit}
-                                    aria-hidden
-                                  />
-                                </span>
-                              </button>
-                            ))
-                          ) : (
-                            <span className={styles.child_empty}>
-                              No payments logged yet
-                            </span>
-                          )}
-                          <button
-                            type="button"
-                            className={styles.childAdd}
-                            aria-label={meta.addChild}
-                            onClick={() =>
-                              setChildTarget({ emiId: emi.id, payment: null })
-                            }
-                          >
-                            <Plus size={15} />
-                            Add
-                          </button>
-                        </>
-                      )}
-                    </m.div>
-                  )}
-                </AnimatePresence>
-              </Card>
-            );
-          })}
+          {active.map((emi) => renderCard(emi, false))}
+          {closed.length > 0 && (
+            <button
+              type="button"
+              className={styles.add}
+              onClick={() => setShowClosed((v) => !v)}
+              aria-expanded={showClosed}
+            >
+              {showClosed ? "Hide" : "Show"} closed ({closed.length})
+            </button>
+          )}
+          {showClosed && closed.map((emi) => renderCard(emi, true))}
           <button type="button" className={styles.add} onClick={openAdd}>
             <Plus size={18} />
             {meta.addLabel}

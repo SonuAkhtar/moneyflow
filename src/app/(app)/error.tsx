@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
 import { AlertTriangle, RotateCcw } from "lucide-react";
 import { Button } from "@/components/Button/Button";
 import styles from "@/components/ErrorBoundary/ErrorBoundary.module.scss";
@@ -13,7 +14,7 @@ export default function AppError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("App route error:", error);
+    Sentry.captureException(error);
   }, [error]);
 
   return (

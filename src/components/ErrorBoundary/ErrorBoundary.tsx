@@ -1,6 +1,7 @@
 "use client";
 
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import * as Sentry from "@sentry/nextjs";
 import { AlertTriangle, RotateCcw } from "lucide-react";
 import { Button } from "@/components/Button/Button";
 import styles from "./ErrorBoundary.module.scss";
@@ -24,7 +25,9 @@ export class ErrorBoundary extends Component<
   }
 
   override componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error("App error boundary caught:", error, info.componentStack);
+    Sentry.captureException(error, {
+      extra: { componentStack: info.componentStack },
+    });
   }
 
   private reset = () => {

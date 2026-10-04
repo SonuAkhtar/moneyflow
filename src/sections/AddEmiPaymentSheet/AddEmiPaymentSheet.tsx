@@ -11,6 +11,7 @@ import { useFinanceStore } from "@/store/financeStore";
 import { useSpendAccounts } from "@/hooks/useSpendAccounts";
 import { useToast } from "@/hooks/useToast";
 import {
+  accountLabel,
   currentDateKey,
   currentMonthKey,
   formatCurrency,
@@ -125,7 +126,7 @@ export const AddEmiPaymentSheet = ({
           value={bankId}
           onChange={(e) => setBankId(e.target.value)}
           options={banks.map((a) => ({
-            label: `${a.name} · ${formatCurrency(a.balance, currency)}`,
+            label: accountLabel(a, currency),
             value: a.id,
           }))}
         />
@@ -134,7 +135,11 @@ export const AddEmiPaymentSheet = ({
       <ConfirmDialog
         open={confirmOpen}
         title="Delete this entry?"
-        message="This payment record will be removed."
+        message={
+          payment?.accountId
+            ? `This payment record will be removed and ${formatCurrency(payment.amount, currency)} added back to your bank balance.`
+            : "This payment record will be removed."
+        }
         confirmLabel="Delete"
         onConfirm={remove}
         onCancel={() => setConfirmOpen(false)}

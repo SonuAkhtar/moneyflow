@@ -1,6 +1,13 @@
 import { format, parseISO } from "date-fns";
 import { getCategoryMeta } from "@/constants/categories";
-import type { Account, Borrowing, Emi, Profile, Transaction } from "@/types";
+import type {
+  Account,
+  Borrowing,
+  CategoryId,
+  Emi,
+  Profile,
+  Transaction,
+} from "@/types";
 
 const csvCell = (value: string | number): string => {
   let text = String(value);
@@ -43,12 +50,13 @@ export interface BackupSnapshot {
   transactions: Transaction[];
   emis: Emi[];
   borrowings: Borrowing[];
+  budgets: Partial<Record<CategoryId, number>>;
 }
 
 export const buildBackup = (
   snapshot: BackupSnapshot,
   exportedAt: string,
-): string => JSON.stringify({ version: 1, exportedAt, ...snapshot }, null, 2);
+): string => JSON.stringify({ version: 2, exportedAt, ...snapshot }, null, 2);
 
 export const downloadFile = (
   filename: string,

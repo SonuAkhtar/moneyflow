@@ -1,3 +1,5 @@
+import * as Sentry from "@sentry/nextjs";
+
 type Meta = Record<string, unknown>;
 
 const emit = (
@@ -14,8 +16,15 @@ const emit = (
 };
 
 export const logger = {
-  error: (context: string, detail?: unknown, meta?: Meta) =>
-    emit("error", context, detail, meta),
+  error: (context: string, detail?: unknown, meta?: Meta) => {
+    emit("error", context, detail, meta);
+    Sentry.captureException(
+      detail instanceof Error
+        ? detail
+        : new Error(`${context}: ${String(detail)}`),
+      { tags: { context }, extra: meta },
+    );
+  },
   warn: (context: string, detail?: unknown, meta?: Meta) =>
     emit("warn", context, detail, meta),
   info: (context: string, detail?: unknown, meta?: Meta) =>

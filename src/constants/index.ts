@@ -77,7 +77,7 @@ export const ONBOARDING_STEPS = [
   {
     key: "income",
     title: "Set your monthly salary",
-    subtitle: "We use this to model your cash flow.",
+    subtitle: "We'll pre-fill it each month - you confirm when it lands.",
   },
   {
     key: "savings",
@@ -86,8 +86,8 @@ export const ONBOARDING_STEPS = [
   },
   {
     key: "account",
-    title: "Add your first wallet",
-    subtitle: "Connect a starting balance to begin.",
+    title: "Add your first bank",
+    subtitle: "Enter its current balance to begin.",
   },
 ] as const;
 

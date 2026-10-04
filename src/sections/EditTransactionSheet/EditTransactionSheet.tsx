@@ -10,7 +10,12 @@ import { CategoryPicker } from "@/components/CategoryPicker/CategoryPicker";
 import { ConfirmDialog } from "@/components/ConfirmDialog/ConfirmDialog";
 import { useFinanceStore } from "@/store/financeStore";
 import { useToast } from "@/hooks/useToast";
-import { dateInputToIso, getCurrencySymbol } from "@/utils";
+import {
+  currentDateKey,
+  dateInputToIso,
+  dateKey,
+  getCurrencySymbol,
+} from "@/utils";
 import { QUICK_EXPENSE_CATEGORIES } from "@/constants";
 import type { CategoryId, Transaction } from "@/types";
 import styles from "./EditTransactionSheet.module.scss";
@@ -41,7 +46,7 @@ export const EditTransactionSheet = ({
   </BottomSheet>
 );
 
-const dateValue = (iso: string) => iso.slice(0, 10);
+const dateValue = (iso: string) => dateKey(iso);
 
 interface EditFormProps {
   transaction: Transaction;
@@ -55,7 +60,7 @@ const EditForm = ({ transaction, onClose }: EditFormProps) => {
   const symbol = getCurrencySymbol();
   const isIncome = transaction.type === "income";
   const noun = isIncome ? "Income" : "Expense";
-  const today = new Date().toISOString().slice(0, 10);
+  const today = currentDateKey();
 
   const [amount, setAmount] = useState(String(transaction.amount));
   const [category, setCategory] = useState<CategoryId>(transaction.category);

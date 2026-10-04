@@ -3,7 +3,7 @@
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
 import { Select } from "@/components/Select/Select";
 import { Button } from "@/components/Button/Button";
-import { formatCurrency } from "@/utils";
+import { accountLabel } from "@/utils";
 import type { Account } from "@/types";
 import styles from "./BankPickerSheet.module.scss";
 
@@ -22,7 +22,7 @@ interface BankPickerSheetProps {
 export const BankPickerSheet = ({
   open,
   title,
-  description = "Expenses here are paid from this savings bank.",
+  description = "Expenses here are paid from this account.",
   banks,
   value,
   currency,
@@ -37,21 +37,19 @@ export const BankPickerSheet = ({
     description={description}
     footer={
       <Button size="lg" fullWidth onClick={onConfirm} disabled={!value}>
-        Use this bank
+        Use this account
       </Button>
     }
   >
     {banks.length === 0 ? (
-      <p className={styles.empty}>
-        Add a savings bank under Total savings first.
-      </p>
+      <p className={styles.empty}>Add an account on the Savings page first.</p>
     ) : (
       <Select
-        label="Savings bank"
+        label="Account"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         options={banks.map((a) => ({
-          label: `${a.name} · ${formatCurrency(a.balance, currency)}`,
+          label: accountLabel(a, currency),
           value: a.id,
         }))}
       />

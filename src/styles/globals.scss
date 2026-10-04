@@ -131,6 +131,7 @@
   --text-tertiary: rgba(14, 17, 22, 0.56);
 
   --accent: #609c00;
+  --accent-text: #4a7900;
   --accent-bg: rgba(96, 156, 0, 0.12);
 
   --gradient-card: linear-gradient(
@@ -209,6 +210,7 @@
   --text-tertiary: rgba(243, 245, 244, 0.58);
 
   --accent: #7cb518;
+  --accent-text: #7cb518;
   --accent-bg: rgba(124, 181, 24, 0.16);
 
   --gradient-card: linear-gradient(
@@ -271,12 +273,13 @@
 
   --text-primary: #26221c;
   --text-secondary: #5c554a;
-  --text-tertiary: #8a8070;
+  --text-tertiary: #736b5e;
 
   --accent: #609c00;
+  --accent-text: #4a7900;
   --accent-bg: rgba(96, 156, 0, 0.12);
 
-  --color-success: #2e7d5b;
+  --color-success: #2c7857;
   --color-danger: #b23a3a;
   --color-warning: #b7791f;
   --color-info: #3f6f9e;
@@ -317,6 +320,7 @@
   --text-tertiary: rgba(237, 230, 216, 0.5);
 
   --accent: #9ccc4a;
+  --accent-text: #9ccc4a;
   --accent-bg: rgba(156, 204, 74, 0.16);
 
   --color-success: #7cc9a6;
@@ -440,4 +444,16 @@ textarea {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

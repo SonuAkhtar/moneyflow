@@ -53,6 +53,7 @@ export const ConfirmDialog = ({
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
+        e.stopPropagation();
         onCancelRef.current();
         return;
       }

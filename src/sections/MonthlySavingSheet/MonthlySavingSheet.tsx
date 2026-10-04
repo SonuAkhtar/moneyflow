@@ -112,6 +112,26 @@ const Form = ({
             </span>
           </div>
         )}
+        {flow.transferIn > 0 && (
+          <div className={styles.summary_row}>
+            <span className={styles.summary_label}>Transferred in</span>
+            <span
+              className={`${styles.summary_value} ${styles["summary_value--in"]}`}
+            >
+              +{formatCurrency(flow.transferIn, currency)}
+            </span>
+          </div>
+        )}
+        {flow.transferOut > 0 && (
+          <div className={styles.summary_row}>
+            <span className={styles.summary_label}>Transferred out</span>
+            <span
+              className={`${styles.summary_value} ${styles["summary_value--out"]}`}
+            >
+              -{formatCurrency(flow.transferOut, currency)}
+            </span>
+          </div>
+        )}
         <div
           className={`${styles.summary_row} ${styles["summary_row--total"]}`}
         >

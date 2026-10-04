@@ -15,6 +15,7 @@ import {
   currentMonthKey,
   emiPaidMonths,
   emiStartMonth,
+  formatCurrency,
   getCurrencySymbol,
 } from "@/utils";
 import type { Emi, EmiKind } from "@/types";
@@ -73,9 +74,31 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
     emi ? startDateOf(emi) : currentDateKey(),
   );
   const [tenure, setTenure] = useState(emi ? intStr(emi.totalMonths) : "");
-  const [paidMode, setPaidMode] = useState<PaidMode>("months");
-  const [paid, setPaid] = useState(emi ? intStr(emiPaidMonths(emi)) : "");
+  const loggedCount = emi?.payments?.length ?? 0;
+  const editingSip = Boolean(emi) && !isLoan;
+  const [paidMode, setPaidMode] = useState<PaidMode>(
+    editingSip ? "amount" : "months",
+  );
+  const [paid, setPaid] = useState(
+    emi
+      ? editingSip
+        ? intStr(emi.principal)
+        : intStr(emiPaidMonths(emi))
+      : "",
+  );
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const refund = (emi?.payments ?? [])
+    .filter((p) => p.accountId)
+    .reduce((acc, p) => acc + p.amount, 0);
+  const deleteMessage =
+    `"${emi?.name ?? ""}"` +
+    (loggedCount > 0
+      ? ` and its ${loggedCount} logged payment${loggedCount === 1 ? "" : "s"} will be removed.`
+      : " will be removed.") +
+    (refund > 0
+      ? ` ${formatCurrency(refund)} will be added back to your bank balance.`
+      : "");
 
   const resolvedName = type === "Other" ? customName.trim() : type;
   const canSave = Number(amount) > 0 && Boolean(resolvedName);
@@ -111,7 +134,7 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
           : paidM * monthly;
       return {
         totalMonths: 0,
-        paidMonths: paidM,
+        paidMonths: paidM + loggedCount,
         remainingMonths: 0,
         principal: invested,
       };
@@ -237,7 +260,11 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
         <div className={styles.paid}>
           <div className={styles.paid_top}>
             <span className={styles.paid_label}>
-              {isLoan ? "Paid so far" : "Invested so far"}
+              {isLoan
+                ? "Paid so far"
+                : loggedCount > 0
+                  ? "Invested before logged payments"
+                  : "Invested so far"}
             </span>
             <SegmentedControl
               size="sm"
@@ -261,7 +288,7 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
       <ConfirmDialog
         open={confirmOpen}
         title="Delete this entry?"
-        message={`"${emi?.name ?? ""}" will be removed.`}
+        message={deleteMessage}
         confirmLabel="Delete"
         onConfirm={confirmDelete}
         onCancel={() => setConfirmOpen(false)}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import { AnimatePresence, m } from "framer-motion";
 import { X } from "lucide-react";
 import { Portal } from "@/components/Portal/Portal";
@@ -52,6 +52,8 @@ export const BottomSheet = ({
   showHandle = true,
   className,
 }: BottomSheetProps) => {
+  const titleId = useId();
+  const descId = useId();
   const onCloseRef = useRef(onClose);
   const panelRef = useRef<HTMLDivElement>(null);
   const restoreFocusRef = useRef<HTMLElement | null>(null);
@@ -139,14 +141,22 @@ export const BottomSheet = ({
                 className={cn(styles.sheet_panel, className)}
                 role="dialog"
                 aria-modal="true"
+                aria-labelledby={title ? titleId : undefined}
+                aria-describedby={description ? descId : undefined}
               >
                 {showHandle && <span className={styles.sheet_handle} />}
                 {(title || description) && (
                   <header className={styles.sheet_header}>
                     <div>
-                      {title && <h3 className={styles.sheet_title}>{title}</h3>}
+                      {title && (
+                        <h3 id={titleId} className={styles.sheet_title}>
+                          {title}
+                        </h3>
+                      )}
                       {description && (
-                        <p className={styles.sheet_desc}>{description}</p>
+                        <p id={descId} className={styles.sheet_desc}>
+                          {description}
+                        </p>
                       )}
                     </div>
                     <button

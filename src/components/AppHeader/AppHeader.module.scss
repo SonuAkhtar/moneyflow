@@ -40,6 +40,12 @@
     transition: height var(--dur-base) var(--ease-smooth);
   }
 
+  &_actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
   &_avatar {
     position: relative;
     transform-origin: right center;
@@ -70,7 +76,7 @@
     }
 
     &--open {
-      border-color: var(--accent);
+      border-color: var(--accent-text);
       box-shadow: 0 0 0 1px var(--accent);
     }
   }
@@ -98,7 +104,7 @@
 
     .header_profile--open & {
       transform: rotate(180deg);
-      color: var(--accent);
+      color: var(--accent-text);
     }
   }
 }

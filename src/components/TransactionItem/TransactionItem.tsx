@@ -3,7 +3,14 @@
 import { memo } from "react";
 import { m } from "framer-motion";
 import { getCategoryMeta } from "@/constants/categories";
-import { formatCurrency, truncate, dayShort, cn } from "@/utils";
+import {
+  formatCurrency,
+  transactionDelta,
+  truncate,
+  dayShort,
+  cn,
+  isBankTransfer,
+} from "@/utils";
 import type { Transaction } from "@/types";
 import styles from "./TransactionItem.module.scss";
 
@@ -20,8 +27,9 @@ export const TransactionItem = memo(function TransactionItem({
 }: TransactionItemProps) {
   const meta = getCategoryMeta(transaction.category);
   const Icon = meta.icon;
-  const isIncome = transaction.type === "income";
-  const sign = isIncome ? "+" : transaction.type === "expense" ? "-" : "";
+  const isTransfer = isBankTransfer(transaction);
+  const isIncome = transactionDelta(transaction) > 0;
+  const sign = isTransfer ? "" : isIncome ? "+" : "-";
 
   return (
     <m.button
@@ -48,7 +56,11 @@ export const TransactionItem = memo(function TransactionItem({
       <span
         className={cn(
           styles.item_amount,
-          isIncome ? styles["item_amount--in"] : styles["item_amount--out"],
+          isTransfer
+            ? styles["item_amount--neutral"]
+            : isIncome
+              ? styles["item_amount--in"]
+              : styles["item_amount--out"],
         )}
       >
         {sign}

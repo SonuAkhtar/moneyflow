@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { useFinanceStore } from "@/store/financeStore";
-import { SAVINGS_DEPOSIT_NOTE } from "@/utils";
+import { transactionDelta } from "@/utils";
 import type { Account, Emi, Transaction } from "@/types";
 
 export interface BalancePoint {
@@ -40,17 +40,14 @@ const buildTrail = (
   for (const account of accounts) {
     const events: TrailEvent[] = transactions
       .filter((t) => t.accountId === account.id)
-      .map((t): TrailEvent => {
-        const isInflow =
-          t.type === "income" ||
-          (t.type === "transfer" && t.note === SAVINGS_DEPOSIT_NOTE);
-        return {
+      .map(
+        (t): TrailEvent => ({
           id: t.id,
           at: +new Date(t.occurredAt),
           seq: +new Date(t.createdAt),
-          delta: isInflow ? t.amount : -t.amount,
-        };
-      })
+          delta: transactionDelta(t),
+        }),
+      )
       .concat(emiEventsByAccount.get(account.id) ?? [])
       .sort((a, b) => (a.at !== b.at ? a.at - b.at : a.seq - b.seq));
 

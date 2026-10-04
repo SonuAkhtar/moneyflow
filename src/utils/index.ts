@@ -1,25 +1,95 @@
 import clsx, { type ClassValue } from "clsx";
 import { format, parseISO, startOfMonth, subMonths } from "date-fns";
 import { CURRENCY, HEALTH_THRESHOLDS } from "@/constants";
-import type { Borrowing, Emi, EmiKind, HealthBand, Transaction } from "@/types";
+import type {
+  Account,
+  Borrowing,
+  Emi,
+  EmiKind,
+  HealthBand,
+  Transaction,
+} from "@/types";
 
 export const SAVINGS_DEPOSIT_NOTE = "Savings deposit";
 export const SAVINGS_WITHDRAWAL_NOTE = "Savings withdrawal";
+export const BANK_TRANSFER_OUT_NOTE = "Bank transfer out";
+export const BANK_TRANSFER_IN_NOTE = "Bank transfer in";
+
+const TRANSFER_INFLOW_NOTES = new Set<string>([
+  SAVINGS_DEPOSIT_NOTE,
+  BANK_TRANSFER_IN_NOTE,
+]);
+
+export const transferDelta = (amount: number, note: string | null): number =>
+  note !== null && TRANSFER_INFLOW_NOTES.has(note) ? amount : -amount;
+
+export const transactionDelta = (
+  t: Pick<Transaction, "type" | "amount" | "note">,
+): number => {
+  if (t.type === "income") return t.amount;
+  if (t.type === "transfer") return transferDelta(t.amount, t.note);
+  return -t.amount;
+};
+
+export const isBankTransfer = (t: Transaction): boolean =>
+  t.type === "transfer" &&
+  (t.note === BANK_TRANSFER_OUT_NOTE || t.note === BANK_TRANSFER_IN_NOTE);
+
+export const findTransferPair = (
+  leg: Transaction,
+  transactions: Transaction[],
+): Transaction | undefined => {
+  if (!isBankTransfer(leg)) return undefined;
+  const want =
+    leg.note === BANK_TRANSFER_OUT_NOTE
+      ? BANK_TRANSFER_IN_NOTE
+      : BANK_TRANSFER_OUT_NOTE;
+  const at = +new Date(leg.occurredAt);
+  return transactions.find(
+    (t) =>
+      t.id !== leg.id &&
+      t.type === "transfer" &&
+      t.note === want &&
+      t.amount === leg.amount &&
+      t.accountId !== leg.accountId &&
+      +new Date(t.occurredAt) === at,
+  );
+};
+
+export interface BankMonthFlow {
+  added: number;
+  taken: number;
+  transferIn: number;
+  transferOut: number;
+  net: number;
+  transferNet: number;
+}
 
 export const bankMonthFlow = (
   accountId: string,
   transactions: Transaction[],
   month: string,
-): { added: number; taken: number; net: number } => {
+): BankMonthFlow => {
   let added = 0;
   let taken = 0;
+  let transferIn = 0;
+  let transferOut = 0;
   for (const t of transactions) {
     if (t.type !== "transfer" || t.accountId !== accountId) continue;
     if (monthKey(t.occurredAt) !== month) continue;
     if (t.note === SAVINGS_DEPOSIT_NOTE) added += t.amount;
     else if (t.note === SAVINGS_WITHDRAWAL_NOTE) taken += t.amount;
+    else if (t.note === BANK_TRANSFER_IN_NOTE) transferIn += t.amount;
+    else if (t.note === BANK_TRANSFER_OUT_NOTE) transferOut += t.amount;
   }
-  return { added, taken, net: added - taken };
+  return {
+    added,
+    taken,
+    transferIn,
+    transferOut,
+    net: round2(added - taken),
+    transferNet: round2(transferIn - transferOut),
+  };
 };
 
 export const accountMonthDelta = (
@@ -31,15 +101,9 @@ export const accountMonthDelta = (
   for (const t of transactions) {
     if (t.accountId !== accountId) continue;
     if (monthKey(t.occurredAt) !== month) continue;
-    if (t.type === "income") {
-      delta += t.amount;
-    } else if (t.type === "transfer" && t.note === SAVINGS_DEPOSIT_NOTE) {
-      delta += t.amount;
-    } else {
-      delta -= t.amount;
-    }
+    delta += transactionDelta(t);
   }
-  return delta;
+  return round2(delta);
 };
 
 const SIP_NAMES = ["SIP", "Mutual Funds"];
@@ -245,3 +309,11 @@ export const borrowingOutstanding = (b: Borrowing): number =>
 
 export const borrowingSettled = (b: Borrowing): boolean =>
   borrowingOutstanding(b) <= 0;
+
+export const isCreditCard = (a: Pick<Account, "type">): boolean =>
+  a.type === "card";
+
+export const accountLabel = (a: Account, currency?: string): string =>
+  isCreditCard(a)
+    ? `${a.name} · ${formatCurrency(Math.max(0, -a.balance), currency)} due`
+    : `${a.name} · ${formatCurrency(a.balance, currency)}`;

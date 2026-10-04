@@ -28,6 +28,93 @@
     font-size: var(--font-xs);
     color: var(--text-tertiary);
   }
+
+  &_transfer {
+    align-self: flex-start;
+    margin-top: var(--space-3);
+  }
+}
+
+.transfers {
+  margin-top: var(--space-5);
+
+  &_list {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  &_more {
+    padding: var(--space-3);
+    border: none;
+    border-top: 1px solid var(--border-subtle);
+    background: none;
+    font: inherit;
+    font-size: var(--font-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--accent-text);
+    cursor: pointer;
+  }
+}
+
+.transfer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  border-bottom: 1px solid var(--border-subtle);
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &_icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-xs);
+    background: var(--surface-input);
+    color: var(--text-secondary);
+  }
+
+  &_text {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &_route {
+    font-size: var(--font-sm);
+    font-weight: var(--weight-semibold);
+    @include truncate(1);
+
+    svg {
+      margin: 0 var(--space-1);
+      vertical-align: -1px;
+      color: var(--text-tertiary);
+    }
+  }
+
+  &_date {
+    font-size: var(--font-xs);
+    color: var(--text-tertiary);
+  }
+
+  &_amount {
+    font-family: var(--num-font);
+    font-weight: var(--weight-semibold);
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 .grid {
@@ -169,8 +256,8 @@
     background var(--dur-fast) var(--ease-smooth);
 
   &:hover {
-    border-color: var(--accent);
-    color: var(--accent);
+    border-color: var(--accent-text);
+    color: var(--accent-text);
     background: var(--accent-bg);
   }
 }

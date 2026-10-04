@@ -1,4 +1,5 @@
 import type { StoreApi } from "zustand";
+import type { Op } from "./ops";
 import type {
   Account,
   AccountInput,
@@ -23,11 +24,19 @@ export interface FinanceState {
   emis: Emi[];
   borrowings: Borrowing[];
   budgets: Partial<Record<CategoryId, number>>;
+  loadError: string | null;
+  pendingSync: number;
+  historyFrom: string | null;
+  historyLoading: boolean;
+  syncStatus: "idle" | "syncing" | "offline";
 
-  setBudget: (category: CategoryId, amount: number) => void;
-  removeBudget: (category: CategoryId) => void;
+  setBudgets: (budgets: Partial<Record<CategoryId, number>>) => void;
 
   hydrate: (userId: string) => Promise<void>;
+  flushSync: () => Promise<void>;
+  loadHistory: (month: string) => Promise<void>;
+  retrySync: () => void;
+  discardPendingSync: () => void;
   resetAll: () => void;
   updateProfile: (patch: Partial<Profile>) => void;
 
@@ -70,6 +79,18 @@ export interface FinanceState {
   ) => void;
   deleteEmiPayment: (emiId: string, paymentId: string) => void;
 
+  addBankTransfer: (input: {
+    fromAccountId: string;
+    toAccountId: string;
+    amount: number;
+    date: string;
+  }) => void;
+  updateBankTransfer: (
+    legId: string,
+    patch: { amount: number; date: string },
+  ) => void;
+  deleteBankTransfer: (legId: string) => void;
+
   addBorrowing: (input: BorrowingInput) => void;
   updateBorrowing: (id: string, patch: Partial<Borrowing>) => void;
   deleteBorrowing: (id: string) => void;
@@ -95,15 +116,31 @@ export const emptyState = {
   emis: [],
   borrowings: [],
   budgets: {},
+  loadError: null,
+  pendingSync: 0,
+  historyFrom: null,
+  historyLoading: false,
+  syncStatus: "idle" as const,
 } satisfies Partial<FinanceState>;
 
 export type FinanceSet = StoreApi<FinanceState>["setState"];
 export type FinanceGet = StoreApi<FinanceState>["getState"];
 
+export interface SyncStep {
+  op: Op;
+  undo?: Op[];
+  retry?: boolean;
+}
+
 export interface MutationHelpers {
   ownerId: () => string;
-  sync: (work: () => Promise<void>, rollback?: () => void) => void;
+  sync: (steps: SyncStep[]) => void;
   toastError: (message: string) => void;
+  idle: () => Promise<void>;
+  pendingCount: () => number;
+  retry: () => void;
+  deferResync: () => void;
+  discardPending: () => void;
 }
 
 export type SliceCreator<T> = (

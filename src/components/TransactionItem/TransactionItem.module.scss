@@ -53,5 +53,9 @@
     &--out {
       color: var(--color-danger);
     }
+
+    &--neutral {
+      color: var(--text-secondary);
+    }
   }
 }

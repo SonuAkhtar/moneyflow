@@ -2,20 +2,34 @@
 
 import { useMemo, useState, type CSSProperties } from "react";
 import { m } from "framer-motion";
-import { ArrowDownRight, ArrowUpRight, Landmark, Plus } from "lucide-react";
+import {
+  ArrowDownRight,
+  ArrowLeftRight,
+  ArrowRight,
+  ArrowUpRight,
+  Landmark,
+  Plus,
+} from "lucide-react";
+import { Button } from "@/components/Button/Button";
 import { Card } from "@/components/Card/Card";
 import { SectionHeader } from "@/components/SectionHeader/SectionHeader";
 import { AddSavingsSheet } from "@/sections/AddSavingsSheet/AddSavingsSheet";
+import { TransferSheet } from "@/sections/TransferSheet/TransferSheet";
 import { useFinanceStore } from "@/store/financeStore";
 import {
+  BANK_TRANSFER_IN_NOTE,
+  BANK_TRANSFER_OUT_NOTE,
   bankMonthFlow,
   cn,
   currentMonthKey,
+  dayShort,
+  findTransferPair,
+  isBankTransfer,
   sumBy,
   formatCurrency,
 } from "@/utils";
 import { listItem, staggerContainer } from "@/themes/animations";
-import type { Account } from "@/types";
+import type { Account, Transaction } from "@/types";
 import styles from "./AccountsList.module.scss";
 
 export const AccountsList = () => {
@@ -24,12 +38,43 @@ export const AccountsList = () => {
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
   const [addOpen, setAddOpen] = useState(false);
   const [editing, setEditing] = useState<Account | null>(null);
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [editingTransfer, setEditingTransfer] = useState<Transaction | null>(
+    null,
+  );
+  const [showAllTransfers, setShowAllTransfers] = useState(false);
 
   const banks = useMemo(
     () => accounts.filter((a) => a.type === "savings"),
     [accounts],
   );
   const total = sumBy(banks, (a) => a.balance);
+
+  const transfers = useMemo(() => {
+    const rows: { leg: Transaction; fromName: string; toName: string }[] = [];
+    for (const t of transactions) {
+      if (!isBankTransfer(t)) continue;
+      const pair = findTransferPair(t, transactions);
+      if (t.note === BANK_TRANSFER_IN_NOTE && pair) continue;
+      const out = t.note === BANK_TRANSFER_OUT_NOTE ? t : undefined;
+      const inn = out ? pair : t;
+      rows.push({
+        leg: t,
+        fromName:
+          (out && accounts.find((a) => a.id === out.accountId)?.name) ??
+          inn?.merchant?.replace(/^From /, "") ??
+          "Deleted bank",
+        toName:
+          (inn && accounts.find((a) => a.id === inn.accountId)?.name) ??
+          out?.merchant?.replace(/^To /, "") ??
+          "Deleted bank",
+      });
+    }
+    return rows.sort(
+      (a, b) => +new Date(b.leg.occurredAt) - +new Date(a.leg.occurredAt),
+    );
+  }, [transactions, accounts]);
+  const visibleTransfers = showAllTransfers ? transfers : transfers.slice(0, 5);
   const month = currentMonthKey();
 
   const sheetOpen = addOpen || editing !== null;
@@ -58,6 +103,18 @@ export const AccountsList = () => {
         <span className={styles.total_meta}>
           Across {banks.length} bank{banks.length === 1 ? "" : "s"}
         </span>
+        <Button
+          variant="secondary"
+          size="sm"
+          icon={ArrowLeftRight}
+          className={styles.total_transfer}
+          onClick={() => setTransferOpen(true)}
+          disabled={accounts.length < 2}
+        >
+          {accounts.length < 2
+            ? "Add 2 accounts to transfer"
+            : "Transfer money"}
+        </Button>
       </Card>
 
       <m.div
@@ -150,6 +207,67 @@ export const AccountsList = () => {
           <span>Add bank</span>
         </m.button>
       </m.div>
+
+      {transfers.length > 0 && (
+        <div className={styles.transfers}>
+          <SectionHeader
+            title="Transfers"
+            caption={`${transfers.length} between your accounts`}
+          />
+          <Card
+            surface="solid"
+            padded={false}
+            className={styles.transfers_list}
+          >
+            {visibleTransfers.map(({ leg, fromName, toName }) => (
+              <button
+                key={leg.id}
+                type="button"
+                className={styles.transfer}
+                onClick={() => setEditingTransfer(leg)}
+                aria-label={`Edit transfer from ${fromName} to ${toName}`}
+              >
+                <span className={styles.transfer_icon}>
+                  <ArrowLeftRight size={15} />
+                </span>
+                <span className={styles.transfer_text}>
+                  <span className={styles.transfer_route}>
+                    {fromName}
+                    <ArrowRight size={12} aria-label="to" />
+                    {toName}
+                  </span>
+                  <span className={styles.transfer_date}>
+                    {dayShort(leg.occurredAt)}
+                  </span>
+                </span>
+                <span className={styles.transfer_amount}>
+                  {formatCurrency(leg.amount, currency)}
+                </span>
+              </button>
+            ))}
+            {transfers.length > 5 && (
+              <button
+                type="button"
+                className={styles.transfers_more}
+                onClick={() => setShowAllTransfers((v) => !v)}
+              >
+                {showAllTransfers
+                  ? "Show less"
+                  : `Show all ${transfers.length}`}
+              </button>
+            )}
+          </Card>
+        </div>
+      )}
+
+      <TransferSheet
+        open={transferOpen || editingTransfer !== null}
+        transfer={editingTransfer}
+        onClose={() => {
+          setTransferOpen(false);
+          setEditingTransfer(null);
+        }}
+      />
 
       <AddSavingsSheet
         key={editing?.id ?? "new"}

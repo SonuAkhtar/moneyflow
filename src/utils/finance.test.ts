@@ -77,7 +77,10 @@ describe("bankMonthFlow", () => {
     expect(bankMonthFlow("acc-1", txns, "2026-05")).toEqual({
       added: 1000,
       taken: 300,
+      transferIn: 0,
+      transferOut: 0,
       net: 700,
+      transferNet: 0,
     });
   });
 });

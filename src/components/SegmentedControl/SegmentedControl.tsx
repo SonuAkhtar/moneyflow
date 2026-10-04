@@ -42,6 +42,7 @@ export function SegmentedControl<T extends string>({
               active && styles["segmented_item--active"],
             )}
             onClick={() => onChange(segment.value)}
+            aria-pressed={active}
           >
             {active && (
               <m.span

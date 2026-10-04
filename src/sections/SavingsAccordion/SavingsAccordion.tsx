@@ -38,12 +38,14 @@ export const SavingsAccordion = () => {
 
   return (
     <Card surface="solid" padded={false} className={styles.accordion}>
-      <button
-        type="button"
-        className={styles.accordion_head}
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-      >
+      <div className={styles.accordion_head}>
+        <button
+          type="button"
+          className={styles.accordion_toggle}
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-label={`${open ? "Hide" : "Show"} bank savings (${banks.length} bank${banks.length === 1 ? "" : "s"})`}
+        />
         <span className={styles.accordion_icon}>
           <Wallet size={22} />
         </span>
@@ -68,25 +70,15 @@ export const SavingsAccordion = () => {
                   </span>
                 )}
               </span>
-              <span
-                role="button"
-                tabIndex={0}
+              <button
+                type="button"
                 className={styles.accordion_eye}
                 aria-label={revealed ? "Hide amounts" : "Show amounts"}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleReveal();
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleReveal();
-                  }
-                }}
+                aria-pressed={revealed}
+                onClick={toggleReveal}
               >
                 {revealed ? <Eye size={16} /> : <EyeOff size={16} />}
-              </span>
+              </button>
             </span>
           </span>
           <span className={styles.accordion_subrow}>
@@ -102,7 +94,7 @@ export const SavingsAccordion = () => {
             </m.span>
           </span>
         </span>
-      </button>
+      </div>
 
       <AnimatePresence initial={false}>
         {open && (

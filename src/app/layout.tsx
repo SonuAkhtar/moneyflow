@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque } from "next/font/google";
 import { Providers } from "./providers";
-import { siteConfig } from "@/config";
+import { env, siteConfig } from "@/config";
 import "@/styles/globals.scss";
 
 const bricolage = Bricolage_Grotesque({
@@ -21,7 +21,19 @@ const supabaseOrigin = (() => {
 })();
 
 export const metadata: Metadata = {
+  metadataBase: new URL(env.appUrl),
   applicationName: siteConfig.name,
+  openGraph: {
+    type: "website",
+    siteName: siteConfig.name,
+    title: siteConfig.title,
+    description: siteConfig.description,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteConfig.title,
+    description: siteConfig.description,
+  },
   title: {
     default: siteConfig.name,
     template: `%s · ${siteConfig.name}`,
@@ -36,8 +48,17 @@ export const metadata: Metadata = {
   },
   formatDetection: { telephone: false },
   icons: {
-    icon: [{ url: "/icons/moneyflow-logo.png", type: "image/png" }],
-    apple: [{ url: "/icons/moneyflow-logo.png", type: "image/png" }],
+    icon: [
+      { url: "/icons/favicon-64.png", type: "image/png", sizes: "64x64" },
+      { url: "/icons/icon-192.png", type: "image/png", sizes: "192x192" },
+    ],
+    apple: [
+      {
+        url: "/icons/apple-touch-icon.png",
+        type: "image/png",
+        sizes: "180x180",
+      },
+    ],
   },
 };
 
@@ -48,7 +69,6 @@ export const viewport: Viewport = {
   ],
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
   viewportFit: "cover",
 };
 
@@ -63,7 +83,7 @@ export default function RootLayout({
         <link
           rel="preload"
           as="image"
-          href="/icons/moneyflow-logo-full.png"
+          href="/icons/splash-logo.png"
           fetchPriority="high"
         />
         {supabaseOrigin && (

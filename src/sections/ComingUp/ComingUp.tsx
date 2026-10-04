@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { parseISO } from "date-fns";
 import { Check, CreditCard, HandCoins, TrendingUp } from "lucide-react";
 import { Card } from "@/components/Card/Card";
 import { SectionHeader } from "@/components/SectionHeader/SectionHeader";
@@ -84,7 +85,7 @@ export const ComingUp = () => {
         id: b.id,
         label: b.lender,
         amount: borrowingOutstanding(b),
-        date: new Date(b.dueDate),
+        date: parseISO(b.dueDate),
         type: "borrow",
         paid: false,
       });
@@ -103,11 +104,13 @@ export const ComingUp = () => {
           const Icon = meta.icon;
           const days = daysUntil(item.date);
           const when =
-            days <= 0
-              ? "Due today"
-              : days === 1
-                ? "Tomorrow"
-                : `In ${days} days`;
+            days < 0
+              ? `Overdue by ${-days} day${days === -1 ? "" : "s"}`
+              : days === 0
+                ? "Due today"
+                : days === 1
+                  ? "Tomorrow"
+                  : `In ${days} days`;
           return (
             <div key={item.id} className={styles.row}>
               <span className={styles.row_icon} style={{ color: meta.color }}>

@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
   const next = nextParam.startsWith("/") ? nextParam : "/";
 
   if (providerError || errorCode) {
-    const reason = errorCode === "otp_expired" ? "link_expired" : "auth_callback";
+    const reason =
+      errorCode === "otp_expired" ? "link_expired" : "auth_callback";
     return NextResponse.redirect(`${origin}/login?error=${reason}`);
   }
 

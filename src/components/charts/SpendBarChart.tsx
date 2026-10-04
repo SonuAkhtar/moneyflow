@@ -5,8 +5,10 @@ import {
   BarChart,
   Cell,
   ResponsiveContainer,
+  ReferenceLine,
   Tooltip,
   XAxis,
+  YAxis,
 } from "recharts";
 import { ChartTooltip } from "./ChartTooltip";
 import styles from "./charts.module.scss";
@@ -26,6 +28,7 @@ interface SpendBarChartProps {
   height?: number;
   currency?: string;
   uniformColor?: string;
+  negativeColor?: string;
 }
 
 export const SpendBarChart = ({
@@ -33,8 +36,10 @@ export const SpendBarChart = ({
   height = 180,
   currency,
   uniformColor,
+  negativeColor = "var(--chart-expense)",
 }: SpendBarChartProps) => {
   const max = Math.max(...data.map((d) => d.value), 1);
+  const hasNegative = data.some((d) => d.value < 0);
 
   return (
     <div className={styles.chart} style={{ height }}>
@@ -47,6 +52,14 @@ export const SpendBarChart = ({
             tick={{ fill: "var(--text-tertiary)", fontSize: 10 }}
             interval="preserveStartEnd"
           />
+          <YAxis
+            hide
+            domain={[
+              (min: number) => Math.min(0, min),
+              (top: number) => Math.max(0, top),
+            ]}
+          />
+          {hasNegative && <ReferenceLine y={0} stroke="var(--text-tertiary)" />}
           <Tooltip
             content={<ChartTooltip currency={currency} />}
             cursor={{ fill: "var(--surface-input)" }}
@@ -62,10 +75,12 @@ export const SpendBarChart = ({
               <Cell
                 key={index}
                 fill={
-                  uniformColor ??
-                  (entry.value >= max * 0.8
-                    ? "var(--chart-expense)"
-                    : "var(--chart-income)")
+                  entry.value < 0
+                    ? negativeColor
+                    : (uniformColor ??
+                      (entry.value >= max * 0.8
+                        ? "var(--chart-expense)"
+                        : "var(--chart-income)"))
                 }
               />
             ))}

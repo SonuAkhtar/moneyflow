@@ -34,7 +34,7 @@
     font-weight: var(--weight-semibold);
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--accent);
+    color: var(--accent-text);
     background: var(--accent-bg);
     padding: 2px var(--space-2);
     border-radius: var(--radius-pill);
@@ -61,7 +61,7 @@
     gap: 4px;
     font-size: var(--font-xs);
     font-weight: var(--weight-medium);
-    color: var(--accent);
+    color: var(--accent-text);
   }
 }
 

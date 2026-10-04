@@ -43,10 +43,7 @@ export const ExpenseSection = ({ variant }: ExpenseSectionProps) => {
   const accountId = isMajor ? majorAccountId : dailyAccountId;
   const setAccount = isMajor ? setMajorAccount : setDailyAccount;
 
-  const banks = useMemo(
-    () => accounts.filter((a) => a.type === "savings"),
-    [accounts],
-  );
+  const banks = accounts;
 
   const fallbackBankId =
     accountId ??

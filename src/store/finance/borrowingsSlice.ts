@@ -1,7 +1,7 @@
-import { borrowingRepo } from "@/services/repositories";
 import { isoNow } from "@/utils";
 import type { Borrowing, BorrowingPayment } from "@/types";
-import { makeRollback, newId } from "./helpers";
+import { newId } from "./helpers";
+import { step } from "./steps";
 import type { FinanceState, SliceCreator } from "./types";
 
 type BorrowingsSlice = Pick<
@@ -18,109 +18,86 @@ export const createBorrowingsSlice: SliceCreator<BorrowingsSlice> = (
   set,
   get,
   { ownerId, sync },
-) => ({
-  addBorrowing: (input) => {
-    const s = get();
-    const borrowing: Borrowing = {
-      id: newId(),
-      userId: ownerId(),
-      lender: input.lender,
-      purpose: input.purpose ?? null,
-      amount: input.amount,
-      borrowedOn: input.borrowedOn,
-      dueDate: input.dueDate ?? null,
-      note: input.note ?? null,
-      payments: [],
-      createdAt: isoNow(),
-    };
-    set({ borrowings: [borrowing, ...s.borrowings] });
-    sync(
-      () => borrowingRepo.save(borrowing),
-      makeRollback(set, s, ["borrowings"]),
-    );
-  },
+) => {
+  const replace = (id: string, next: Borrowing) =>
+    set({ borrowings: get().borrowings.map((b) => (b.id === id ? next : b)) });
 
-  updateBorrowing: (id, patch) => {
-    const s = get();
-    const borrowings = s.borrowings.map((b) =>
-      b.id === id ? { ...b, ...patch } : b,
-    );
-    set({ borrowings });
-    const updated = borrowings.find((b) => b.id === id);
-    if (updated)
-      sync(
-        () => borrowingRepo.save(updated),
-        makeRollback(set, s, ["borrowings"]),
-      );
-  },
+  return {
+    addBorrowing: (input) => {
+      const borrowing: Borrowing = {
+        id: newId(),
+        userId: ownerId(),
+        lender: input.lender,
+        purpose: input.purpose ?? null,
+        amount: input.amount,
+        borrowedOn: input.borrowedOn,
+        dueDate: input.dueDate ?? null,
+        note: input.note ?? null,
+        payments: [],
+        createdAt: isoNow(),
+      };
+      set({ borrowings: [borrowing, ...get().borrowings] });
+      sync([step.saveBorrowing(borrowing)]);
+    },
 
-  deleteBorrowing: (id) => {
-    const s = get();
-    set({ borrowings: s.borrowings.filter((b) => b.id !== id) });
-    const uid = ownerId();
-    sync(
-      () => borrowingRepo.remove(id, uid),
-      makeRollback(set, s, ["borrowings"]),
-    );
-  },
+    updateBorrowing: (id, patch) => {
+      const old = get().borrowings.find((b) => b.id === id);
+      if (!old) return;
+      const updated = { ...old, ...patch };
+      replace(id, updated);
+      sync([step.saveBorrowing(updated, old)]);
+    },
 
-  addBorrowingPayment: (borrowingId, input) => {
-    const s = get();
-    const payment: BorrowingPayment = {
-      id: newId(),
-      paidOn: input.paidOn,
-      amount: input.amount,
-      note: input.note ?? null,
-    };
-    set({
-      borrowings: s.borrowings.map((b) =>
-        b.id === borrowingId
-          ? { ...b, payments: [payment, ...(b.payments ?? [])] }
-          : b,
-      ),
-    });
-    sync(
-      () => borrowingRepo.savePayment(payment, borrowingId, ownerId()),
-      makeRollback(set, s, ["borrowings"]),
-    );
-  },
+    deleteBorrowing: (id) => {
+      const old = get().borrowings.find((b) => b.id === id);
+      if (!old) return;
+      ownerId();
+      set({ borrowings: get().borrowings.filter((b) => b.id !== id) });
+      sync([
+        ...(old.payments ?? []).map((p) => step.removeBorrowingPayment(id, p)),
+        step.removeBorrowing(old),
+      ]);
+    },
 
-  updateBorrowingPayment: (borrowingId, paymentId, patch) => {
-    const s = get();
-    let updated: BorrowingPayment | undefined;
-    const borrowings = s.borrowings.map((b) => {
-      if (b.id !== borrowingId) return b;
-      const payments = (b.payments ?? []).map((p) => {
-        if (p.id !== paymentId) return p;
-        updated = { ...p, ...patch };
-        return updated;
+    addBorrowingPayment: (borrowingId, input) => {
+      const old = get().borrowings.find((b) => b.id === borrowingId);
+      if (!old) return;
+      const payment: BorrowingPayment = {
+        id: newId(),
+        paidOn: input.paidOn,
+        amount: input.amount,
+        note: input.note ?? null,
+      };
+      replace(borrowingId, {
+        ...old,
+        payments: [payment, ...(old.payments ?? [])],
       });
-      return { ...b, payments };
-    });
-    set({ borrowings });
-    if (updated)
-      sync(
-        () => borrowingRepo.savePayment(updated!, borrowingId, ownerId()),
-        makeRollback(set, s, ["borrowings"]),
-      );
-  },
+      sync([step.saveBorrowingPayment(borrowingId, payment)]);
+    },
 
-  deleteBorrowingPayment: (borrowingId, paymentId) => {
-    const s = get();
-    set({
-      borrowings: s.borrowings.map((b) =>
-        b.id === borrowingId
-          ? {
-              ...b,
-              payments: (b.payments ?? []).filter((p) => p.id !== paymentId),
-            }
-          : b,
-      ),
-    });
-    const uid = ownerId();
-    sync(
-      () => borrowingRepo.removePayment(paymentId, uid),
-      makeRollback(set, s, ["borrowings"]),
-    );
-  },
-});
+    updateBorrowingPayment: (borrowingId, paymentId, patch) => {
+      const old = get().borrowings.find((b) => b.id === borrowingId);
+      const previous = old?.payments?.find((p) => p.id === paymentId);
+      if (!old || !previous) return;
+      const updated = { ...previous, ...patch };
+      replace(borrowingId, {
+        ...old,
+        payments: (old.payments ?? []).map((p) =>
+          p.id === paymentId ? updated : p,
+        ),
+      });
+      sync([step.saveBorrowingPayment(borrowingId, updated, previous)]);
+    },
+
+    deleteBorrowingPayment: (borrowingId, paymentId) => {
+      const old = get().borrowings.find((b) => b.id === borrowingId);
+      const payment = old?.payments?.find((p) => p.id === paymentId);
+      if (!old || !payment) return;
+      replace(borrowingId, {
+        ...old,
+        payments: (old.payments ?? []).filter((p) => p.id !== paymentId),
+      });
+      sync([step.removeBorrowingPayment(borrowingId, payment)]);
+    },
+  };
+};

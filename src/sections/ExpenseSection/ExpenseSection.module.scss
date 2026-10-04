@@ -47,7 +47,7 @@
   transition: border-color var(--dur-fast) var(--ease-smooth);
 
   svg:first-child {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   svg:last-child {
@@ -55,7 +55,7 @@
   }
 
   &:hover {
-    border-color: var(--accent);
+    border-color: var(--accent-text);
   }
 
   &_name {

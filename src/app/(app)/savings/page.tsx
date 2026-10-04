@@ -3,6 +3,7 @@
 import { m } from "framer-motion";
 import { Landmark, TrendingUp, Wallet } from "lucide-react";
 import { AccountsList } from "@/sections/AccountsList/AccountsList";
+import { OtherAccountsList } from "@/sections/OtherAccountsList/OtherAccountsList";
 import { EmiList } from "@/sections/EmiList/EmiList";
 import { useFinanceStore } from "@/store/financeStore";
 import {
@@ -132,6 +133,10 @@ export default function SavingsPage() {
 
       <m.div variants={listItem}>
         <AccountsList />
+      </m.div>
+
+      <m.div variants={listItem}>
+        <OtherAccountsList />
       </m.div>
 
       <m.div variants={listItem}>

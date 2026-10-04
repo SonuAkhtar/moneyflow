@@ -15,6 +15,7 @@ import { createAccountsSlice } from "./finance/accountsSlice";
 import { createEmisSlice } from "./finance/emisSlice";
 import { createBorrowingsSlice } from "./finance/borrowingsSlice";
 import { createBudgetsSlice } from "./finance/budgetsSlice";
+import { createTransfersSlice } from "./finance/transfersSlice";
 
 const noopStorage: StateStorage = {
   getItem: () => null,
@@ -33,16 +34,22 @@ type LegacyEmiPayment = {
 export const useFinanceStore = create<FinanceState>()(
   persist(
     (set, get) => {
-      const helpers = createMutationHelpers(get);
+      const helpers = createMutationHelpers(set, get);
       return {
         ...emptyState,
         hasHydrated: false,
+        loadError: null,
+        pendingSync: 0,
+        historyFrom: null,
+        historyLoading: false,
+        syncStatus: "idle",
         ...createCoreSlice(set, get, helpers),
         ...createTransactionsSlice(set, get, helpers),
         ...createAccountsSlice(set, get, helpers),
         ...createEmisSlice(set, get, helpers),
         ...createBorrowingsSlice(set, get, helpers),
         ...createBudgetsSlice(set, get, helpers),
+        ...createTransfersSlice(set, get, helpers),
       };
     },
     {

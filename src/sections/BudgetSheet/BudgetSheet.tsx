@@ -24,7 +24,7 @@ export const BudgetSheet = ({ open, onClose }: BudgetSheetProps) => (
 
 const Form = ({ onClose }: { onClose: () => void }) => {
   const budgets = useFinanceStore((s) => s.budgets);
-  const setBudget = useFinanceStore((s) => s.setBudget);
+  const setBudgets = useFinanceStore((s) => s.setBudgets);
   const toast = useToast();
   const symbol = getCurrencySymbol();
 
@@ -38,9 +38,12 @@ const Form = ({ onClose }: { onClose: () => void }) => {
   );
 
   const save = () => {
+    const next: Partial<Record<CategoryId, number>> = {};
     for (const id of EXPENSE_CATEGORIES) {
-      setBudget(id as CategoryId, Number(draft[id]) || 0);
+      const amount = Number(draft[id]) || 0;
+      if (amount > 0) next[id as CategoryId] = amount;
     }
+    setBudgets(next);
     toast({ title: "Budgets saved", variant: "success" });
     onClose();
   };

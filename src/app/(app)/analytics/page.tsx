@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, m } from "framer-motion";
@@ -28,6 +28,7 @@ import { Skeleton } from "@/components/Skeleton/Skeleton";
 import { TransactionItem } from "@/components/TransactionItem/TransactionItem";
 import { EditTransactionSheet } from "@/sections/EditTransactionSheet/EditTransactionSheet";
 import { CategoryBudgets } from "@/sections/CategoryBudgets/CategoryBudgets";
+import { TransferSheet } from "@/sections/TransferSheet/TransferSheet";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useFinanceMetrics } from "@/hooks/useFinanceMetrics";
 import { useFinanceStore } from "@/store/financeStore";
@@ -36,6 +37,7 @@ import {
   currentMonthKey,
   formatCurrency,
   formatPercent,
+  isBankTransfer,
   lastNMonthKeys,
   monthKey,
   monthLabel,
@@ -51,22 +53,21 @@ function ChartFallback() {
 }
 
 const AreaTrendChart = dynamic(
-  () =>
-    import("@/components/charts/AreaTrendChart").then((m) => m.AreaTrendChart),
+  () => import("@/components/charts").then((m) => m.AreaTrendChart),
   { ssr: false, loading: ChartFallback },
 );
 const CategoryDonut = dynamic(
-  () =>
-    import("@/components/charts/CategoryDonut").then((m) => m.CategoryDonut),
+  () => import("@/components/charts").then((m) => m.CategoryDonut),
   { ssr: false, loading: ChartFallback },
 );
 const SpendBarChart = dynamic(
-  () =>
-    import("@/components/charts/SpendBarChart").then((m) => m.SpendBarChart),
+  () => import("@/components/charts").then((m) => m.SpendBarChart),
   { ssr: false, loading: ChartFallback },
 );
 
 type View = "overview" | "categories" | "daily";
+
+const HISTORY_MONTH_OPTIONS = 36;
 type TxnType = "all" | "income" | "expense";
 
 export default function AnalyticsPage() {
@@ -81,6 +82,18 @@ export default function AnalyticsPage() {
   }, [month]);
   const prev = useFinanceMetrics(prevMonth);
   const transactions = useFinanceStore((s) => s.transactions);
+  const historyFrom = useFinanceStore((s) => s.historyFrom);
+  const historyLoading = useFinanceStore((s) => s.historyLoading);
+  const loadHistory = useFinanceStore((s) => s.loadHistory);
+  const loadedFromMonth = historyFrom ? monthKey(historyFrom) : null;
+  useEffect(() => {
+    void loadHistory(month);
+  }, [month, historyFrom, loadHistory]);
+  const searchOlder = () => {
+    if (!historyFrom) return;
+    const d = new Date(historyFrom);
+    void loadHistory(monthKey(new Date(d.getFullYear() - 1, d.getMonth(), 1)));
+  };
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
   const [view, setView] = useState<View>("overview");
   const [editing, setEditing] = useState<Transaction | null>(null);
@@ -125,7 +138,7 @@ export default function AnalyticsPage() {
 
   const monthOptions = useMemo(
     () =>
-      lastNMonthKeys(12)
+      lastNMonthKeys(HISTORY_MONTH_OPTIONS)
         .slice()
         .reverse()
         .map((key) => ({ label: monthLabel(key), value: key })),
@@ -240,6 +253,19 @@ export default function AnalyticsPage() {
                 ))
               )}
             </Card>
+            {loadedFromMonth && (
+              <div className={styles.older}>
+                <span>Searching since {monthLabel(loadedFromMonth)}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  loading={historyLoading}
+                  onClick={searchOlder}
+                >
+                  Search older history
+                </Button>
+              </div>
+            )}
           </m.div>
         </>
       )}
@@ -254,6 +280,11 @@ export default function AnalyticsPage() {
               onChange={(e) => setMonth(e.target.value)}
               options={monthOptions}
             />
+            {historyLoading && (
+              <p className={styles.older} role="status">
+                Loading {monthLabel(month)}...
+              </p>
+            )}
             <SegmentedControl<View>
               className={styles.segments}
               segments={[
@@ -350,7 +381,7 @@ export default function AnalyticsPage() {
                 <SpendBarChart
                   data={monthlyTrend.map((t) => ({
                     label: t.label,
-                    value: Math.max(0, t.saved),
+                    value: t.saved,
                   }))}
                   currency={currency}
                   uniformColor="var(--chart-saved)"
@@ -487,8 +518,13 @@ export default function AnalyticsPage() {
       )}
 
       <EditTransactionSheet
-        transaction={editing}
-        open={editing !== null}
+        transaction={editing && !isBankTransfer(editing) ? editing : null}
+        open={editing !== null && !isBankTransfer(editing)}
+        onClose={() => setEditing(null)}
+      />
+      <TransferSheet
+        transfer={editing && isBankTransfer(editing) ? editing : null}
+        open={editing !== null && isBankTransfer(editing)}
         onClose={() => setEditing(null)}
       />
     </m.div>

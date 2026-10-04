@@ -11,6 +11,7 @@ import { useFinanceStore } from "@/store/financeStore";
 import { useToast } from "@/hooks/useToast";
 import {
   accountMonthDelta,
+  bankMonthFlow,
   cn,
   currentMonthKey,
   formatCurrency,
@@ -72,7 +73,10 @@ export const AddSavingsSheet = ({
 
   const currentValue = toNum(current);
   const savedLastValue = toNum(savedLast);
-  const liveDelta = round2(currentValue - savedLastValue);
+  const transferNet = account
+    ? bankMonthFlow(account.id, transactions, month).transferNet
+    : 0;
+  const liveDelta = round2(currentValue - savedLastValue - transferNet);
 
   const balanceField = isEdit ? current : savedLast;
   const balanceValue = isEdit ? currentValue : savedLastValue;
@@ -86,7 +90,8 @@ export const AddSavingsSheet = ({
     if (account) {
       const adjustment = round2(currentValue - savedLastValue - thisMonthDelta);
       if (adjustment > 0.005) addSavingDeposit(account.id, adjustment);
-      else if (adjustment < -0.005) addSavingWithdrawal(account.id, -adjustment);
+      else if (adjustment < -0.005)
+        addSavingWithdrawal(account.id, -adjustment);
       updateAccount(account.id, {
         name: bankName,
         institution: bankName,

@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { m } from "framer-motion";
 import type { User } from "@supabase/supabase-js";
 import { AppHeader } from "@/components/AppHeader/AppHeader";
 import { BottomNav } from "@/components/BottomNav/BottomNav";
@@ -30,10 +29,13 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
   const user = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
   const hydrate = useFinanceStore((s) => s.hydrate);
+  const flushSync = useFinanceStore((s) => s.flushSync);
   const resetAll = useFinanceStore((s) => s.resetAll);
   const profile = useFinanceStore((s) => s.profile);
   const hasHydrated = useFinanceStore((s) => s.hasHydrated);
   const initialized = useFinanceStore((s) => s.initialized);
+  const loadError = useFinanceStore((s) => s.loadError);
+  const [retrying, setRetrying] = useState(false);
   const signOut = useSignOut();
   const hydratedFor = useRef<string | null>(null);
   const [rehydrated, setRehydrated] = useState(false);
@@ -105,9 +107,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (status !== "authed" || !hasHydrated) return;
     const warm = () => {
-      void import("@/components/charts/AreaTrendChart");
-      void import("@/components/charts/CategoryDonut");
-      void import("@/components/charts/SpendBarChart");
+      void import("@/components/charts");
     };
     const ric = (
       window as unknown as {
@@ -121,14 +121,27 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
     const cic = (
       window as unknown as { cancelIdleCallback?: (id: number) => void }
     ).cancelIdleCallback;
-    const id = ric ? ric(warm, { timeout: 3000 }) : window.setTimeout(warm, 1500);
+    const id = ric
+      ? ric(warm, { timeout: 3000 })
+      : window.setTimeout(warm, 1500);
     return () => {
       if (ric && cic) cic(id);
       else clearTimeout(id);
     };
   }, [status, hasHydrated]);
 
-  if (status === "authed" && user && initialized && !profile) {
+  const ownedProfileMissing = !profile || !user || profile.id !== user.id;
+  const loadFailed =
+    status === "authed" && user && loadError && ownedProfileMissing;
+  const accountMissing = status === "authed" && user && initialized && !profile;
+
+  if (loadFailed || accountMissing) {
+    const retry = async () => {
+      if (!user) return;
+      setRetrying(true);
+      await hydrate(user.id);
+      setRetrying(false);
+    };
     return (
       <div
         style={{
@@ -143,9 +156,20 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
         }}
       >
         <p style={{ color: "var(--text-secondary)", maxWidth: "280px" }}>
-          We couldn&apos;t load your account. Please sign in again.
+          {loadFailed
+            ? "We couldn't load your data. Check your connection and try again."
+            : "We couldn't load your account. Please sign in again."}
         </p>
-        <Button size="md" onClick={() => void signOut()}>
+        {loadFailed && (
+          <Button size="md" loading={retrying} onClick={() => void retry()}>
+            Try again
+          </Button>
+        )}
+        <Button
+          size="md"
+          variant={loadFailed ? "secondary" : "primary"}
+          onClick={() => void signOut()}
+        >
           Sign out
         </Button>
       </div>
@@ -166,21 +190,26 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
           ? "profile"
           : "home";
 
+  const routeTitle = {
+    home: "Home",
+    savings: "Savings",
+    analytics: "Analytics",
+    emi: "EMIs and borrowings",
+    profile: "Profile",
+  }[routeKey];
+
   return (
     <div className={styles.shell} data-route={routeKey}>
       <div className={styles.shell_canvas} aria-hidden />
       <div className={styles.shell_inner}>
         <AppHeader />
-        <PullToRefresh onRefresh={() => hydrate(ownedProfile.id)}>
-          <m.main
-            key={pathname}
-            className={styles.shell_main}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-          >
+        <PullToRefresh
+          onRefresh={() => flushSync().then(() => hydrate(ownedProfile.id))}
+        >
+          <main className={styles.shell_main}>
+            <h1 className="sr-only">{routeTitle}</h1>
             {children}
-          </m.main>
+          </main>
         </PullToRefresh>
       </div>
       <BottomNav />

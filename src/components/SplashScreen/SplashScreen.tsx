@@ -4,7 +4,7 @@ export const SplashScreen = () => (
   <div className={styles.splash}>
     <span className={styles.splash_aura} aria-hidden />
     <img
-      src="/icons/moneyflow-logo-full.png"
+      src="/icons/splash-logo.png"
       alt="moneyFlow"
       width={200}
       height={200}

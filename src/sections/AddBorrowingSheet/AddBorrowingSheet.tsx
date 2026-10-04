@@ -7,7 +7,7 @@ import { SheetActions } from "@/components/SheetActions/SheetActions";
 import { ConfirmDialog } from "@/components/ConfirmDialog/ConfirmDialog";
 import { useFinanceStore } from "@/store/financeStore";
 import { useToast } from "@/hooks/useToast";
-import { getCurrencySymbol } from "@/utils";
+import { currentDateKey, getCurrencySymbol } from "@/utils";
 import type { Borrowing } from "@/types";
 import styles from "./AddBorrowingSheet.module.scss";
 
@@ -17,7 +17,7 @@ interface AddBorrowingSheetProps {
   borrowing?: Borrowing | null;
 }
 
-const todayKey = () => new Date().toISOString().slice(0, 10);
+const todayKey = currentDateKey;
 
 export const AddBorrowingSheet = ({
   open,

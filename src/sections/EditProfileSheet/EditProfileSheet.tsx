@@ -10,6 +10,9 @@ import { Avatar } from "@/components/Avatar/Avatar";
 import { useFinanceStore } from "@/store/financeStore";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/hooks/useToast";
+import { authService } from "@/services/auth.service";
+import { avatarRepo } from "@/services/repositories";
+import { logger } from "@/lib/logger";
 import type { Profile } from "@/types";
 import styles from "./EditProfileSheet.module.scss";
 
@@ -33,7 +36,12 @@ const CURRENCIES = [
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_AVATAR_DIM = 256;
 
-const compressAvatar = (file: File): Promise<string> =>
+interface CompressedAvatar {
+  blob: Blob;
+  dataUrl: string;
+}
+
+const compressAvatar = (file: File): Promise<CompressedAvatar> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = () => reject(new Error("Could not read image"));
@@ -53,7 +61,15 @@ const compressAvatar = (file: File): Promise<string> =>
         const ctx = canvas.getContext("2d");
         if (!ctx) return reject(new Error("Canvas unsupported"));
         ctx.drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL("image/jpeg", 0.82));
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+        canvas.toBlob(
+          (blob) =>
+            blob
+              ? resolve({ blob, dataUrl })
+              : reject(new Error("Encode failed")),
+          "image/jpeg",
+          0.82,
+        );
       };
       img.src = reader.result as string;
     };
@@ -91,12 +107,16 @@ const ProfileForm = ({ profile, onClose }: ProfileFormProps) => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(
     profile.avatarUrl ?? null,
   );
+  const [pendingAvatar, setPendingAvatar] = useState<CompressedAvatar | null>(
+    null,
+  );
 
   const nameError = fullName.trim() ? undefined : "Name is required";
   const emailError = EMAIL_RE.test(email.trim())
     ? undefined
     : "Enter a valid email";
-  const canSave = !nameError && !emailError;
+  const [saving, setSaving] = useState(false);
+  const canSave = !nameError && !emailError && !saving;
 
   const onPickAvatar = async (event: ChangeEvent<HTMLInputElement>) => {
     const input = event.target;
@@ -112,24 +132,60 @@ const ProfileForm = ({ profile, onClose }: ProfileFormProps) => {
       return;
     }
     try {
-      setAvatarUrl(await compressAvatar(file));
+      const compressed = await compressAvatar(file);
+      setPendingAvatar(compressed);
+      setAvatarUrl(compressed.dataUrl);
     } catch {
       toast({ title: "Couldn't use that image", variant: "error" });
     }
   };
 
-  const save = () => {
+  const save = async () => {
     if (!canSave) return;
+    const nextEmail = email.trim();
+    const emailChanged =
+      nextEmail.toLowerCase() !== profile.email.trim().toLowerCase();
+    if (emailChanged) {
+      setSaving(true);
+      const result = await authService.updateEmail(nextEmail);
+      setSaving(false);
+      if (!result.ok) {
+        toast({
+          title: "Couldn't change email",
+          description: result.message,
+          variant: "error",
+        });
+        return;
+      }
+    }
+    let nextAvatar = avatarUrl;
+    if (pendingAvatar) {
+      setSaving(true);
+      try {
+        nextAvatar = await avatarRepo.upload(profile.id, pendingAvatar.blob);
+      } catch (err) {
+        logger.warn("profile.avatarUpload", err);
+        nextAvatar = pendingAvatar.dataUrl;
+      }
+      setSaving(false);
+    }
     updateProfile({
       fullName: fullName.trim(),
-      email: email.trim(),
       phone: phone.trim() || null,
       currency,
       savingsTarget: Math.max(0, Number(savingsTarget) || 0),
-      avatarUrl,
+      avatarUrl: nextAvatar,
     });
     updateName(fullName.trim());
-    toast({ title: "Profile updated", variant: "success" });
+    toast(
+      emailChanged
+        ? {
+            title: "Confirm your new email",
+            description: `We sent a link to ${nextEmail}. Your login email changes once you confirm it.`,
+            variant: "info",
+          }
+        : { title: "Profile updated", variant: "success" },
+    );
     onClose();
   };
 
@@ -183,7 +239,13 @@ const ProfileForm = ({ profile, onClose }: ProfileFormProps) => {
         onChange={(e) => setSavingsTarget(e.target.value)}
       />
 
-      <Button size="lg" fullWidth onClick={save} disabled={!canSave}>
+      <Button
+        size="lg"
+        fullWidth
+        onClick={() => void save()}
+        disabled={!canSave}
+        loading={saving}
+      >
         Save changes
       </Button>
     </div>

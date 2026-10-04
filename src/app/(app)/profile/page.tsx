@@ -13,6 +13,7 @@ import { EditProfileSheet } from "@/sections/EditProfileSheet/EditProfileSheet";
 import { SalaryManager } from "@/sections/SalaryManager/SalaryManager";
 import { OtherIncomeManager } from "@/sections/OtherIncomeManager/OtherIncomeManager";
 import { DataExport } from "@/sections/DataExport/DataExport";
+import { DeleteAccount } from "@/sections/DeleteAccount/DeleteAccount";
 import { useFinanceStore } from "@/store/financeStore";
 import { useSignOut } from "@/hooks/useSignOut";
 import { currentStreak, monthLabel } from "@/utils";
@@ -101,6 +102,10 @@ export default function ProfilePage() {
             </span>
           </a>
         </Card>
+      </m.div>
+
+      <m.div variants={listItem}>
+        <DeleteAccount />
       </m.div>
 
       <m.div className={styles.actions} variants={listItem}>

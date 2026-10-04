@@ -11,6 +11,7 @@ import { useFinanceStore } from "@/store/financeStore";
 import { salaryTotalsByMonth } from "@/store/finance/selectors";
 import { useToast } from "@/hooks/useToast";
 import {
+  accountLabel,
   currentMonthKey,
   formatCurrency,
   lastNMonthKeys,
@@ -25,6 +26,7 @@ export const SalaryManager = () => {
   const setSalary = useFinanceStore((s) => s.setSalary);
   const deleteTransaction = useFinanceStore((s) => s.deleteTransaction);
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
+  const expectedSalary = useFinanceStore((s) => s.profile?.monthlySalary ?? 0);
   const toast = useToast();
 
   const [open, setOpen] = useState(false);
@@ -45,7 +47,13 @@ export const SalaryManager = () => {
 
   const openEditor = (month: string) => {
     setEditMonth(month);
-    setAmount(salaryByMonth[month] ? String(salaryByMonth[month]) : "");
+    setAmount(
+      salaryByMonth[month]
+        ? String(salaryByMonth[month])
+        : expectedSalary > 0
+          ? String(expectedSalary)
+          : "",
+    );
     const existing = transactions.find(
       (t) =>
         t.type === "income" &&
@@ -157,7 +165,7 @@ export const SalaryManager = () => {
             value={bankId}
             onChange={(e) => setBankId(e.target.value)}
             options={accounts.map((a) => ({
-              label: `${a.name} · ${formatCurrency(a.balance, currency)}`,
+              label: accountLabel(a, currency),
               value: a.id,
             }))}
           />

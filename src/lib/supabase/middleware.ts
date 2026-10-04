@@ -7,7 +7,13 @@ type CookieToSet = { name: string; value: string; options: CookieOptions };
 
 const AUTH_PATHS = ["/login", "/signup", "/forgot-password"];
 const RECOVERY_PATHS = ["/verify", "/reset-password", "/auth/callback"];
-const PUBLIC_PATHS = ["/offline"];
+const PUBLIC_PATHS = [
+  "/offline",
+  "/api/auth/sign-in",
+  "/monitoring",
+  "/robots.txt",
+  "/opengraph-image",
+];
 
 const startsWithAny = (path: string, prefixes: string[]) =>
   prefixes.some((p) => path === p || path.startsWith(`${p}/`));
@@ -53,9 +59,8 @@ export const updateSession = async (request: NextRequest) => {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const user = claimsData?.claims?.sub ? claimsData.claims : null;
 
   const redirectTo = (pathname: string) => {
     const url = request.nextUrl.clone();

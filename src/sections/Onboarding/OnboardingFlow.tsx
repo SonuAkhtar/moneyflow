@@ -22,19 +22,30 @@ export const OnboardingFlow = () => {
   const [saving, setSaving] = useState(false);
 
   const [step, setStep] = useState(0);
-  const [salary, setSalary] = useState("85000");
-  const [target, setTarget] = useState("25000");
-  const [accountName, setAccountName] = useState("Everyday Savings");
-  const [balance, setBalance] = useState("48000");
+  const [salary, setSalary] = useState("");
+  const [target, setTarget] = useState("");
+  const [accountName, setAccountName] = useState("");
+  const [balance, setBalance] = useState("");
+  const [accountId] = useState(() => crypto.randomUUID());
 
   useEffect(() => {
     let active = true;
-    authService.currentSession().then((session) => {
+    void (async () => {
+      const session = await authService.currentSession();
       if (!active) return;
-      if (session?.userId) setUserId(session.userId);
-      else router.replace(ROUTES.login);
+      if (!session?.userId) {
+        router.replace(ROUTES.login);
+        return;
+      }
+      const bundle = await profileRepo.get(session.userId).catch(() => null);
+      if (!active) return;
+      if (bundle?.profile.onboardingComplete) {
+        router.replace(ROUTES.home);
+        return;
+      }
+      setUserId(session.userId);
       setResolved(true);
-    });
+    })();
     return () => {
       active = false;
     };
@@ -49,13 +60,8 @@ export const OnboardingFlow = () => {
     if (saving) return;
     setSaving(true);
     try {
-      await profileRepo.update(userId, {
-        monthlySalary: Number(salary) || 0,
-        savingsTarget: Number(target) || 0,
-        onboardingComplete: true,
-      });
-      await accountRepo.save({
-        id: crypto.randomUUID(),
+      await accountRepo.insert({
+        id: accountId,
         userId,
         name: accountName.trim() || "Savings",
         type: "savings",
@@ -64,6 +70,11 @@ export const OnboardingFlow = () => {
         colorTag: "#4ece6e",
         isPrimary: true,
         createdAt: new Date().toISOString(),
+      });
+      await profileRepo.update(userId, {
+        monthlySalary: Number(salary) || 0,
+        savingsTarget: Number(target) || 0,
+        onboardingComplete: true,
       });
       await useFinanceStore.getState().hydrate(userId);
       router.replace(ROUTES.home);
@@ -115,6 +126,7 @@ export const OnboardingFlow = () => {
                 label="Monthly salary"
                 type="number"
                 inputMode="decimal"
+                placeholder="e.g. 85000"
                 value={salary}
                 onChange={(e) => setSalary(e.target.value)}
               />
@@ -124,6 +136,7 @@ export const OnboardingFlow = () => {
                 label="Monthly savings target"
                 type="number"
                 inputMode="decimal"
+                placeholder="e.g. 25000"
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
               />
@@ -131,7 +144,8 @@ export const OnboardingFlow = () => {
             {step === 3 && (
               <>
                 <Input
-                  label="Wallet name"
+                  label="Bank name"
+                  placeholder="e.g. HDFC Savings"
                   value={accountName}
                   onChange={(e) => setAccountName(e.target.value)}
                 />
@@ -139,6 +153,7 @@ export const OnboardingFlow = () => {
                   label="Starting balance"
                   type="number"
                   inputMode="decimal"
+                  placeholder="0"
                   value={balance}
                   onChange={(e) => setBalance(e.target.value)}
                 />

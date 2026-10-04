@@ -12,13 +12,19 @@ import { ConfirmDialog } from "@/components/ConfirmDialog/ConfirmDialog";
 import { useFinanceStore } from "@/store/financeStore";
 import { useSpendAccounts } from "@/hooks/useSpendAccounts";
 import { useToast } from "@/hooks/useToast";
-import { dateInputToIso, formatCurrency, getCurrencySymbol } from "@/utils";
+import {
+  accountLabel,
+  currentDateKey,
+  dateInputToIso,
+  dateKey,
+  getCurrencySymbol,
+} from "@/utils";
 import type { CategoryId, Transaction } from "@/types";
 import styles from "./AddIncomeSheet.module.scss";
 
 const INCOME_CATEGORIES: CategoryId[] = ["investment", "other"];
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = currentDateKey;
 
 interface AddIncomeSheetProps {
   open: boolean;
@@ -71,7 +77,7 @@ const Form = ({ transaction, onClose }: FormProps) => {
   const [note, setNote] = useState(transaction?.note ?? "");
   const [bankId, setBankId] = useState(defaultBankId);
   const [date, setDate] = useState(
-    transaction ? transaction.occurredAt.slice(0, 10) : today(),
+    transaction ? dateKey(transaction.occurredAt) : today(),
   );
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -145,7 +151,7 @@ const Form = ({ transaction, onClose }: FormProps) => {
         value={bankId}
         onChange={(e) => setBankId(e.target.value)}
         options={banks.map((a) => ({
-          label: `${a.name} · ${formatCurrency(a.balance, currency)}`,
+          label: accountLabel(a, currency),
           value: a.id,
         }))}
       />

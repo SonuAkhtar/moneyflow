@@ -4,20 +4,33 @@ import type { Account, Profile } from "@/types";
 
 vi.mock("@/services/repositories", () => {
   const ok = () => Promise.resolve();
-  const repo = () => ({
-    list: () => Promise.resolve([]),
-    save: vi.fn(ok),
-    remove: vi.fn(ok),
-  });
   return {
-    accountRepo: repo(),
-    transactionRepo: repo(),
+    accountRepo: {
+      list: () => Promise.resolve([]),
+      insert: vi.fn(ok),
+      updateMeta: vi.fn(ok),
+      adjustBalance: vi.fn(() => Promise.resolve(0)),
+      remove: vi.fn(ok),
+    },
+    transactionRepo: {
+      list: () => Promise.resolve([]),
+      save: vi.fn(ok),
+      remove: vi.fn(ok),
+      removeByAccount: vi.fn(ok),
+    },
     emiRepo: {
       save: vi.fn(ok),
       remove: vi.fn(ok),
       savePayment: vi.fn(ok),
       removePayment: vi.fn(ok),
     },
+    borrowingRepo: {
+      save: vi.fn(ok),
+      remove: vi.fn(ok),
+      savePayment: vi.fn(ok),
+      removePayment: vi.fn(ok),
+    },
+    budgetRepo: { save: vi.fn(ok) },
     profileRepo: { get: () => Promise.resolve(null), update: vi.fn(ok) },
     fetchSnapshot: vi.fn(() =>
       Promise.resolve({
@@ -28,6 +41,8 @@ vi.mock("@/services/repositories", () => {
         transactions: [],
         emis: [],
         borrowings: [],
+        budgets: null,
+        authEmail: null,
       }),
     ),
   };

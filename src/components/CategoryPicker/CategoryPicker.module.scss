@@ -21,8 +21,8 @@
 
   &--active {
     background: var(--accent-bg);
-    border-color: var(--accent);
-    color: var(--accent);
+    border-color: var(--accent-text);
+    color: var(--accent-text);
 
     .chip_icon {
       background: var(--accent);
