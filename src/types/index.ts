@@ -186,6 +186,7 @@ export interface ToastMessage {
   description?: string;
   variant: "success" | "error" | "info" | "warning";
   duration?: number;
+  action?: { label: string; onClick: () => void };
 }
 
 export interface SelectOption<T = string> {

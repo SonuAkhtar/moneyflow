@@ -10,6 +10,7 @@ interface ProgressBarProps {
   size?: "sm" | "md";
   showTrackGlow?: boolean;
   className?: string;
+  label?: string;
 }
 
 export const ProgressBar = ({
@@ -18,6 +19,7 @@ export const ProgressBar = ({
   size = "md",
   showTrackGlow = false,
   className,
+  label,
 }: ProgressBarProps) => {
   const clamped = Math.max(0, Math.min(100, value));
 
@@ -30,6 +32,7 @@ export const ProgressBar = ({
         className,
       )}
       role="progressbar"
+      aria-label={label}
       aria-valuenow={Math.round(clamped)}
       aria-valuemin={0}
       aria-valuemax={100}

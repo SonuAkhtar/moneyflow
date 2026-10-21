@@ -4,17 +4,13 @@ import { m } from "framer-motion";
 import { GreetingHeader } from "@/sections/GreetingHeader/GreetingHeader";
 import { MonthOverview } from "@/sections/MonthOverview/MonthOverview";
 import { ComingUp } from "@/sections/ComingUp/ComingUp";
+import { SpendPulse } from "@/sections/SpendPulse/SpendPulse";
 import { SavingsAccordion } from "@/sections/SavingsAccordion/SavingsAccordion";
 import { MajorSpends } from "@/sections/MajorSpends/MajorSpends";
 import { DailySpends } from "@/sections/DailySpends/DailySpends";
 import { BalanceTrailProvider } from "@/hooks/useBalanceTrail";
 import { staggerContainer, listItem } from "@/themes/animations";
 import styles from "./page.module.scss";
-
-const cardTap = {
-  whileTap: { scale: 0.97 },
-  transition: { type: "spring" as const, stiffness: 500, damping: 18 },
-};
 
 export default function HomePage() {
   return (
@@ -29,15 +25,19 @@ export default function HomePage() {
           <GreetingHeader />
         </m.div>
 
-        <m.div variants={listItem} {...cardTap}>
+        <m.div variants={listItem}>
           <MonthOverview />
         </m.div>
 
-        <m.div variants={listItem} {...cardTap}>
+        <m.div variants={listItem}>
+          <SpendPulse />
+        </m.div>
+
+        <m.div variants={listItem}>
           <ComingUp />
         </m.div>
 
-        <m.div variants={listItem} {...cardTap}>
+        <m.div variants={listItem}>
           <SavingsAccordion />
         </m.div>
 

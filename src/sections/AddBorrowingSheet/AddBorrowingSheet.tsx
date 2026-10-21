@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
 import { Input } from "@/components/Input/Input";
+import { NumberInput } from "@/components/NumberInput/NumberInput";
 import { SheetActions } from "@/components/SheetActions/SheetActions";
 import { ConfirmDialog } from "@/components/ConfirmDialog/ConfirmDialog";
 import { useFinanceStore } from "@/store/financeStore";
@@ -115,9 +116,8 @@ export const AddBorrowingSheet = ({
           value={lender}
           onChange={(e) => setLender(e.target.value)}
         />
-        <Input
+        <NumberInput
           label={`Amount (${symbol})`}
-          type="number"
           inputMode="decimal"
           placeholder="0"
           value={amount}

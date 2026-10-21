@@ -78,7 +78,7 @@ export const useAnalytics = (
       };
     });
 
-    const monthlyTrend: TrendPoint[] = lastNMonthKeys(6).map((key) => {
+    const monthlyTrend: TrendPoint[] = lastNMonthKeys(6, month).map((key) => {
       const { income, expenses } = monthTotals(transactions, key);
       const spent = expenses + loanEmiPaidInMonth(emis, key);
       return {
@@ -117,5 +117,5 @@ export const useAnalytics = (
       .slice(0, 5);
 
     return { categoryBreakdown, monthlyTrend, dailySpend, topMerchants };
-  }, [transactions, emis, monthTxns]);
+  }, [transactions, emis, monthTxns, month]);
 };

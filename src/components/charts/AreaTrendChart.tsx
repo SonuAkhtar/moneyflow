@@ -10,7 +10,7 @@ import {
   YAxis,
 } from "recharts";
 import { ChartTooltip } from "./ChartTooltip";
-import { formatCompact } from "@/utils";
+import { formatCompact, formatCurrency } from "@/utils";
 import styles from "./charts.module.scss";
 
 const REDUCED =
@@ -58,7 +58,17 @@ export const AreaTrendChart = ({
   height = 220,
   currency,
 }: AreaTrendChartProps) => (
-  <div className={styles.chart} style={{ height }}>
+  <div
+    className={styles.chart}
+    style={{ height }}
+    role="img"
+    aria-label={`Income and expenses by month: ${data
+      .map(
+        (d) =>
+          `${d.label} income ${formatCurrency(d.income, currency)}, expenses ${formatCurrency(d.expenses, currency)}`,
+      )
+      .join("; ")}`}
+  >
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart
         data={data}

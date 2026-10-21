@@ -1,0 +1,65 @@
+.bar {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: z("max");
+  height: 3px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease-smooth) 120ms;
+
+  &_fill {
+    display: block;
+    height: 100%;
+    width: 0;
+    border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+    background: linear-gradient(
+      90deg,
+      var(--accent-solid),
+      var(--accent) 60%,
+      var(--brand-400)
+    );
+    box-shadow:
+      0 0 10px color-mix(in srgb, var(--accent) 70%, transparent),
+      0 0 3px var(--accent);
+  }
+
+  &--loading {
+    opacity: 1;
+    transition-delay: 0ms;
+  }
+
+  &--loading &_fill {
+    animation: creep 8s cubic-bezier(0.1, 0.7, 0.2, 1) forwards;
+  }
+
+  &--done {
+    opacity: 0;
+  }
+
+  &--done &_fill {
+    width: 100%;
+    transition: width 180ms var(--ease-smooth);
+  }
+}
+
+@keyframes creep {
+  0% {
+    width: 0;
+  }
+  10% {
+    width: 35%;
+  }
+  40% {
+    width: 70%;
+  }
+  100% {
+    width: 92%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar--loading .bar_fill {
+    animation: none;
+    width: 70%;
+  }
+}

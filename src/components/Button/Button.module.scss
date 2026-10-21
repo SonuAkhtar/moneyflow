@@ -42,7 +42,7 @@
 
   &--primary {
     background: var(--gradient-lime);
-    color: #fff;
+    color: var(--text-inverse);
     box-shadow: var(--shadow-glow-lime);
 
     &:hover:not(:disabled) {
@@ -78,9 +78,9 @@
   }
 
   &--danger {
-    background: linear-gradient(135deg, #e4574d 0%, #f5803c 100%);
-    color: #fff;
-    box-shadow: 0 12px 40px rgba(228, 87, 77, 0.3);
+    background: var(--gradient-danger);
+    color: var(--text-inverse);
+    box-shadow: var(--shadow-glow-danger);
   }
 
   &_label {

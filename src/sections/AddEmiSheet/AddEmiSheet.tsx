@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
 import { Input } from "@/components/Input/Input";
+import { NumberInput } from "@/components/NumberInput/NumberInput";
 import { Select } from "@/components/Select/Select";
 import { SegmentedControl } from "@/components/SegmentedControl/SegmentedControl";
 import { SheetActions } from "@/components/SheetActions/SheetActions";
@@ -229,9 +230,8 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
           />
         )}
 
-        <Input
+        <NumberInput
           label={`Monthly amount (${symbol})`}
-          type="number"
           inputMode="decimal"
           placeholder="0"
           value={amount}
@@ -247,9 +247,8 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
         />
 
         {isLoan && (
-          <Input
+          <NumberInput
             label="Tenure (months)"
-            type="number"
             inputMode="numeric"
             placeholder="0"
             value={tenure}
@@ -273,8 +272,7 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
               onChange={switchPaidMode}
             />
           </div>
-          <Input
-            type="number"
+          <NumberInput
             inputMode={paidMode === "amount" ? "decimal" : "numeric"}
             placeholder={
               paidMode === "amount" ? `${symbol}0` : "Number of months"

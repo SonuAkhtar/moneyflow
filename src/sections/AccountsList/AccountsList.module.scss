@@ -1,42 +1,61 @@
-.total {
+.head {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  margin-bottom: var(--space-5);
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
 
-  &_label {
+  &_text {
+    min-width: 0;
+  }
+
+  &_title {
+    font-size: var(--font-lg);
+  }
+
+  &_caption {
     font-size: var(--font-xs);
-    font-weight: var(--weight-medium);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
     color: var(--text-secondary);
   }
 
-  &_value {
-    font-family: var(--num-font);
-    font-size: var(--font-3xl);
+  &_total {
     font-weight: var(--weight-semibold);
-    letter-spacing: -0.02em;
-    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
 
     &--neg {
       color: var(--color-danger);
     }
   }
+}
 
-  &_meta {
-    font-size: var(--font-xs);
-    color: var(--text-tertiary);
+.transferBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--surface-card-solid);
+  border: 1px solid var(--border-glass);
+  box-shadow: var(--shadow-soft);
+  color: var(--text-primary);
+  font-size: var(--font-sm);
+  font-weight: var(--weight-semibold);
+  @include focus-ring;
+
+  svg {
+    color: var(--tone-fg, var(--accent-text));
   }
 
-  &_transfer {
-    align-self: flex-start;
-    margin-top: var(--space-3);
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
   }
 }
 
 .transfers {
-  margin-top: var(--space-5);
+  margin-top: var(--space-6);
 
   &_list {
     display: flex;
@@ -57,95 +76,139 @@
   }
 }
 
+.tgroup {
+  & + & {
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  &_head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-2) var(--space-4) var(--space-1);
+    font-size: var(--font-2xs);
+    font-weight: var(--weight-semibold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+}
+
 .transfer {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-3);
   width: 100%;
-  padding: var(--space-3) var(--space-4);
+  min-height: 56px;
+  padding: var(--space-2) var(--space-4);
   border: none;
-  border-bottom: 1px solid var(--border-subtle);
   background: none;
   font: inherit;
   color: inherit;
   text-align: left;
   cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-smooth);
+  @include focus-ring;
 
-  &:last-child {
-    border-bottom: none;
+  &:hover {
+    background: var(--surface-input);
   }
 
-  &_icon {
+  &_banks {
+    display: flex;
+    flex-shrink: 0;
+  }
+
+  &_bank {
     display: grid;
     place-items: center;
-    flex-shrink: 0;
-    width: 30px;
-    height: 30px;
-    border-radius: var(--radius-xs);
-    background: var(--surface-input);
-    color: var(--text-secondary);
+    width: 26px;
+    height: 26px;
+    border-radius: var(--radius-pill);
+    border: 2px solid var(--surface-card-solid);
+    background: color-mix(in srgb, var(--bank) 18%, var(--surface-card-solid));
+    color: var(--bank);
+    font-size: var(--font-2xs);
+    font-weight: var(--weight-bold);
+
+    & + & {
+      margin-left: -8px;
+    }
   }
 
   &_text {
     display: flex;
     flex-direction: column;
-    flex: 1;
+    gap: 1px;
     min-width: 0;
   }
 
   &_route {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
     font-size: var(--font-sm);
     font-weight: var(--weight-semibold);
-    @include truncate(1);
+  }
 
-    svg {
-      margin: 0 var(--space-1);
-      vertical-align: -1px;
-      color: var(--text-tertiary);
-    }
+  &_name {
+    min-width: 0;
+    @include truncate(1);
+  }
+
+  &_arrow {
+    display: inline-block;
+    flex-shrink: 0;
+    color: var(--text-tertiary);
   }
 
   &_date {
     font-size: var(--font-xs);
-    color: var(--text-tertiary);
+    color: var(--text-secondary);
   }
 
   &_amount {
     font-family: var(--num-font);
-    font-weight: var(--weight-semibold);
+    font-size: var(--font-sm);
+    font-weight: var(--weight-bold);
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
 }
 
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
 .card {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: 6px;
   overflow: hidden;
   width: 100%;
-  padding: var(--space-4) var(--space-3) var(--space-3);
+  padding: var(--space-3);
   text-align: left;
   transition:
     transform var(--dur-fast) var(--ease-smooth),
     box-shadow var(--dur-fast) var(--ease-smooth);
 
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    z-index: 2;
-    background: var(--bank, var(--accent));
-  }
+  background:
+    radial-gradient(
+      120% 90% at 0% 0%,
+      color-mix(in srgb, var(--bank, var(--accent)) 16%, transparent) 0%,
+      transparent 62%
+    ),
+    var(--surface-card-solid) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--bank, var(--accent)) 22%,
+    var(--border-subtle)
+  ) !important;
 
   &:hover {
     transform: translateY(-1px);
@@ -177,7 +240,7 @@
 
   &_balance {
     font-family: var(--num-font);
-    font-size: var(--font-xl);
+    font-size: var(--font-lg);
     font-weight: var(--weight-bold);
     letter-spacing: -0.02em;
     font-variant-numeric: tabular-nums;
@@ -190,7 +253,7 @@
 
   &_track {
     display: block;
-    height: 5px;
+    height: 4px;
     border-radius: var(--radius-pill);
     background: var(--surface-input);
     overflow: hidden;
@@ -244,9 +307,10 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-1);
-  min-height: 128px;
+  min-height: 0;
   border-radius: var(--radius-lg);
-  border: 1.5px dashed var(--border-strong);
+  border: 1.5px dashed var(--tone-border, var(--border-strong));
+  background: color-mix(in srgb, var(--surface-card-solid) 50%, transparent);
   color: var(--text-secondary);
   font-size: var(--font-xs);
   font-weight: var(--weight-medium);

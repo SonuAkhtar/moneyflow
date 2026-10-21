@@ -4,12 +4,14 @@ import { useState, type ChangeEvent } from "react";
 import { Camera } from "lucide-react";
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
 import { Input } from "@/components/Input/Input";
+import { NumberInput } from "@/components/NumberInput/NumberInput";
 import { Select } from "@/components/Select/Select";
 import { Button } from "@/components/Button/Button";
 import { Avatar } from "@/components/Avatar/Avatar";
 import { useFinanceStore } from "@/store/financeStore";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/hooks/useToast";
+import { CURRENCY_SELECT_OPTIONS } from "@/constants/currencies";
 import { authService } from "@/services/auth.service";
 import { avatarRepo } from "@/services/repositories";
 import { logger } from "@/lib/logger";
@@ -20,18 +22,6 @@ interface EditProfileSheetProps {
   open: boolean;
   onClose: () => void;
 }
-
-const CURRENCIES = [
-  { label: "₹ Indian Rupee (INR)", value: "INR" },
-  { label: "$ US Dollar (USD)", value: "USD" },
-  { label: "€ Euro (EUR)", value: "EUR" },
-  { label: "£ British Pound (GBP)", value: "GBP" },
-  { label: "د.إ UAE Dirham (AED)", value: "AED" },
-  { label: "$ Australian Dollar (AUD)", value: "AUD" },
-  { label: "$ Canadian Dollar (CAD)", value: "CAD" },
-  { label: "¥ Japanese Yen (JPY)", value: "JPY" },
-  { label: "$ Singapore Dollar (SGD)", value: "SGD" },
-];
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_AVATAR_DIM = 256;
@@ -228,11 +218,10 @@ const ProfileForm = ({ profile, onClose }: ProfileFormProps) => {
         label="Currency"
         value={currency}
         onChange={(e) => setCurrency(e.target.value)}
-        options={CURRENCIES}
+        options={CURRENCY_SELECT_OPTIONS}
       />
-      <Input
+      <NumberInput
         label="Monthly savings target"
-        type="number"
         inputMode="decimal"
         placeholder="0"
         value={savingsTarget}

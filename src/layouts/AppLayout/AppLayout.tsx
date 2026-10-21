@@ -6,6 +6,7 @@ import type { User } from "@supabase/supabase-js";
 import { AppHeader } from "@/components/AppHeader/AppHeader";
 import { BottomNav } from "@/components/BottomNav/BottomNav";
 import { PullToRefresh } from "@/components/PullToRefresh/PullToRefresh";
+import { QuickAdd } from "@/components/QuickAdd/QuickAdd";
 import { SplashScreen } from "@/components/SplashScreen/SplashScreen";
 import { Button } from "@/components/Button/Button";
 import { getBrowserSupabase } from "@/lib/supabase/client";
@@ -143,19 +144,8 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
       setRetrying(false);
     };
     return (
-      <div
-        style={{
-          minHeight: "100dvh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "16px",
-          padding: "24px",
-          textAlign: "center",
-        }}
-      >
-        <p style={{ color: "var(--text-secondary)", maxWidth: "280px" }}>
+      <div className={styles.failure} role="alert">
+        <p className={styles.failure_text}>
           {loadFailed
             ? "We couldn't load your data. Check your connection and try again."
             : "We couldn't load your account. Please sign in again."}
@@ -180,18 +170,21 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
     return <SplashScreen />;
   }
 
-  const routeKey = pathname.startsWith("/savings")
-    ? "savings"
-    : pathname.startsWith("/analytics")
-      ? "analytics"
-      : pathname.startsWith("/emi")
-        ? "emi"
-        : pathname.startsWith("/profile")
-          ? "profile"
-          : "home";
+  const routeKey = pathname.startsWith("/transactions")
+    ? "transactions"
+    : pathname.startsWith("/savings")
+      ? "savings"
+      : pathname.startsWith("/analytics")
+        ? "analytics"
+        : pathname.startsWith("/emi")
+          ? "emi"
+          : pathname.startsWith("/profile")
+            ? "profile"
+            : "home";
 
   const routeTitle = {
     home: "Home",
+    transactions: "Transactions",
     savings: "Savings",
     analytics: "Analytics",
     emi: "EMIs and borrowings",
@@ -212,6 +205,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
           </main>
         </PullToRefresh>
       </div>
+      {routeKey !== "profile" && <QuickAdd />}
       <BottomNav />
     </div>
   );

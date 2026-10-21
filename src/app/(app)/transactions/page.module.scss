@@ -1,0 +1,138 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-top: var(--space-3);
+}
+
+.top {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
+.search {
+  flex: 1;
+}
+
+.filterBtn {
+  position: relative;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: var(--radius-md);
+  background: var(--surface-input);
+  border: 1px solid var(--border-glass);
+  color: var(--text-secondary);
+  @include focus-ring;
+
+  &--on {
+    border-color: var(--accent-text);
+    color: var(--accent-text);
+  }
+
+  &_count {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: var(--radius-pill);
+    background: var(--accent-solid);
+    color: var(--text-on-accent);
+    font-size: var(--font-2xs);
+    font-weight: var(--weight-bold);
+    line-height: 18px;
+  }
+}
+
+.segments {
+  width: 100%;
+}
+
+.panelWrap {
+  overflow: hidden;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: var(--tap-min);
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+.clear {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--tap-min);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  color: var(--accent-text);
+  font-size: var(--font-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+
+  &_head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0 var(--space-1);
+  }
+
+  &_title {
+    font-size: var(--font-md);
+  }
+
+  &_net {
+    font-size: var(--font-sm);
+    font-weight: var(--weight-semibold);
+
+    &--in {
+      color: var(--color-success);
+    }
+
+    &--out {
+      color: var(--color-danger);
+    }
+  }
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2);
+}
+
+.older {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--font-xs);
+  color: var(--text-tertiary);
+}

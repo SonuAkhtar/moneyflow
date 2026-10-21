@@ -8,15 +8,22 @@
   margin-bottom: var(--space-3);
 }
 
-.search {
-  margin-bottom: var(--space-2);
-}
-
-.results {
+.searchLink {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: var(--space-2);
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 54px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-input);
+  border: 1px solid var(--border-glass);
+  color: var(--text-secondary);
+  font-size: var(--font-md);
+  @include focus-ring;
+
+  span {
+    flex: 1;
+  }
 }
 
 .segments.segments {

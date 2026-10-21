@@ -11,6 +11,7 @@ export const ROUTES = {
   home: "/",
   savings: "/savings",
   analytics: "/analytics",
+  transactions: "/transactions",
   emi: "/emi",
   profile: "/profile",
   onboarding: "/onboarding",

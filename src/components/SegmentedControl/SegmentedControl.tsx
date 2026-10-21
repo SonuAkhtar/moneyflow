@@ -16,6 +16,8 @@ interface SegmentedControlProps<T extends string> {
   onChange: (value: T) => void;
   size?: "sm" | "md";
   className?: string;
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
 }
 
 export function SegmentedControl<T extends string>({
@@ -24,11 +26,16 @@ export function SegmentedControl<T extends string>({
   onChange,
   size = "md",
   className,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
 }: SegmentedControlProps<T>) {
   const groupId = useId();
 
   return (
     <div
+      role="group"
+      aria-label={ariaLabel}
+      aria-labelledby={ariaLabelledBy}
       className={cn(styles.segmented, styles[`segmented--${size}`], className)}
     >
       {segments.map((segment) => {

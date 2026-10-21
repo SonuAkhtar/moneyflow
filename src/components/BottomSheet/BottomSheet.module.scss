@@ -66,8 +66,8 @@
   &_close {
     display: grid;
     place-items: center;
-    width: 34px;
-    height: 34px;
+    width: var(--tap-min);
+    height: var(--tap-min);
     border-radius: var(--radius-pill);
     background: var(--surface-glass);
     color: var(--text-secondary);

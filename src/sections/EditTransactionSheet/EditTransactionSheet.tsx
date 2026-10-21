@@ -6,6 +6,7 @@ import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
 import { Input } from "@/components/Input/Input";
 import { Button } from "@/components/Button/Button";
 import { AmountField } from "@/components/AmountField/AmountField";
+import { DateField } from "@/components/DateField/DateField";
 import { CategoryPicker } from "@/components/CategoryPicker/CategoryPicker";
 import { ConfirmDialog } from "@/components/ConfirmDialog/ConfirmDialog";
 import { useFinanceStore } from "@/store/financeStore";
@@ -14,6 +15,7 @@ import {
   currentDateKey,
   dateInputToIso,
   dateKey,
+  formatCurrency,
   getCurrencySymbol,
 } from "@/utils";
 import { QUICK_EXPENSE_CATEGORIES } from "@/constants";
@@ -56,6 +58,8 @@ interface EditFormProps {
 const EditForm = ({ transaction, onClose }: EditFormProps) => {
   const updateTransaction = useFinanceStore((s) => s.updateTransaction);
   const deleteTransaction = useFinanceStore((s) => s.deleteTransaction);
+  const restoreTransaction = useFinanceStore((s) => s.restoreTransaction);
+  const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
   const toast = useToast();
   const symbol = getCurrencySymbol();
   const isIncome = transaction.type === "income";
@@ -84,7 +88,7 @@ const EditForm = ({ transaction, onClose }: EditFormProps) => {
     });
     toast({
       title: `${noun} updated`,
-      description: `${symbol}${value}`,
+      description: formatCurrency(value, currency),
       variant: "success",
     });
     onClose();
@@ -92,7 +96,15 @@ const EditForm = ({ transaction, onClose }: EditFormProps) => {
 
   const confirmDelete = () => {
     deleteTransaction(transaction.id);
-    toast({ title: `${noun} deleted`, variant: "info" });
+    toast({
+      title: `${noun} deleted`,
+      description: formatCurrency(transaction.amount, currency),
+      variant: "info",
+      action: {
+        label: "Undo",
+        onClick: () => restoreTransaction(transaction),
+      },
+    });
     setConfirmOpen(false);
     onClose();
   };
@@ -112,31 +124,17 @@ const EditForm = ({ transaction, onClose }: EditFormProps) => {
         </div>
       )}
 
-      {transaction.type === "expense" && transaction.isBigExpense ? (
-        <div className={styles.row}>
-          <Input
-            label="Merchant"
-            placeholder="Where?"
-            value={merchant}
-            onChange={(e) => setMerchant(e.target.value)}
-          />
-          <Input
-            label="Date"
-            type="date"
-            max={today}
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
-        </div>
-      ) : (
+      {transaction.type === "expense" && (
         <Input
-          label="Date"
-          type="date"
-          max={today}
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
+          label="Merchant (optional)"
+          placeholder="Where did you spend?"
+          value={merchant}
+          maxLength={80}
+          onChange={(e) => setMerchant(e.target.value)}
         />
       )}
+
+      <DateField value={date} onChange={setDate} max={today} />
 
       <div className={styles.actions}>
         <button

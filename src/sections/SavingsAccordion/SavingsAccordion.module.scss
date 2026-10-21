@@ -103,8 +103,9 @@
     padding: 0;
     display: grid;
     place-items: center;
-    width: 30px;
-    height: 30px;
+    width: var(--tap-min);
+    height: var(--tap-min);
+    margin: -7px;
     border-radius: var(--radius-pill);
     color: var(--text-secondary);
     cursor: pointer;

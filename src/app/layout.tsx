@@ -10,7 +10,7 @@ const bricolage = Bricolage_Grotesque({
   variable: "--font-app",
 });
 
-const themeScript = `(function(){try{var t=localStorage.getItem('mf-theme');if(t!=='light'&&t!=='dark'){t='light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();`;
+const themeScript = `(function(){var d=document.documentElement;try{var t=localStorage.getItem('mf-theme');if(t==='light'||t==='dark'){d.setAttribute('data-theme',t);return;}var q=window.matchMedia('(prefers-color-scheme: dark)');var apply=function(){if(!localStorage.getItem('mf-theme')){d.setAttribute('data-theme',q.matches?'dark':'light');}};apply();q.addEventListener('change',apply);}catch(e){d.setAttribute('data-theme','light');}})();`;
 
 const supabaseOrigin = (() => {
   try {

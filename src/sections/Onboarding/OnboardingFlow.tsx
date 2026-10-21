@@ -3,8 +3,17 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, m } from "framer-motion";
-import { ArrowRight, Check, PiggyBank, Sparkles, Wallet } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  PiggyBank,
+  Sparkles,
+  Wallet,
+} from "lucide-react";
 import { Input } from "@/components/Input/Input";
+import { Select } from "@/components/Select/Select";
+import { NumberInput } from "@/components/NumberInput/NumberInput";
 import { Button } from "@/components/Button/Button";
 import { SplashScreen } from "@/components/SplashScreen/SplashScreen";
 import { authService } from "@/services/auth.service";
@@ -12,6 +21,8 @@ import { accountRepo, profileRepo } from "@/services/repositories";
 import { useFinanceStore } from "@/store/financeStore";
 import { useToast } from "@/hooks/useToast";
 import { ONBOARDING_STEPS, ROUTES } from "@/constants";
+import { CURRENCY_SELECT_OPTIONS, guessCurrency } from "@/constants/currencies";
+import { getCurrencySymbol } from "@/utils";
 import styles from "./OnboardingFlow.module.scss";
 
 export const OnboardingFlow = () => {
@@ -27,6 +38,12 @@ export const OnboardingFlow = () => {
   const [accountName, setAccountName] = useState("");
   const [balance, setBalance] = useState("");
   const [accountId] = useState(() => crypto.randomUUID());
+  const [currency, setCurrency] = useState(() =>
+    guessCurrency(
+      typeof navigator !== "undefined" ? navigator.languages : undefined,
+    ),
+  );
+  const symbol = getCurrencySymbol(currency);
 
   useEffect(() => {
     let active = true;
@@ -74,6 +91,7 @@ export const OnboardingFlow = () => {
       await profileRepo.update(userId, {
         monthlySalary: Number(salary) || 0,
         savingsTarget: Number(target) || 0,
+        currency,
         onboardingComplete: true,
       });
       await useFinanceStore.getState().hydrate(userId);
@@ -93,7 +111,15 @@ export const OnboardingFlow = () => {
   return (
     <div className={styles.flow}>
       <div className={styles.flow_glow} aria-hidden />
-      <div className={styles.flow_progress}>
+      <div
+        className={styles.flow_progress}
+        role="progressbar"
+        aria-label="Setup progress"
+        aria-valuemin={1}
+        aria-valuemax={ONBOARDING_STEPS.length}
+        aria-valuenow={step + 1}
+        aria-valuetext={`Step ${step + 1} of ${ONBOARDING_STEPS.length}`}
+      >
         {ONBOARDING_STEPS.map((s, i) => (
           <span
             key={s.key}
@@ -121,22 +147,28 @@ export const OnboardingFlow = () => {
           <p className={styles.flow_subtitle}>{current.subtitle}</p>
 
           <div className={styles.flow_body}>
+            {step === 0 && (
+              <Select
+                label="Currency"
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                options={CURRENCY_SELECT_OPTIONS}
+              />
+            )}
             {step === 1 && (
-              <Input
-                label="Monthly salary"
-                type="number"
+              <NumberInput
+                label={`Monthly salary (${symbol})`}
                 inputMode="decimal"
-                placeholder="e.g. 85000"
+                placeholder="0"
                 value={salary}
                 onChange={(e) => setSalary(e.target.value)}
               />
             )}
             {step === 2 && (
-              <Input
-                label="Monthly savings target"
-                type="number"
+              <NumberInput
+                label={`Monthly savings target (${symbol})`}
                 inputMode="decimal"
-                placeholder="e.g. 25000"
+                placeholder="0"
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
               />
@@ -145,13 +177,12 @@ export const OnboardingFlow = () => {
               <>
                 <Input
                   label="Bank name"
-                  placeholder="e.g. HDFC Savings"
+                  placeholder="e.g. Main savings account"
                   value={accountName}
                   onChange={(e) => setAccountName(e.target.value)}
                 />
-                <Input
-                  label="Starting balance"
-                  type="number"
+                <NumberInput
+                  label={`Starting balance (${symbol})`}
                   inputMode="decimal"
                   placeholder="0"
                   value={balance}
@@ -177,6 +208,17 @@ export const OnboardingFlow = () => {
         {step > 0 && !isLast && (
           <Button variant="ghost" fullWidth onClick={() => void finish()}>
             Skip personalization
+          </Button>
+        )}
+        {step > 0 && (
+          <Button
+            variant="ghost"
+            fullWidth
+            icon={ArrowLeft}
+            onClick={() => setStep((s) => s - 1)}
+            disabled={saving}
+          >
+            Back
           </Button>
         )}
       </div>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Landmark } from "lucide-react";
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
 import { Input } from "@/components/Input/Input";
+import { NumberInput } from "@/components/NumberInput/NumberInput";
 import { Select } from "@/components/Select/Select";
 import { SheetActions } from "@/components/SheetActions/SheetActions";
 import { ConfirmDialog } from "@/components/ConfirmDialog/ConfirmDialog";
@@ -199,17 +200,15 @@ export const AddSavingsSheet = ({
 
         {isEdit ? (
           <div className={styles.fields}>
-            <Input
+            <NumberInput
               label={`Current balance (${symbol})`}
-              type="number"
               inputMode="decimal"
               placeholder="0"
               value={current}
               onChange={(e) => setCurrent(e.target.value)}
             />
-            <Input
+            <NumberInput
               label={`Saved till last month (${symbol})`}
-              type="number"
               inputMode="decimal"
               placeholder="0"
               value={savedLast}
@@ -217,9 +216,8 @@ export const AddSavingsSheet = ({
             />
           </div>
         ) : (
-          <Input
+          <NumberInput
             label={`Saved till last month (${symbol})`}
-            type="number"
             inputMode="decimal"
             placeholder="0"
             value={savedLast}

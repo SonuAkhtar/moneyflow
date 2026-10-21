@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Search } from "lucide-react";
 import { Avatar } from "@/components/Avatar/Avatar";
 import { ProfileMenu } from "@/components/ProfileMenu/ProfileMenu";
 import { SyncBadge } from "@/components/SyncBadge/SyncBadge";
@@ -45,6 +45,13 @@ export const AppHeader = () => {
 
       <div className={styles.header_actions}>
         <SyncBadge />
+        <Link
+          href={ROUTES.transactions}
+          className={styles.header_search}
+          aria-label="Search transactions"
+        >
+          <Search size={19} />
+        </Link>
         <div className={styles.header_avatar}>
           <button
             type="button"

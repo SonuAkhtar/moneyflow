@@ -29,7 +29,14 @@ export const CategoryDonut = ({
   currency = "INR",
   height = 220,
 }: CategoryDonutProps) => (
-  <div className={styles.donut} style={{ height }}>
+  <div
+    className={styles.donut}
+    style={{ height }}
+    role="img"
+    aria-label={`Spending by category, total ${formatCurrency(total, currency)}: ${data
+      .map((d) => `${d.label} ${formatCurrency(d.value, currency)}`)
+      .join(", ")}`}
+  >
     <ResponsiveContainer width="100%" height="100%">
       <PieChart>
         <Tooltip content={<ChartTooltip currency={currency} />} />

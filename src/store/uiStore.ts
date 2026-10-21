@@ -22,7 +22,7 @@ export const useUiStore = create<UiState>((set) => ({
           t.description === toast.description &&
           t.variant === toast.variant,
       );
-      if (duplicate) return s;
+      if (duplicate && !toast.action) return s;
       const next = [...s.toasts, { ...toast, id: createId("toast") }];
       return { toasts: next.slice(-MAX_TOASTS) };
     }),

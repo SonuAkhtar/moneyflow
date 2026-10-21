@@ -1,7 +1,40 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: var(--space-5);
+}
+
+.panel {
+  --tone-bg: var(--surface-card);
+  --tone-border: var(--border-subtle);
+  --tone-fg: var(--text-primary);
+
+  padding: var(--space-4);
+  border-radius: calc(var(--radius-xl) + 4px);
+  background: var(--tone-bg);
+  border: 1px solid var(--tone-border);
+
+  &[data-tone="bank"] {
+    --tone-bg: var(--tint-bank-bg);
+    --tone-border: var(--tint-bank-border);
+    --tone-fg: var(--tint-bank-fg);
+  }
+
+  &[data-tone="wallet"] {
+    --tone-bg: var(--tint-wallet-bg);
+    --tone-border: var(--tint-wallet-border);
+    --tone-fg: var(--tint-wallet-fg);
+  }
+
+  &[data-tone="sip"] {
+    --tone-bg: var(--tint-sip-bg);
+    --tone-border: var(--tint-sip-border);
+    --tone-fg: var(--tint-sip-fg);
+  }
+
+  h3 {
+    color: var(--tone-fg);
+  }
 }
 
 .hero {
@@ -11,8 +44,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  margin-top: var(--space-4);
-  padding: var(--space-4);
+  margin-top: var(--space-3);
+  padding: var(--space-4) var(--space-4) var(--space-3);
   border-radius: var(--radius-lg);
   background:
     radial-gradient(
@@ -30,7 +63,7 @@
   box-shadow:
     0 20px 44px rgba(6, 23, 15, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.16);
-  color: #eaf5ee;
+  color: var(--hero-text);
 
   &::before {
     content: "";
@@ -44,13 +77,6 @@
       rgba(255, 255, 255, 0.1) 46%,
       transparent 62%
     );
-  }
-
-  &_top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
   }
 
   &_chip {
@@ -70,26 +96,24 @@
     flex-shrink: 0;
   }
 
-  &_brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: var(--font-sm);
-    font-weight: var(--weight-bold);
-    letter-spacing: -0.01em;
-    color: rgba(240, 250, 243, 0.92);
-  }
-
   &_head {
     display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  &_headText {
+    display: flex;
     flex-direction: column;
-    gap: var(--space-1);
+    gap: 2px;
+    min-width: 0;
   }
 
   &_label {
     font-size: var(--font-2xs);
     font-weight: var(--weight-semibold);
-    color: rgba(234, 245, 238, 0.62);
+    color: var(--hero-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.16em;
   }
@@ -101,7 +125,7 @@
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
     line-height: 1.02;
-    color: #f4fdf7;
+    color: var(--hero-text-strong);
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
   }
 
@@ -114,63 +138,33 @@
   &_bar {
     display: flex;
     gap: 3px;
-    height: 6px;
+    height: 5px;
     border-radius: var(--radius-pill);
     overflow: hidden;
     background: rgba(255, 255, 255, 0.12);
   }
 
   &_barBanks {
-    background: linear-gradient(90deg, #78b0ff, #5b8bf0);
+    background: linear-gradient(90deg, var(--hero-blue), #5b8bf0);
     border-radius: var(--radius-pill);
   }
 
   &_barSips {
-    background: linear-gradient(90deg, #5fe0a3, #3fbf85);
+    background: linear-gradient(90deg, var(--hero-green), #3fbf85);
     border-radius: var(--radius-pill);
-  }
-
-  &_keys {
-    display: flex;
-    gap: var(--space-4);
-  }
-
-  &_key {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: var(--font-2xs);
-    font-weight: var(--weight-semibold);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: rgba(234, 245, 238, 0.66);
-  }
-
-  &_keyDot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-
-    &--banks {
-      background: #78b0ff;
-    }
-
-    &--sips {
-      background: #5fe0a3;
-    }
   }
 
   &_grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--space-3);
+    gap: var(--space-2);
   }
 
   &_cell {
     display: flex;
     flex-direction: column;
-    gap: 1px;
-    padding: var(--space-2) var(--space-3);
+    gap: 0;
+    padding: var(--space-2) 10px;
     border-radius: var(--radius-sm);
     background: rgba(255, 255, 255, 0.07);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -186,35 +180,44 @@
     font-weight: var(--weight-semibold);
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: rgba(234, 245, 238, 0.74);
+    color: var(--hero-text-muted);
 
     svg {
-      color: rgba(234, 245, 238, 0.74);
+      color: var(--hero-text-muted);
+    }
+
+    .hero_iconBanks {
+      color: var(--hero-blue);
+    }
+
+    .hero_iconSips {
+      color: var(--hero-green);
     }
   }
 
   &_cellValue {
     font-family: var(--num-font);
-    font-size: var(--font-lg);
+    font-size: var(--font-md);
     font-weight: var(--weight-bold);
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.01em;
-    color: #f4fdf7;
+    line-height: 1.35;
+    color: var(--hero-text-strong);
     @include truncate(1);
   }
 
   &_cellSub {
-    font-size: var(--font-xs);
-    color: rgba(234, 245, 238, 0.5);
-    @include truncate(1);
+    font-size: var(--font-2xs);
+    line-height: 1.35;
+    color: var(--hero-text-muted);
 
     &--up {
-      color: #7ce8a6;
+      color: var(--hero-gain);
       font-weight: var(--weight-medium);
     }
 
     &--down {
-      color: #ff9d9d;
+      color: var(--hero-loss);
       font-weight: var(--weight-medium);
     }
   }

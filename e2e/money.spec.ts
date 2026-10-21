@@ -74,49 +74,44 @@ test("bank transfer moves money and is not counted as spending", async ({
 test("credit card spending adds to what is owed; paying the bill is a transfer", async ({
   page,
 }) => {
-  await signInSeeded(page);
-  await page.goto("/savings");
-  await page.getByRole("button", { name: "Add wallet, cash or card" }).click();
-  const sheet = page.getByRole("dialog");
-  await sheet.getByRole("button", { name: "Credit card" }).click();
-  await sheet.getByLabel("Name").fill("HDFC Millennia");
-  await sheet.getByLabel(/Amount owed right now/).fill("0");
-  await sheet.getByRole("button", { name: "Add credit card" }).click();
-  await expect(
-    page.getByRole("button", { name: "Edit HDFC Millennia" }),
-  ).toContainText("No dues");
+  const CARD = "aaaaaaaa-0000-4000-8000-0000000000c1";
+  await signInSeeded(page, {
+    accounts: [
+      {
+        id: HDFC,
+        name: "HDFC",
+        type: "savings",
+        balance: 50000,
+        is_primary: true,
+        color_tag: "#3d8bff",
+      },
+      {
+        id: CARD,
+        name: "HDFC Millennia",
+        type: "card",
+        balance: 0,
+        color_tag: "#e4574d",
+      },
+    ],
+  });
 
-  await expect
-    .poll(async () => (await serverState()).db.accounts!.length)
-    .toBe(3);
-  const card = (await serverState()).db.accounts!.find(
-    (a) => a.type === "card",
-  )!;
-
-  await page.goto("/");
   await page.getByRole("button", { name: "Add daily expense" }).click();
   const expense = page.getByRole("dialog");
   await expense.getByLabel("Amount").fill("1200");
-  await expense.getByLabel("Bank").selectOption(String(card.id));
+  await expense.getByLabel("Bank").selectOption(CARD);
   await expense.getByRole("button", { name: "Add expense" }).click();
   await expect(spentOnHome(page)).toHaveText("₹1,200");
+  await expect.poll(() => serverBalance(CARD)).toBe(-1200);
 
   await page.goto("/savings");
-  await expect(
-    page.getByRole("button", { name: "Edit HDFC Millennia" }),
-  ).toContainText("₹1,200 due");
-  await expect.poll(() => serverBalance(String(card.id))).toBe(-1200);
-
   await page.getByRole("button", { name: "Transfer money" }).click();
   const transfer = page.getByRole("dialog");
   await transfer.getByLabel("From").selectOption(HDFC);
-  await transfer.getByLabel("To").selectOption(String(card.id));
+  await transfer.getByLabel("To").selectOption(CARD);
   await transfer.getByLabel("Amount").fill("1200");
   await transfer.getByRole("button", { name: "Transfer ₹1,200" }).click();
-  await expect(
-    page.getByRole("button", { name: "Edit HDFC Millennia" }),
-  ).toContainText("No dues");
-  await expect.poll(() => serverBalance(String(card.id))).toBe(0);
+  await expect.poll(() => serverBalance(CARD)).toBe(0);
+  await expect.poll(() => serverBalance(HDFC)).toBe(48800);
   await page.goto("/");
   await expect(spentOnHome(page)).toHaveText("₹1,200");
 });
@@ -206,10 +201,9 @@ test("profile photo is uploaded to storage", async ({ page }) => {
       ),
     )
     .toBe(true);
-  const profile = (await serverState()).db.profiles![0]!;
-  expect(String(profile.avatar_url)).toContain(
-    `${MOCK}/storage/v1/object/public/avatars/${user.id}/`,
-  );
+  await expect
+    .poll(async () => String((await serverState()).db.profiles![0]!.avatar_url))
+    .toContain(`${MOCK}/storage/v1/object/public/avatars/${user.id}/`);
 });
 
 test("deleting the account removes the user and all data", async ({ page }) => {

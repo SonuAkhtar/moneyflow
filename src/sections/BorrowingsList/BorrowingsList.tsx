@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { AnimatePresence, m } from "framer-motion";
+import { parseISO } from "date-fns";
 import { CheckCircle2, ChevronRight, HandCoins, Plus } from "lucide-react";
 import { Card } from "@/components/Card/Card";
 import { ProgressBar } from "@/components/ProgressBar/ProgressBar";
-import { Badge } from "@/components/Badge/Badge";
 import { AddBorrowingSheet } from "@/sections/AddBorrowingSheet/AddBorrowingSheet";
 import { AddBorrowingPaymentSheet } from "@/sections/AddBorrowingPaymentSheet/AddBorrowingPaymentSheet";
 import { useFinanceStore } from "@/store/financeStore";
@@ -13,6 +13,7 @@ import {
   borrowingOutstanding,
   borrowingRepaid,
   borrowingSettled,
+  cn,
   dayShort,
   formatCurrency,
   sumBy,
@@ -25,6 +26,29 @@ interface ChildTarget {
   payment: BorrowingPayment | null;
   outstanding: number;
 }
+
+const daysUntil = (iso: string): number => {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((+parseISO(iso) - +today) / 86_400_000);
+};
+
+const statusFor = (
+  settled: boolean,
+  dueDate: string | null,
+): { label: string; tone: "settled" | "overdue" | "soon" | "open" } => {
+  if (settled) return { label: "Settled", tone: "settled" };
+  if (!dueDate) return { label: "No due date", tone: "open" };
+  const days = daysUntil(dueDate);
+  if (days < 0) return { label: `Overdue ${-days}d`, tone: "overdue" };
+  if (days === 0) return { label: "Due today", tone: "overdue" };
+  if (days <= 14)
+    return {
+      label: `Due in ${days} day${days === 1 ? "" : "s"}`,
+      tone: "soon",
+    };
+  return { label: `Due ${dayShort(dueDate)}`, tone: "open" };
+};
 
 export const BorrowingsList = () => {
   const borrowings = useFinanceStore((s) => s.borrowings);
@@ -53,6 +77,7 @@ export const BorrowingsList = () => {
           <h3 className={styles.header_title}>Money borrowed</h3>
           <p className={styles.header_caption}>
             {borrowings.length} record{borrowings.length === 1 ? "" : "s"}
+            {totalOutstanding > 0 ? " · outstanding" : ""}
           </p>
         </div>
         <span className={styles.header_out}>
@@ -87,8 +112,13 @@ export const BorrowingsList = () => {
               c.paidOn.localeCompare(a.paidOn),
             );
             const isOpen = expanded === b.id;
+            const status = statusFor(settled, b.dueDate);
             return (
-              <Card key={b.id} surface="solid" className={styles.item}>
+              <Card
+                key={b.id}
+                surface="solid"
+                className={cn(styles.item, styles[`item--${status.tone}`])}
+              >
                 <div className={styles.item_head}>
                   <button
                     type="button"
@@ -96,8 +126,8 @@ export const BorrowingsList = () => {
                     onClick={() => openEdit(b)}
                     aria-label={`Edit borrowing from ${b.lender}`}
                   >
-                    <span className={styles.item_icon}>
-                      <HandCoins size={18} />
+                    <span className={styles.item_avatar} aria-hidden>
+                      {b.lender.trim().charAt(0).toUpperCase() || "?"}
                     </span>
                     <span className={styles.item_info}>
                       <span className={styles.item_name}>{b.lender}</span>
@@ -107,9 +137,21 @@ export const BorrowingsList = () => {
                       </span>
                     </span>
                   </button>
-                  <span className={styles.item_amount}>
-                    {formatCurrency(settled ? b.amount : outstanding, currency)}
-                    {!settled && <span className={styles.item_per}> left</span>}
+                  <span className={styles.item_right}>
+                    <span
+                      className={cn(
+                        styles.item_amount,
+                        settled && styles["item_amount--settled"],
+                      )}
+                    >
+                      {formatCurrency(
+                        settled ? b.amount : outstanding,
+                        currency,
+                      )}
+                    </span>
+                    <span className={styles.item_per}>
+                      {settled ? "repaid" : "left"}
+                    </span>
                   </span>
                   <button
                     type="button"
@@ -128,27 +170,28 @@ export const BorrowingsList = () => {
                   </button>
                 </div>
 
-                <ProgressBar
-                  value={pct}
-                  tone={settled ? "lime" : "ocean"}
-                  size="sm"
-                />
-                <div className={styles.item_foot}>
-                  {settled ? (
-                    <Badge tone="lime">
-                      <CheckCircle2 size={12} /> Settled
-                    </Badge>
-                  ) : (
-                    <Badge tone="ocean">
-                      {formatCurrency(repaid, currency)} repaid
-                    </Badge>
-                  )}
-                  <span className={styles.item_remaining}>
-                    of {formatCurrency(b.amount, currency)}
-                    {b.dueDate && !settled
-                      ? ` · due ${dayShort(b.dueDate)}`
-                      : ""}
-                  </span>
+                <div className={styles.item_progress}>
+                  <ProgressBar
+                    value={pct}
+                    tone={settled ? "lime" : "ocean"}
+                    size="sm"
+                    label={`${b.lender}: ${Math.round(pct)}% repaid`}
+                  />
+                  <div className={styles.item_foot}>
+                    <span className={styles.item_remaining}>
+                      {formatCurrency(repaid, currency)} of{" "}
+                      {formatCurrency(b.amount, currency)} · {Math.round(pct)}%
+                    </span>
+                    <span
+                      className={cn(
+                        styles.status,
+                        styles[`status--${status.tone}`],
+                      )}
+                    >
+                      {settled && <CheckCircle2 size={11} aria-hidden />}
+                      {status.label}
+                    </span>
+                  </div>
                 </div>
 
                 <AnimatePresence initial={false}>

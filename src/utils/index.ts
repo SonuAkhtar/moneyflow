@@ -1,6 +1,7 @@
 import clsx, { type ClassValue } from "clsx";
 import { format, parseISO, startOfMonth, subMonths } from "date-fns";
 import { CURRENCY, HEALTH_THRESHOLDS } from "@/constants";
+import { localeForCurrency as localeFor } from "@/constants/currencies";
 import type {
   Account,
   Borrowing,
@@ -142,9 +143,6 @@ export const setActiveCurrency = (code: string | null | undefined): void => {
   ACTIVE_CURRENCY = code || CURRENCY.code;
 };
 
-const localeFor = (currency: string): string =>
-  currency === "INR" ? "en-IN" : "en-US";
-
 export const getCurrencySymbol = (
   currency: string = ACTIVE_CURRENCY,
 ): string => {
@@ -239,10 +237,12 @@ export const shortMonthLabel = (date: Date | string): string => {
   return format(d, "MMM");
 };
 
-export const lastNMonthKeys = (n: number): string[] =>
-  Array.from({ length: n }, (_, i) =>
-    monthKey(subMonths(startOfMonth(new Date()), n - 1 - i)),
+export const lastNMonthKeys = (n: number, endMonth?: string): string[] => {
+  const end = endMonth ? parseISO(`${endMonth}-01`) : new Date();
+  return Array.from({ length: n }, (_, i) =>
+    monthKey(subMonths(startOfMonth(end), n - 1 - i)),
   );
+};
 
 export const dayLabel = (date: string | Date): string => {
   const d = typeof date === "string" ? parseISO(date) : date;

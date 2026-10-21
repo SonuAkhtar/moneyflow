@@ -9,11 +9,11 @@
   width: 50%;
 
   &--sm {
-    height: 38px;
+    height: 46px;
   }
 
   &--md {
-    height: 46px;
+    height: 52px;
   }
 
   &_item {
@@ -29,7 +29,7 @@
     transition: color var(--dur-fast) var(--ease-smooth);
 
     &--active {
-      color: var(--text-inverse);
+      color: var(--text-on-accent);
     }
   }
 
@@ -37,8 +37,8 @@
     position: absolute;
     inset: 0;
     border-radius: var(--radius-pill);
-    background: var(--gradient-lime);
-    box-shadow: var(--shadow-glow-lime);
+    background: var(--accent-solid);
+    box-shadow: var(--shadow-soft);
     z-index: 0;
   }
 

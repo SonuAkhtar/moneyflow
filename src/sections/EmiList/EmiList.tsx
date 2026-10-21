@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, m } from "framer-motion";
+import { format, parseISO } from "date-fns";
 import {
   ChevronRight,
   CreditCard,
@@ -104,7 +105,11 @@ export const EmiList = ({ kind }: EmiListProps) => {
     );
     const isOpen = expanded === emi.id;
     return (
-      <Card key={emi.id} surface="solid" className={styles.item}>
+      <Card
+        key={emi.id}
+        surface="solid"
+        className={`${styles.item} ${styles[`item--${kind}`]}`}
+      >
         <div className={styles.item_head}>
           <button
             type="button"
@@ -121,18 +126,21 @@ export const EmiList = ({ kind }: EmiListProps) => {
                 {isClosed && <Badge tone="lime">Closed</Badge>}
               </span>
               <span className={styles.item_sub}>
-                Started · {monthLabel(emiStartMonth(emi))}
+                {kind === "sip"
+                  ? `${formatCurrency(emi.monthlyAmount, currency)}/mo · since ${format(
+                      parseISO(`${emiStartMonth(emi)}-01`),
+                      "MMM yyyy",
+                    )}`
+                  : `Started · ${monthLabel(emiStartMonth(emi))}`}
               </span>
             </span>
           </button>
-          <span
-            className={`${styles.item_amount} ${
-              kind === "sip" ? styles["item_amount--sip"] : ""
-            }`}
-          >
-            {formatCurrency(emi.monthlyAmount, currency)}
-            <span className={styles.item_per}>/mo</span>
-          </span>
+          {kind === "loan" && (
+            <span className={styles.item_amount}>
+              {formatCurrency(emi.monthlyAmount, currency)}
+              <span className={styles.item_per}>/mo</span>
+            </span>
+          )}
           <button
             type="button"
             className={styles.item_arrow}
@@ -164,12 +172,35 @@ export const EmiList = ({ kind }: EmiListProps) => {
             </div>
           </>
         )}
-        {kind === "sip" && paidMonths > 0 && (
-          <div className={styles.item_foot}>
-            <Badge tone="ocean">{paidMonths} months</Badge>
-            <span className={styles.item_remaining}>
-              {formatCurrency(paidAmount, currency)} invested
-            </span>
+        {kind === "sip" && (
+          <div className={styles.sip}>
+            <div className={styles.sip_stats}>
+              <span className={styles.sip_stat}>
+                <span className={styles.sip_label}>Invested</span>
+                <span className={styles.sip_value}>
+                  {formatCurrency(paidAmount, currency)}
+                </span>
+              </span>
+              <span className={`${styles.sip_stat} ${styles["sip_stat--end"]}`}>
+                <span className={styles.sip_label}>
+                  {hasSchedule ? "Progress" : "Paid"}
+                </span>
+                <span className={styles.sip_value}>
+                  {hasSchedule
+                    ? `${paidMonths}/${emi.totalMonths} mo`
+                    : `${paidMonths} mo`}
+                </span>
+              </span>
+            </div>
+            {hasSchedule && (
+              <ProgressBar
+                value={pct}
+                size="sm"
+                tone="lime"
+                className={styles.sip_bar}
+                label={`${emi.name}: ${paidMonths} of ${emi.totalMonths} months paid`}
+              />
+            )}
           </div>
         )}
 

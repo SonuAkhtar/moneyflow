@@ -1,0 +1,105 @@
+.loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+  padding-top: var(--space-5);
+  animation: loader-in var(--dur-base) var(--ease-smooth) both;
+  animation-delay: 120ms;
+}
+
+.mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-card-solid);
+  box-shadow: var(--shadow-card);
+
+  &_ring {
+    position: absolute;
+    inset: -3px;
+    border-radius: inherit;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      transparent 200deg,
+      var(--accent) 320deg,
+      var(--brand-400) 360deg
+    );
+    mask: radial-gradient(
+      farthest-side,
+      transparent calc(100% - 3px),
+      #000 calc(100% - 3px)
+    );
+    animation: orbit 0.9s linear infinite;
+  }
+
+  &_logo {
+    animation: breathe 1.6s var(--ease-smooth) infinite;
+  }
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card-solid);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-soft);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card-solid);
+  border: 1px solid var(--border-subtle);
+
+  &_text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+@keyframes orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes breathe {
+  50% {
+    transform: scale(0.9);
+    opacity: 0.75;
+  }
+}
+
+@keyframes loader-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}

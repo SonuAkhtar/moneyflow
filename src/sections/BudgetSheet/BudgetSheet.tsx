@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
-import { Input } from "@/components/Input/Input";
+import { NumberInput } from "@/components/NumberInput/NumberInput";
 import { Button } from "@/components/Button/Button";
 import { useFinanceStore } from "@/store/financeStore";
 import { useToast } from "@/hooks/useToast";
@@ -65,10 +65,9 @@ const Form = ({ onClose }: { onClose: () => void }) => {
               >
                 <Icon size={16} />
               </span>
-              <Input
+              <NumberInput
                 className={styles.item_input}
                 label={meta.label}
-                type="number"
                 inputMode="decimal"
                 placeholder={`No limit (${symbol})`}
                 value={draft[id] ?? ""}

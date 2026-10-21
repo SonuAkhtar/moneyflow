@@ -22,13 +22,11 @@ export const MonthOverview = () => {
   ];
 
   return (
-    <div className={styles.card}>
+    <section className={styles.card} aria-label="Monthly statement">
       <div className={styles.top}>
-        <span className={styles.kicker}>Monthly statement</span>
+        <h2 className={styles.month}>{monthLabel(currentMonthKey())}</h2>
         <span className={styles.rate}>{savingsRate}% saved</span>
       </div>
-
-      <span className={styles.month}>{monthLabel(currentMonthKey())}</span>
 
       <div className={styles.grid}>
         {stats.map((stat) => (
@@ -36,12 +34,13 @@ export const MonthOverview = () => {
             <span className={styles.stat_label}>{stat.label}</span>
             <span
               className={`${styles.stat_value} ${styles[`stat_value--${stat.tone}`]}`}
+              title={formatCurrency(stat.value, currency)}
             >
               {formatCurrency(stat.value, currency)}
             </span>
           </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 };

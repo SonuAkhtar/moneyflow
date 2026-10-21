@@ -60,6 +60,14 @@ export const BottomNav = () => {
               )}
               aria-current={active ? "page" : undefined}
             >
+              {active && (
+                <m.span
+                  layoutId="nav-lens"
+                  className={styles.nav_lens}
+                  transition={SPRING}
+                  aria-hidden
+                />
+              )}
               <span className={styles.nav_iconWrap}>
                 <m.span
                   className={styles.nav_icon}

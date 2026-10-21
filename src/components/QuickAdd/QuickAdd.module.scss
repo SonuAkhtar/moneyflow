@@ -1,0 +1,32 @@
+.fab {
+  position: fixed;
+  z-index: z("fab");
+  right: max(
+    var(--space-4),
+    calc((100vw - #{$content-max}) / 2 + var(--space-4))
+  );
+  bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-solid);
+  color: var(--text-on-accent);
+  box-shadow: var(--shadow-float);
+  transition:
+    transform var(--dur-base) var(--ease-smooth),
+    opacity var(--dur-base) var(--ease-smooth);
+  @include tap-highlight-none;
+  @include focus-ring;
+
+  &:active {
+    transform: scale(0.94);
+  }
+
+  &--hidden:not(:focus-visible) {
+    transform: translateY(24px) scale(0.6);
+    opacity: 0;
+    pointer-events: none;
+  }
+}

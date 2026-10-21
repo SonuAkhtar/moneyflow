@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { AnimatePresence, m } from "framer-motion";
-import { AlertTriangle, CheckCircle2, Info, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Info, X, XCircle } from "lucide-react";
 import { useUiStore } from "@/store/uiStore";
 import { Portal } from "@/components/Portal/Portal";
 import type { ToastMessage } from "@/types";
@@ -20,9 +20,10 @@ const ToastItem = ({ toast }: { toast: ToastMessage }) => {
   const Icon = ICONS[toast.variant];
 
   useEffect(() => {
-    const timer = setTimeout(() => dismiss(toast.id), toast.duration ?? 3600);
+    const duration = toast.duration ?? (toast.action ? 6000 : 3600);
+    const timer = setTimeout(() => dismiss(toast.id), duration);
     return () => clearTimeout(timer);
-  }, [toast.id, toast.duration, dismiss]);
+  }, [toast.id, toast.duration, toast.action, dismiss]);
 
   return (
     <m.div
@@ -33,15 +34,6 @@ const ToastItem = ({ toast }: { toast: ToastMessage }) => {
       exit={{ opacity: 0, y: -12, scale: 0.96 }}
       transition={{ type: "spring", stiffness: 380, damping: 30 }}
       role={toast.variant === "error" ? "alert" : "status"}
-      tabIndex={0}
-      aria-label="Dismiss notification"
-      onClick={() => dismiss(toast.id)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          dismiss(toast.id);
-        }
-      }}
     >
       <span className={styles.toast_icon}>
         <Icon size={18} />
@@ -52,6 +44,26 @@ const ToastItem = ({ toast }: { toast: ToastMessage }) => {
           <p className={styles.toast_desc}>{toast.description}</p>
         )}
       </div>
+      {toast.action && (
+        <button
+          type="button"
+          className={styles.toast_action}
+          onClick={() => {
+            toast.action?.onClick();
+            dismiss(toast.id);
+          }}
+        >
+          {toast.action.label}
+        </button>
+      )}
+      <button
+        type="button"
+        className={styles.toast_close}
+        aria-label={`Dismiss: ${toast.title}`}
+        onClick={() => dismiss(toast.id)}
+      >
+        <X size={16} />
+      </button>
     </m.div>
   );
 };

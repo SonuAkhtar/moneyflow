@@ -59,13 +59,19 @@ test("queued changes survive a reload and sync afterwards", async ({
   );
   await context.setOffline(false);
   await page.reload();
-  await expect(page.getByText("Monthly statement")).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Monthly statement" }),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: /waiting to sync/ }),
   ).toBeVisible();
 
   await page.unroute("**/rest/v1/transactions*");
-  await page.getByRole("button", { name: /waiting to sync/ }).click();
+  // The queue may already have retried, so the badge can be gone.
+  await page
+    .getByRole("button", { name: /waiting to sync/ })
+    .click({ timeout: 3000 })
+    .catch(() => undefined);
   await expect
     .poll(async () => (await serverState()).db.transactions!.length)
     .toBe(1);

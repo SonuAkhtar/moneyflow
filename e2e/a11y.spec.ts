@@ -17,7 +17,14 @@ test("signed-in pages have no serious accessibility violations @mobile", async (
   page,
 }) => {
   await signInSeeded(page);
-  for (const path of ["/", "/savings", "/analytics", "/emi", "/profile"]) {
+  for (const path of [
+    "/",
+    "/transactions",
+    "/savings",
+    "/analytics",
+    "/emi",
+    "/profile",
+  ]) {
     await page.goto(path);
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(400);

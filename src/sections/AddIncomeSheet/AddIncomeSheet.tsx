@@ -7,6 +7,7 @@ import { Input } from "@/components/Input/Input";
 import { Select } from "@/components/Select/Select";
 import { Button } from "@/components/Button/Button";
 import { AmountField } from "@/components/AmountField/AmountField";
+import { DateField } from "@/components/DateField/DateField";
 import { CategoryPicker } from "@/components/CategoryPicker/CategoryPicker";
 import { ConfirmDialog } from "@/components/ConfirmDialog/ConfirmDialog";
 import { useFinanceStore } from "@/store/financeStore";
@@ -17,6 +18,7 @@ import {
   currentDateKey,
   dateInputToIso,
   dateKey,
+  formatCurrency,
   getCurrencySymbol,
 } from "@/utils";
 import type { CategoryId, Transaction } from "@/types";
@@ -62,6 +64,7 @@ const Form = ({ transaction, onClose }: FormProps) => {
   const addTransaction = useFinanceStore((s) => s.addTransaction);
   const updateTransaction = useFinanceStore((s) => s.updateTransaction);
   const deleteTransaction = useFinanceStore((s) => s.deleteTransaction);
+  const restoreTransaction = useFinanceStore((s) => s.restoreTransaction);
   const { banks, defaultBankId, resolve } = useSpendAccounts(
     transaction?.accountId,
   );
@@ -99,14 +102,14 @@ const Form = ({ transaction, onClose }: FormProps) => {
       updateTransaction(transaction.id, input);
       toast({
         title: "Income updated",
-        description: `${symbol}${value}`,
+        description: formatCurrency(value, currency),
         variant: "success",
       });
     } else {
       addTransaction(input);
       toast({
         title: "Income added",
-        description: `${symbol}${value}`,
+        description: formatCurrency(value, currency),
         variant: "success",
       });
     }
@@ -116,7 +119,15 @@ const Form = ({ transaction, onClose }: FormProps) => {
   const confirmDelete = () => {
     if (!transaction) return;
     deleteTransaction(transaction.id);
-    toast({ title: "Income deleted", variant: "info" });
+    toast({
+      title: "Income deleted",
+      description: formatCurrency(transaction.amount, currency),
+      variant: "info",
+      action: {
+        label: "Undo",
+        onClick: () => restoreTransaction(transaction),
+      },
+    });
     setConfirmOpen(false);
     onClose();
   };
@@ -156,13 +167,7 @@ const Form = ({ transaction, onClose }: FormProps) => {
         }))}
       />
 
-      <Input
-        label="Date"
-        type="date"
-        max={today()}
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-      />
+      <DateField value={date} onChange={setDate} />
 
       {transaction ? (
         <div className={styles.actions}>

@@ -1,9 +1,8 @@
 "use client";
 
 import { m } from "framer-motion";
-import { Landmark, TrendingUp, Wallet } from "lucide-react";
+import { Landmark, TrendingUp } from "lucide-react";
 import { AccountsList } from "@/sections/AccountsList/AccountsList";
-import { OtherAccountsList } from "@/sections/OtherAccountsList/OtherAccountsList";
 import { EmiList } from "@/sections/EmiList/EmiList";
 import { useFinanceStore } from "@/store/financeStore";
 import {
@@ -46,19 +45,14 @@ export default function SavingsPage() {
     >
       <m.div variants={listItem}>
         <div className={styles.hero}>
-          <div className={styles.hero_top}>
-            <span className={styles.hero_chip} aria-hidden />
-            <span className={styles.hero_brand}>
-              <Wallet size={14} />
-              moneyFlow
-            </span>
-          </div>
-
           <div className={styles.hero_head}>
-            <span className={styles.hero_label}>Total savings</span>
-            <span className={styles.hero_total}>
-              {formatCurrency(totalSavings, currency)}
-            </span>
+            <div className={styles.hero_headText}>
+              <span className={styles.hero_label}>Total savings</span>
+              <span className={styles.hero_total}>
+                {formatCurrency(totalSavings, currency)}
+              </span>
+            </div>
+            <span className={styles.hero_chip} aria-hidden />
           </div>
 
           {totalSavings > 0 && (
@@ -73,27 +67,13 @@ export default function SavingsPage() {
                   style={{ flexGrow: Math.max(0, sipTotal) }}
                 />
               </span>
-              <div className={styles.hero_keys}>
-                <span className={styles.hero_key}>
-                  <span
-                    className={`${styles.hero_keyDot} ${styles["hero_keyDot--banks"]}`}
-                  />
-                  Banks
-                </span>
-                <span className={styles.hero_key}>
-                  <span
-                    className={`${styles.hero_keyDot} ${styles["hero_keyDot--sips"]}`}
-                  />
-                  SIPs
-                </span>
-              </div>
             </div>
           )}
 
           <div className={styles.hero_grid}>
             <div className={styles.hero_cell}>
               <span className={styles.hero_cellHead}>
-                <Landmark size={15} /> Banks
+                <Landmark size={14} className={styles.hero_iconBanks} /> Banks
               </span>
               <span className={styles.hero_cellValue}>
                 {formatCurrency(banksTotal, currency)}
@@ -111,12 +91,12 @@ export default function SavingsPage() {
                   ? `+${formatCurrency(banksThisMonth, currency)} this month`
                   : banksThisMonth < 0
                     ? `-${formatCurrency(Math.abs(banksThisMonth), currency)} this month`
-                    : "No deposits this month"}
+                    : "No deposits yet"}
               </span>
             </div>
             <div className={styles.hero_cell}>
               <span className={styles.hero_cellHead}>
-                <TrendingUp size={15} /> SIPs
+                <TrendingUp size={14} className={styles.hero_iconSips} /> SIPs
               </span>
               <span className={styles.hero_cellValue}>
                 {formatCurrency(sipTotal, currency)}
@@ -131,15 +111,11 @@ export default function SavingsPage() {
         </div>
       </m.div>
 
-      <m.div variants={listItem}>
+      <m.div variants={listItem} className={styles.panel} data-tone="bank">
         <AccountsList />
       </m.div>
 
-      <m.div variants={listItem}>
-        <OtherAccountsList />
-      </m.div>
-
-      <m.div variants={listItem}>
+      <m.div variants={listItem} className={styles.panel} data-tone="sip">
         <EmiList kind="sip" />
       </m.div>
     </m.div>

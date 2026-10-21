@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
 import { Input } from "@/components/Input/Input";
+import { DateField } from "@/components/DateField/DateField";
+import { SegmentedControl } from "@/components/SegmentedControl/SegmentedControl";
 import { Select } from "@/components/Select/Select";
 import { Button } from "@/components/Button/Button";
 import { CategoryPicker } from "@/components/CategoryPicker/CategoryPicker";
@@ -14,9 +16,10 @@ import {
   accountLabel,
   currentDateKey,
   dateInputToIso,
+  formatCurrency,
   getCurrencySymbol,
 } from "@/utils";
-import { QUICK_EXPENSE_CATEGORIES } from "@/constants";
+import { BIG_EXPENSE_THRESHOLD, QUICK_EXPENSE_CATEGORIES } from "@/constants";
 import type { CategoryId } from "@/types";
 import styles from "./AddExpenseSheet.module.scss";
 
@@ -27,9 +30,10 @@ interface AddExpenseSheetProps {
   big?: boolean;
   defaultCategory?: CategoryId;
   accountId?: string;
+  kindSelectable?: boolean;
 }
 
-const today = currentDateKey;
+type Kind = "daily" | "major";
 
 export const AddExpenseSheet = ({
   open,
@@ -38,6 +42,7 @@ export const AddExpenseSheet = ({
   big = false,
   defaultCategory = "food",
   accountId,
+  kindSelectable = false,
 }: AddExpenseSheetProps) => (
   <BottomSheet open={open} onClose={onClose} title={title}>
     {open && (
@@ -47,6 +52,7 @@ export const AddExpenseSheet = ({
         big={big}
         defaultCategory={defaultCategory}
         accountId={accountId}
+        kindSelectable={kindSelectable}
       />
     )}
   </BottomSheet>
@@ -57,6 +63,7 @@ interface ExpenseFormProps {
   big: boolean;
   defaultCategory: CategoryId;
   accountId?: string;
+  kindSelectable: boolean;
 }
 
 const ExpenseForm = ({
@@ -64,6 +71,7 @@ const ExpenseForm = ({
   big,
   defaultCategory,
   accountId,
+  kindSelectable,
 }: ExpenseFormProps) => {
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
   const addTransaction = useFinanceStore((s) => s.addTransaction);
@@ -75,34 +83,80 @@ const ExpenseForm = ({
   const [category, setCategory] = useState<CategoryId>(defaultCategory);
   const [bankId, setBankId] = useState(defaultBankId);
   const [merchant, setMerchant] = useState("");
-  const [date, setDate] = useState(today());
+  const [date, setDate] = useState(currentDateKey());
+  const [chosenKind, setChosenKind] = useState<Kind | null>(null);
 
-  const canSave = Number(amount) > 0 && Boolean(resolve(bankId));
+  const value = Number(amount);
+  const suggestedKind: Kind =
+    value > BIG_EXPENSE_THRESHOLD ? "major" : big ? "major" : "daily";
+  const kind: Kind = kindSelectable
+    ? (chosenKind ?? suggestedKind)
+    : big
+      ? "major"
+      : "daily";
+
+  const account = resolve(bankId);
+  const blocker =
+    banks.length === 0
+      ? "Add a bank on the Savings tab first."
+      : !account
+        ? "Pick a bank to pay from."
+        : !(value > 0)
+          ? "Enter an amount to continue."
+          : null;
 
   const submit = () => {
-    const value = Number(amount);
-    const account = resolve(bankId);
-    if (!(value > 0) || !account) return;
+    if (blocker || !account) return;
     addTransaction({
       accountId: account.id,
       type: "expense",
       amount: value,
       category,
-      merchant: merchant || undefined,
-      isBigExpense: big,
+      merchant: merchant.trim() || undefined,
+      isBigExpense: kind === "major",
       occurredAt: dateInputToIso(date),
     });
     toast({
-      title: "Expense added",
-      description: `${symbol}${value}`,
+      title: kind === "major" ? "Major expense added" : "Expense added",
+      description: formatCurrency(value, currency),
       variant: "success",
     });
     onClose();
   };
 
   return (
-    <div className={styles.form}>
-      <AmountField value={amount} onChange={setAmount} symbol={symbol} />
+    <form
+      className={styles.form}
+      onSubmit={(e) => {
+        e.preventDefault();
+        submit();
+      }}
+    >
+      <AmountField
+        value={amount}
+        onChange={setAmount}
+        symbol={symbol}
+        autoFocus
+      />
+
+      {kindSelectable && (
+        <div className={styles.field}>
+          <span className={styles.label} id="expense-kind-label">
+            Type
+          </span>
+          <SegmentedControl<Kind>
+            className={styles.kind}
+            aria-labelledby="expense-kind-label"
+            segments={[
+              { label: "Daily", value: "daily" },
+              { label: "Major", value: "major" },
+            ]}
+            value={kind}
+            onChange={setChosenKind}
+            size="sm"
+          />
+        </div>
+      )}
 
       <div className={styles.field}>
         <span className={styles.label}>Category</span>
@@ -113,31 +167,15 @@ const ExpenseForm = ({
         />
       </div>
 
-      {big ? (
-        <div className={styles.row}>
-          <Input
-            label="Merchant"
-            placeholder="Where?"
-            value={merchant}
-            onChange={(e) => setMerchant(e.target.value)}
-          />
-          <Input
-            label="Date"
-            type="date"
-            max={today()}
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
-        </div>
-      ) : (
-        <Input
-          label="Date"
-          type="date"
-          max={today()}
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
-      )}
+      <Input
+        label="Merchant (optional)"
+        placeholder="Where did you spend?"
+        value={merchant}
+        maxLength={80}
+        onChange={(e) => setMerchant(e.target.value)}
+      />
+
+      <DateField value={date} onChange={setDate} />
 
       <Select
         label="Bank"
@@ -149,9 +187,15 @@ const ExpenseForm = ({
         }))}
       />
 
-      <Button size="lg" fullWidth onClick={submit} disabled={!canSave}>
+      {blocker && (value > 0 || banks.length === 0) && (
+        <p className={styles.hint} role="status">
+          {blocker}
+        </p>
+      )}
+
+      <Button type="submit" size="lg" fullWidth disabled={blocker !== null}>
         Add expense
       </Button>
-    </div>
+    </form>
   );
 };

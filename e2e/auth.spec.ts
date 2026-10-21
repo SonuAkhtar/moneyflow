@@ -19,7 +19,9 @@ test("sign up, skip onboarding without fake data, land on home", async ({
   ).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("button", { name: "Skip personalization" }).click();
-  await expect(page.getByText("Monthly statement")).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Monthly statement" }),
+  ).toBeVisible();
 
   const { db } = await serverState();
   expect(db.accounts).toHaveLength(1);
@@ -40,7 +42,9 @@ test("sign in with username goes through the server route", async ({
     if (r.url().includes("/rpc/email_for_username")) calls.push(r.url());
   });
   await signIn(page, "riya", "Passw0rd!");
-  await expect(page.getByText("Monthly statement")).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Monthly statement" }),
+  ).toBeVisible();
   expect(calls).toEqual([]);
 });
 
@@ -59,7 +63,9 @@ test("unknown username and wrong password show the same error", async ({
 test("sign in with email and sign out @mobile", async ({ page }) => {
   const user = await seedUser();
   await signIn(page, user.email, user.password);
-  await expect(page.getByText("Monthly statement")).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Monthly statement" }),
+  ).toBeVisible();
   await page.goto("/profile");
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/login$/);

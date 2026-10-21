@@ -39,7 +39,6 @@ $content-max: 520px;
 ) {
   background: $bg;
   backdrop-filter: blur($blur) saturate(140%);
-  -webkit-backdrop-filter: blur($blur) saturate(140%);
   border: 1px solid $border;
 }
 
@@ -105,6 +104,6 @@ $content-max: 520px;
   &:focus-visible {
     box-shadow:
       0 0 0 2px var(--surface-base),
-      0 0 0 4px var(--color-lime);
+      0 0 0 4px var(--focus-ring);
   }
 }

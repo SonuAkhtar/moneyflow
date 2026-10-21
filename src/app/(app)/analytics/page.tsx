@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, m } from "framer-motion";
 import {
@@ -9,17 +10,16 @@ import {
   ArrowUpRight,
   BarChart3,
   ChevronDown,
+  ChevronRight,
   Percent,
   PiggyBank,
   Plus,
   Search,
-  SearchX,
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
 import { Card } from "@/components/Card/Card";
 import { Button } from "@/components/Button/Button";
-import { Input } from "@/components/Input/Input";
 import { Select } from "@/components/Select/Select";
 import { SegmentedControl } from "@/components/SegmentedControl/SegmentedControl";
 import { SectionHeader } from "@/components/SectionHeader/SectionHeader";
@@ -43,7 +43,6 @@ import {
   monthLabel,
 } from "@/utils";
 import { ROUTES } from "@/constants";
-import { getCategoryMeta } from "@/constants/categories";
 import { staggerContainer, listItem } from "@/themes/animations";
 import type { Transaction } from "@/types";
 import styles from "./page.module.scss";
@@ -68,7 +67,6 @@ const SpendBarChart = dynamic(
 type View = "overview" | "categories" | "daily";
 
 const HISTORY_MONTH_OPTIONS = 36;
-type TxnType = "all" | "income" | "expense";
 
 export default function AnalyticsPage() {
   const router = useRouter();
@@ -85,39 +83,12 @@ export default function AnalyticsPage() {
   const historyFrom = useFinanceStore((s) => s.historyFrom);
   const historyLoading = useFinanceStore((s) => s.historyLoading);
   const loadHistory = useFinanceStore((s) => s.loadHistory);
-  const loadedFromMonth = historyFrom ? monthKey(historyFrom) : null;
   useEffect(() => {
     void loadHistory(month);
   }, [month, historyFrom, loadHistory]);
-  const searchOlder = () => {
-    if (!historyFrom) return;
-    const d = new Date(historyFrom);
-    void loadHistory(monthKey(new Date(d.getFullYear() - 1, d.getMonth(), 1)));
-  };
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
   const [view, setView] = useState<View>("overview");
   const [editing, setEditing] = useState<Transaction | null>(null);
-  const [query, setQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState<TxnType>("all");
-  const searching = query.trim().length > 0;
-
-  const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
-    return transactions
-      .filter((t) => typeFilter === "all" || t.type === typeFilter)
-      .filter((t) => {
-        const category = getCategoryMeta(t.category).label.toLowerCase();
-        return (
-          (t.note ?? "").toLowerCase().includes(q) ||
-          (t.merchant ?? "").toLowerCase().includes(q) ||
-          category.includes(q) ||
-          String(t.amount).includes(q)
-        );
-      })
-      .sort((a, b) => +new Date(b.occurredAt) - +new Date(a.occurredAt))
-      .slice(0, 100);
-  }, [transactions, query, typeFilter]);
   const totalSpend = categoryBreakdown.reduce((acc, c) => acc + c.value, 0);
   const spentByCategory = useMemo(
     () => Object.fromEntries(categoryBreakdown.map((c) => [c.id, c.value])),
@@ -207,315 +178,259 @@ export default function AnalyticsPage() {
       animate="visible"
     >
       <m.div variants={listItem}>
-        <Input
-          icon={Search}
-          placeholder="Search transactions..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className={styles.search}
-        />
+        <Link href={ROUTES.transactions} className={styles.searchLink}>
+          <Search size={18} />
+          <span>Search and filter all transactions</span>
+          <ChevronRight size={16} />
+        </Link>
       </m.div>
 
-      {searching && (
-        <>
-          <m.div variants={listItem}>
-            <SegmentedControl<TxnType>
-              className={styles.segments}
-              segments={[
-                { label: "All", value: "all" },
-                { label: "Income", value: "income" },
-                { label: "Expense", value: "expense" },
-              ]}
-              value={typeFilter}
-              onChange={setTypeFilter}
-            />
-          </m.div>
-          <m.div variants={listItem}>
-            <SectionHeader
-              title="Results"
-              caption={`${results.length} match${results.length === 1 ? "" : "es"}`}
-            />
-            <Card surface="solid" padded={false} className={styles.results}>
-              {results.length === 0 ? (
-                <EmptyState
-                  icon={SearchX}
-                  title="No matches"
-                  description="Try a different name, category, or amount."
-                />
-              ) : (
-                results.map((t) => (
-                  <TransactionItem
-                    key={t.id}
-                    transaction={t}
-                    currency={currency}
-                    onClick={setEditing}
-                  />
-                ))
-              )}
-            </Card>
-            {loadedFromMonth && (
-              <div className={styles.older}>
-                <span>Searching since {monthLabel(loadedFromMonth)}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  loading={historyLoading}
-                  onClick={searchOlder}
-                >
-                  Search older history
-                </Button>
-              </div>
-            )}
-          </m.div>
-        </>
-      )}
+      <>
+        <m.div variants={listItem}>
+          <Select
+            aria-label="Select month"
+            className={styles.monthSelect}
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+            options={monthOptions}
+          />
+          {historyLoading && (
+            <p className={styles.older} role="status">
+              Loading {monthLabel(month)}...
+            </p>
+          )}
+          <SegmentedControl<View>
+            className={styles.segments}
+            segments={[
+              { label: "Overview", value: "overview" },
+              { label: "Categories", value: "categories" },
+              { label: "Daily", value: "daily" },
+            ]}
+            value={view}
+            onChange={setView}
+          />
+        </m.div>
 
-      {!searching && (
-        <>
-          <m.div variants={listItem}>
-            <Select
-              aria-label="Select month"
-              className={styles.monthSelect}
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
-              options={monthOptions}
-            />
-            {historyLoading && (
-              <p className={styles.older} role="status">
-                Loading {monthLabel(month)}...
-              </p>
-            )}
-            <SegmentedControl<View>
-              className={styles.segments}
-              segments={[
-                { label: "Overview", value: "overview" },
-                { label: "Categories", value: "categories" },
-                { label: "Daily", value: "daily" },
-              ]}
-              value={view}
-              onChange={setView}
-            />
-          </m.div>
-
-          <m.div className={styles.kpis} variants={listItem}>
-            {kpis.map((kpi) => {
-              const Icon = kpi.icon;
-              const up = kpi.delta > 0;
-              const good = kpi.goodUp ? kpi.delta > 0 : kpi.delta < 0;
-              return (
-                <Card
-                  key={kpi.key}
-                  surface="solid"
-                  padded={false}
-                  className={styles.kpi}
-                  data-tone={kpi.tone}
-                >
-                  <div className={styles.kpi_top}>
-                    <span className={styles.kpi_icon}>
-                      <Icon size={15} />
+        <m.div className={styles.kpis} variants={listItem}>
+          {kpis.map((kpi) => {
+            const Icon = kpi.icon;
+            const up = kpi.delta > 0;
+            const good = kpi.goodUp ? kpi.delta > 0 : kpi.delta < 0;
+            return (
+              <Card
+                key={kpi.key}
+                surface="solid"
+                padded={false}
+                className={styles.kpi}
+                data-tone={kpi.tone}
+              >
+                <div className={styles.kpi_top}>
+                  <span className={styles.kpi_icon}>
+                    <Icon size={15} />
+                  </span>
+                  {kpi.delta !== 0 && (
+                    <span
+                      className={cn(
+                        styles.kpi_delta,
+                        good
+                          ? styles["kpi_delta--good"]
+                          : styles["kpi_delta--bad"],
+                      )}
+                    >
+                      {up ? (
+                        <ArrowUpRight size={12} />
+                      ) : (
+                        <ArrowDownRight size={12} />
+                      )}
+                      {kpi.unit === "pts"
+                        ? `${Math.abs(kpi.delta)}`
+                        : fmt(Math.abs(kpi.delta))}
                     </span>
-                    {kpi.delta !== 0 && (
-                      <span
-                        className={cn(
-                          styles.kpi_delta,
-                          good
-                            ? styles["kpi_delta--good"]
-                            : styles["kpi_delta--bad"],
-                        )}
-                      >
-                        {up ? (
-                          <ArrowUpRight size={12} />
-                        ) : (
-                          <ArrowDownRight size={12} />
-                        )}
-                        {kpi.unit === "pts"
-                          ? `${Math.abs(kpi.delta)}`
-                          : fmt(Math.abs(kpi.delta))}
-                      </span>
-                    )}
-                  </div>
-                  <span
-                    className={`${styles.kpi_value} ${styles[`kpi_value--${kpi.tone}`]}`}
-                  >
-                    {kpi.value}
-                  </span>
-                  <span className={styles.kpi_label}>{kpi.label}</span>
-                </Card>
-              );
-            })}
-          </m.div>
+                  )}
+                </div>
+                <span
+                  className={`${styles.kpi_value} ${styles[`kpi_value--${kpi.tone}`]}`}
+                >
+                  {kpi.value}
+                </span>
+                <span className={styles.kpi_label}>{kpi.label}</span>
+              </Card>
+            );
+          })}
+        </m.div>
 
-          {view === "overview" && (
-            <m.div variants={listItem}>
+        {view === "overview" && (
+          <m.div variants={listItem}>
+            <Card surface="solid">
+              <SectionHeader
+                title="Income vs Spending"
+                caption={`6 months to ${monthLabel(month)}`}
+              />
+              <AreaTrendChart data={monthlyTrend} currency={currency} />
+              <div className={styles.legend}>
+                <span className={styles.legend_item}>
+                  <span
+                    className={`${styles.legend_dot} ${styles["legend_dot--lime"]}`}
+                  />
+                  Income
+                </span>
+                <span className={styles.legend_item}>
+                  <span
+                    className={`${styles.legend_dot} ${styles["legend_dot--orange"]}`}
+                  />
+                  Expenses
+                </span>
+              </div>
+            </Card>
+          </m.div>
+        )}
+
+        {view === "overview" && (
+          <m.div variants={listItem}>
+            <Card surface="solid" className={styles.trend}>
+              <SectionHeader
+                title="Net saved per month"
+                caption="Income minus everything spent"
+              />
+              <SpendBarChart
+                data={monthlyTrend.map((t) => ({
+                  label: t.label,
+                  value: t.saved,
+                }))}
+                currency={currency}
+                uniformColor="var(--chart-saved)"
+              />
+            </Card>
+          </m.div>
+        )}
+
+        {view === "categories" && (
+          <m.div variants={listItem}>
+            {totalSpend === 0 ? (
               <Card surface="solid">
-                <SectionHeader
-                  title="Income vs Spending"
-                  caption="Last 6 months"
+                <EmptyState
+                  icon={BarChart3}
+                  title="No spending yet"
+                  description="Log expenses to unlock category analytics."
+                  action={logExpenseCta}
                 />
-                <AreaTrendChart data={monthlyTrend} currency={currency} />
-                <div className={styles.legend}>
-                  <span className={styles.legend_item}>
-                    <span
-                      className={`${styles.legend_dot} ${styles["legend_dot--lime"]}`}
-                    />
-                    Income
-                  </span>
-                  <span className={styles.legend_item}>
-                    <span
-                      className={`${styles.legend_dot} ${styles["legend_dot--orange"]}`}
-                    />
-                    Expenses
-                  </span>
+              </Card>
+            ) : (
+              <Card surface="solid">
+                <SectionHeader title="Where it goes" caption="By category" />
+                <CategoryDonut
+                  data={categoryBreakdown}
+                  total={totalSpend}
+                  currency={currency}
+                />
+                <ul className={styles.cats}>
+                  {categoryBreakdown.slice(0, 6).map((cat) => (
+                    <li key={cat.id} className={styles.cats_item}>
+                      <span
+                        className={styles.cats_dot}
+                        style={{ background: cat.color }}
+                      />
+                      <span className={styles.cats_name}>{cat.label}</span>
+                      <span className={styles.cats_share}>
+                        {formatPercent(cat.share)}
+                      </span>
+                      <span className={styles.cats_value}>
+                        {formatCurrency(cat.value, currency)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <div className={styles.catsFoot}>
+                  <span>Daily average {fmt(metrics.dailyAverage)}</span>
+                  {metrics.bigExpenseTotal > 0 && (
+                    <span>Big spends {fmt(metrics.bigExpenseTotal)}</span>
+                  )}
                 </div>
               </Card>
-            </m.div>
-          )}
+            )}
+          </m.div>
+        )}
 
-          {view === "overview" && (
-            <m.div variants={listItem}>
-              <Card surface="solid" className={styles.trend}>
-                <SectionHeader
-                  title="Net saved per month"
-                  caption="Income minus everything spent"
-                />
-                <SpendBarChart
-                  data={monthlyTrend.map((t) => ({
-                    label: t.label,
-                    value: t.saved,
-                  }))}
-                  currency={currency}
-                  uniformColor="var(--chart-saved)"
-                />
-              </Card>
-            </m.div>
-          )}
-
-          {view === "categories" && (
-            <m.div variants={listItem}>
-              {totalSpend === 0 ? (
-                <Card surface="solid">
-                  <EmptyState
-                    icon={BarChart3}
-                    title="No spending yet"
-                    description="Log expenses to unlock category analytics."
-                    action={logExpenseCta}
-                  />
-                </Card>
-              ) : (
-                <Card surface="solid">
-                  <SectionHeader title="Where it goes" caption="By category" />
-                  <CategoryDonut
-                    data={categoryBreakdown}
-                    total={totalSpend}
-                    currency={currency}
-                  />
-                  <ul className={styles.cats}>
-                    {categoryBreakdown.slice(0, 6).map((cat) => (
-                      <li key={cat.id} className={styles.cats_item}>
-                        <span
-                          className={styles.cats_dot}
-                          style={{ background: cat.color }}
-                        />
-                        <span className={styles.cats_name}>{cat.label}</span>
-                        <span className={styles.cats_share}>
-                          {formatPercent(cat.share)}
-                        </span>
-                        <span className={styles.cats_value}>
-                          {formatCurrency(cat.value, currency)}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className={styles.catsFoot}>
-                    <span>Daily average {fmt(metrics.dailyAverage)}</span>
-                    {metrics.bigExpenseTotal > 0 && (
-                      <span>Big spends {fmt(metrics.bigExpenseTotal)}</span>
-                    )}
-                  </div>
-                </Card>
-              )}
-            </m.div>
-          )}
-
-          {view === "categories" && (
-            <m.div variants={listItem}>
-              <CategoryBudgets
-                spentByCategory={spentByCategory}
-                currency={currency}
-              />
-            </m.div>
-          )}
-
-          {view === "daily" && (
-            <m.div variants={listItem}>
-              <Card surface="solid">
-                <SectionHeader
-                  title="Daily spending"
-                  caption={monthLabel(month)}
-                />
-                {dailySpend.length === 0 ? (
-                  <EmptyState
-                    icon={BarChart3}
-                    title="Nothing logged"
-                    description="Your daily spend chart will appear here."
-                    action={logExpenseCta}
-                  />
-                ) : (
-                  <SpendBarChart data={dailySpend} currency={currency} />
-                )}
-              </Card>
-            </m.div>
-          )}
-
+        {view === "categories" && (
           <m.div variants={listItem}>
-            <SectionHeader title="Top merchants" caption={monthLabel(month)} />
-            <Card surface="solid" padded={false} className={styles.merchants}>
-              {topMerchants.length === 0 ? (
-                <EmptyState icon={BarChart3} title="No merchants yet" />
+            <CategoryBudgets
+              spentByCategory={spentByCategory}
+              currency={currency}
+            />
+          </m.div>
+        )}
+
+        {view === "daily" && (
+          <m.div variants={listItem}>
+            <Card surface="solid">
+              <SectionHeader
+                title="Daily spending"
+                caption={monthLabel(month)}
+              />
+              {dailySpend.length === 0 ? (
+                <EmptyState
+                  icon={BarChart3}
+                  title="Nothing logged"
+                  description="Your daily spend chart will appear here."
+                  action={logExpenseCta}
+                />
               ) : (
-                topMerchants.map((merchant, index) => (
-                  <div key={merchant.name} className={styles.merchant}>
-                    <span className={styles.merchant_rank}>{index + 1}</span>
-                    <span className={styles.merchant_name}>
-                      {merchant.name}
-                    </span>
-                    <span className={styles.merchant_count}>
-                      {merchant.count}×
-                    </span>
-                    <span className={styles.merchant_value}>
-                      {formatCurrency(merchant.value, currency)}
-                    </span>
-                  </div>
-                ))
+                <SpendBarChart data={dailySpend} currency={currency} />
               )}
             </Card>
           </m.div>
+        )}
 
-          <m.div className={styles.groups} variants={listItem}>
-            <MonthGroup
-              title="Income"
-              items={groups.income}
-              currency={currency}
-              onEdit={setEditing}
-              tone="in"
-            />
-            <MonthGroup
-              title="Major expenses"
-              items={groups.major}
-              currency={currency}
-              onEdit={setEditing}
-              tone="out"
-            />
-            <MonthGroup
-              title="Daily expenses"
-              items={groups.daily}
-              currency={currency}
-              onEdit={setEditing}
-              tone="out"
-            />
-          </m.div>
-        </>
-      )}
+        <m.div variants={listItem}>
+          <SectionHeader title="Top merchants" caption={monthLabel(month)} />
+          <Card surface="solid" padded={false} className={styles.merchants}>
+            {topMerchants.length === 0 ? (
+              <EmptyState
+                icon={BarChart3}
+                title="No merchants yet"
+                description="Add a merchant when you log an expense to see where your money goes."
+              />
+            ) : (
+              topMerchants.map((merchant, index) => (
+                <div key={merchant.name} className={styles.merchant}>
+                  <span className={styles.merchant_rank}>{index + 1}</span>
+                  <span className={styles.merchant_name}>{merchant.name}</span>
+                  <span className={styles.merchant_count}>
+                    {merchant.count}×
+                  </span>
+                  <span className={styles.merchant_value}>
+                    {formatCurrency(merchant.value, currency)}
+                  </span>
+                </div>
+              ))
+            )}
+          </Card>
+        </m.div>
+
+        <m.div className={styles.groups} variants={listItem}>
+          <MonthGroup
+            title="Income"
+            items={groups.income}
+            currency={currency}
+            onEdit={setEditing}
+            tone="in"
+          />
+          <MonthGroup
+            title="Major expenses"
+            items={groups.major}
+            currency={currency}
+            onEdit={setEditing}
+            tone="out"
+          />
+          <MonthGroup
+            title="Daily expenses"
+            items={groups.daily}
+            currency={currency}
+            onEdit={setEditing}
+            tone="out"
+          />
+        </m.div>
+      </>
 
       <EditTransactionSheet
         transaction={editing && !isBankTransfer(editing) ? editing : null}

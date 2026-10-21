@@ -10,7 +10,6 @@ import {
   Landmark,
   Plus,
 } from "lucide-react";
-import { Button } from "@/components/Button/Button";
 import { Card } from "@/components/Card/Card";
 import { SectionHeader } from "@/components/SectionHeader/SectionHeader";
 import { AddSavingsSheet } from "@/sections/AddSavingsSheet/AddSavingsSheet";
@@ -25,12 +24,25 @@ import {
   dayShort,
   findTransferPair,
   isBankTransfer,
+  monthKey,
+  monthLabel,
   sumBy,
   formatCurrency,
 } from "@/utils";
 import { listItem, staggerContainer } from "@/themes/animations";
 import type { Account, Transaction } from "@/types";
 import styles from "./AccountsList.module.scss";
+
+const relativeDay = (iso: string): string => {
+  const d = new Date(iso);
+  const today = new Date();
+  const start = (x: Date) =>
+    new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diff = Math.round((start(today) - start(d)) / 86_400_000);
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Yesterday";
+  return dayShort(iso);
+};
 
 export const AccountsList = () => {
   const accounts = useFinanceStore((s) => s.accounts);
@@ -51,15 +63,25 @@ export const AccountsList = () => {
   const total = sumBy(banks, (a) => a.balance);
 
   const transfers = useMemo(() => {
-    const rows: { leg: Transaction; fromName: string; toName: string }[] = [];
+    const rows: {
+      leg: Transaction;
+      fromName: string;
+      toName: string;
+      fromColor: string;
+      toColor: string;
+    }[] = [];
     for (const t of transactions) {
       if (!isBankTransfer(t)) continue;
       const pair = findTransferPair(t, transactions);
       if (t.note === BANK_TRANSFER_IN_NOTE && pair) continue;
       const out = t.note === BANK_TRANSFER_OUT_NOTE ? t : undefined;
       const inn = out ? pair : t;
+      const fromAcct = out && accounts.find((a) => a.id === out.accountId);
+      const toAcct = inn && accounts.find((a) => a.id === inn.accountId);
       rows.push({
         leg: t,
+        fromColor: fromAcct ? fromAcct.colorTag : "var(--text-tertiary)",
+        toColor: toAcct ? toAcct.colorTag : "var(--text-tertiary)",
         fromName:
           (out && accounts.find((a) => a.id === out.accountId)?.name) ??
           inn?.merchant?.replace(/^From /, "") ??
@@ -76,6 +98,23 @@ export const AccountsList = () => {
   }, [transactions, accounts]);
   const visibleTransfers = showAllTransfers ? transfers : transfers.slice(0, 5);
   const month = currentMonthKey();
+  const movedThisMonth = sumBy(
+    transfers.filter((t) => monthKey(t.leg.occurredAt) === month),
+    (t) => t.leg.amount,
+  );
+  const transferGroups = useMemo(() => {
+    const groups: { month: string; total: number; rows: typeof transfers }[] =
+      [];
+    for (const row of visibleTransfers) {
+      const key = monthKey(row.leg.occurredAt);
+      const last = groups[groups.length - 1];
+      if (last && last.month === key) {
+        last.rows.push(row);
+        last.total += row.leg.amount;
+      } else groups.push({ month: key, total: row.leg.amount, rows: [row] });
+    }
+    return groups;
+  }, [visibleTransfers]);
 
   const sheetOpen = addOpen || editing !== null;
   const closeSheet = () => {
@@ -85,37 +124,33 @@ export const AccountsList = () => {
 
   return (
     <section>
-      <SectionHeader
-        title="Bank savings"
-        caption={`${banks.length} bank${banks.length === 1 ? "" : "s"}`}
-      />
-
-      <Card surface="gradient" glow="lime" className={styles.total}>
-        <span className={styles.total_label}>Total saved</span>
-        <span
-          className={cn(
-            styles.total_value,
-            total < 0 && styles["total_value--neg"],
-          )}
-        >
-          {formatCurrency(total, currency)}
-        </span>
-        <span className={styles.total_meta}>
-          Across {banks.length} bank{banks.length === 1 ? "" : "s"}
-        </span>
-        <Button
-          variant="secondary"
-          size="sm"
-          icon={ArrowLeftRight}
-          className={styles.total_transfer}
+      <div className={styles.head}>
+        <div className={styles.head_text}>
+          <h3 className={styles.head_title}>Banks</h3>
+          <p className={styles.head_caption}>
+            {banks.length} account{banks.length === 1 ? "" : "s"} ·{" "}
+            <span
+              className={cn(
+                styles.head_total,
+                total < 0 && styles["head_total--neg"],
+              )}
+            >
+              {formatCurrency(total, currency)}
+            </span>
+          </p>
+        </div>
+        <button
+          type="button"
+          className={styles.transferBtn}
           onClick={() => setTransferOpen(true)}
           disabled={accounts.length < 2}
+          aria-label="Transfer money"
+          title={accounts.length < 2 ? "Add 2 accounts to transfer" : undefined}
         >
-          {accounts.length < 2
-            ? "Add 2 accounts to transfer"
-            : "Transfer money"}
-        </Button>
-      </Card>
+          <ArrowLeftRight size={15} aria-hidden />
+          Transfer
+        </button>
+      </div>
 
       <m.div
         className={styles.grid}
@@ -211,39 +246,70 @@ export const AccountsList = () => {
       {transfers.length > 0 && (
         <div className={styles.transfers}>
           <SectionHeader
-            title="Transfers"
-            caption={`${transfers.length} between your accounts`}
+            title="Recent transfers"
+            caption={
+              movedThisMonth > 0
+                ? `${formatCurrency(movedThisMonth, currency)} moved this month`
+                : `${transfers.length} between your accounts`
+            }
           />
           <Card
             surface="solid"
             padded={false}
             className={styles.transfers_list}
           >
-            {visibleTransfers.map(({ leg, fromName, toName }) => (
-              <button
-                key={leg.id}
-                type="button"
-                className={styles.transfer}
-                onClick={() => setEditingTransfer(leg)}
-                aria-label={`Edit transfer from ${fromName} to ${toName}`}
-              >
-                <span className={styles.transfer_icon}>
-                  <ArrowLeftRight size={15} />
-                </span>
-                <span className={styles.transfer_text}>
-                  <span className={styles.transfer_route}>
-                    {fromName}
-                    <ArrowRight size={12} aria-label="to" />
-                    {toName}
-                  </span>
-                  <span className={styles.transfer_date}>
-                    {dayShort(leg.occurredAt)}
-                  </span>
-                </span>
-                <span className={styles.transfer_amount}>
-                  {formatCurrency(leg.amount, currency)}
-                </span>
-              </button>
+            {transferGroups.map((group) => (
+              <div key={group.month} className={styles.tgroup}>
+                <div className={styles.tgroup_head}>
+                  <span>{monthLabel(group.month)}</span>
+                  <span>{formatCurrency(group.total, currency)}</span>
+                </div>
+                {group.rows.map(
+                  ({ leg, fromName, toName, fromColor, toColor }) => (
+                    <button
+                      key={leg.id}
+                      type="button"
+                      className={styles.transfer}
+                      onClick={() => setEditingTransfer(leg)}
+                      aria-label={`Edit transfer from ${fromName} to ${toName}`}
+                    >
+                      <span className={styles.transfer_banks} aria-hidden>
+                        <span
+                          className={styles.transfer_bank}
+                          style={{ "--bank": fromColor } as CSSProperties}
+                        >
+                          {fromName.charAt(0).toUpperCase()}
+                        </span>
+                        <span
+                          className={styles.transfer_bank}
+                          style={{ "--bank": toColor } as CSSProperties}
+                        >
+                          {toName.charAt(0).toUpperCase()}
+                        </span>
+                      </span>
+                      <span className={styles.transfer_text}>
+                        <span className={styles.transfer_route}>
+                          <span className={styles.transfer_name}>
+                            {fromName}
+                          </span>
+                          <ArrowRight
+                            size={13}
+                            className={styles.transfer_arrow}
+                            aria-hidden
+                          />
+                          <span className={styles.transfer_name}>{toName}</span>
+                        </span>
+                        <span className={styles.transfer_date}>
+                          {relativeDay(leg.occurredAt)}
+                        </span>
+                      </span>
+                      <span className={styles.transfer_amount}>
+                        {formatCurrency(leg.amount, currency)}
+                      </span>
+                    </button>
+                  ),
+                )}
+              </div>
             ))}
             {transfers.length > 5 && (
               <button

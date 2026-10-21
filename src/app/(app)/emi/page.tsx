@@ -2,7 +2,6 @@
 
 import { m } from "framer-motion";
 import { CreditCard } from "lucide-react";
-import { Card } from "@/components/Card/Card";
 import { ProgressBar } from "@/components/ProgressBar/ProgressBar";
 import { EmiList } from "@/sections/EmiList/EmiList";
 import { BorrowingsList } from "@/sections/BorrowingsList/BorrowingsList";
@@ -41,21 +40,8 @@ export default function EmiPage() {
   const repaidPct = loanTotal > 0 ? (loanPaid / loanTotal) * 100 : 0;
 
   const stats = [
-    {
-      key: "monthly",
-      value: formatCurrency(loanMonthly, currency, { compact: true }),
-      label: "Per month",
-    },
-    {
-      key: "paid",
-      value: formatCurrency(paidSoFar, currency, { compact: true }),
-      label: "Paid so far",
-    },
-    {
-      key: "remaining",
-      value: formatCurrency(loanRemaining, currency, { compact: true }),
-      label: "Loan left",
-    },
+    { key: "paid", label: "Paid so far", value: paidSoFar },
+    { key: "left", label: "Loan left", value: loanRemaining },
   ];
 
   return (
@@ -66,45 +52,53 @@ export default function EmiPage() {
       animate="visible"
     >
       <m.div variants={listItem}>
-        <div className={styles.hero}>
-          <span className={styles.hero_glow} aria-hidden />
+        <section className={styles.hero} aria-label="Monthly total">
           <div className={styles.hero_top}>
             <span className={styles.hero_badge}>
-              <CreditCard size={16} />
+              <CreditCard size={14} aria-hidden />
               Monthly total
             </span>
-            <span className={styles.hero_share}>{burdenShare}% of income</span>
-          </div>
-          <span className={styles.hero_value}>
-            {formatCurrency(loanMonthly, currency)}
-          </span>
-          <span className={styles.hero_meta}>
-            across {loans.length} active EMI{loans.length === 1 ? "" : "s"}
-          </span>
-          {loanTotal > 0 && (
-            <div className={styles.hero_progress}>
-              <ProgressBar value={repaidPct} tone="ocean" size="sm" />
-              <span className={styles.hero_meta}>
-                {Math.round(repaidPct)}% of loans repaid ·{" "}
-                {formatCurrency(loanRemaining, currency)} left
+            {monthIncome > 0 && (
+              <span className={styles.hero_share}>
+                {burdenShare}% of income
               </span>
-            </div>
+            )}
+          </div>
+          <div className={styles.hero_main}>
+            <span className={styles.hero_value}>
+              {formatCurrency(loanMonthly, currency)}
+            </span>
+            <span className={styles.hero_meta}>
+              /mo · {loans.length} active EMI{loans.length === 1 ? "" : "s"}
+            </span>
+          </div>
+          {loanTotal > 0 && (
+            <ProgressBar
+              value={repaidPct}
+              tone="ocean"
+              size="sm"
+              label={`${Math.round(repaidPct)}% of loans repaid`}
+            />
           )}
-        </div>
-      </m.div>
-
-      <m.div className={styles.stats} variants={listItem}>
-        {stats.map((stat) => (
-          <Card
-            key={stat.key}
-            surface="solid"
-            padded={false}
-            className={styles.stat}
-          >
-            <span className={styles.stat_value}>{stat.value}</span>
-            <span className={styles.stat_label}>{stat.label}</span>
-          </Card>
-        ))}
+          <div className={styles.hero_stats}>
+            {stats.map((stat) => (
+              <div key={stat.key} className={styles.hero_stat}>
+                <span className={styles.hero_statValue}>
+                  {formatCurrency(stat.value, currency, {
+                    compact: stat.value >= 100000,
+                  })}
+                </span>
+                <span className={styles.hero_statLabel}>{stat.label}</span>
+              </div>
+            ))}
+            <div className={styles.hero_stat}>
+              <span className={styles.hero_statValue}>
+                {`${Math.round(repaidPct)}%`}
+              </span>
+              <span className={styles.hero_statLabel}>Repaid</span>
+            </div>
+          </div>
+        </section>
       </m.div>
 
       <m.div variants={listItem}>

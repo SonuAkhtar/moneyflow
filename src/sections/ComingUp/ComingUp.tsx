@@ -1,19 +1,17 @@
 "use client";
 
-import { useMemo } from "react";
-import { parseISO } from "date-fns";
+import { useMemo, type CSSProperties } from "react";
+import { format, parseISO } from "date-fns";
 import { Check, CreditCard, HandCoins, TrendingUp } from "lucide-react";
-import { Card } from "@/components/Card/Card";
-import { SectionHeader } from "@/components/SectionHeader/SectionHeader";
 import { useFinanceStore } from "@/store/financeStore";
 import {
   borrowingOutstanding,
   borrowingSettled,
+  cn,
   currentMonthKey,
   dayShort,
   emiKind,
   formatCurrency,
-  monthLabel,
 } from "@/utils";
 import styles from "./ComingUp.module.scss";
 
@@ -32,18 +30,9 @@ const clampToMonth = (year: number, month: number, dueDay: number): Date => {
   return new Date(year, month, day);
 };
 
-const nextDueDate = (dueDay: number): Date => {
+const dueDateThisMonth = (dueDay: number): Date => {
   const now = new Date();
-  const candidate = clampToMonth(now.getFullYear(), now.getMonth(), dueDay);
-  const todayMidnight = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-  );
-  if (candidate.getTime() < todayMidnight.getTime()) {
-    return clampToMonth(now.getFullYear(), now.getMonth() + 1, dueDay);
-  }
-  return candidate;
+  return clampToMonth(now.getFullYear(), now.getMonth(), dueDay);
 };
 
 const daysUntil = (date: Date): number => {
@@ -54,9 +43,9 @@ const daysUntil = (date: Date): number => {
 };
 
 const META = {
-  loan: { icon: CreditCard, color: "var(--color-danger)" },
-  sip: { icon: TrendingUp, color: "var(--color-success)" },
-  borrow: { icon: HandCoins, color: "var(--color-warning)" },
+  loan: { icon: CreditCard, color: "var(--color-danger)", label: "Loan EMI" },
+  sip: { icon: TrendingUp, color: "var(--color-success)", label: "SIP" },
+  borrow: { icon: HandCoins, color: "var(--color-warning)", label: "Borrowed" },
 } as const;
 
 export const ComingUp = () => {
@@ -74,13 +63,14 @@ export const ComingUp = () => {
         id: e.id,
         label: e.name,
         amount: e.monthlyAmount,
-        date: nextDueDate(e.dueDay),
+        date: dueDateThisMonth(e.dueDay),
         type: emiKind(e),
         paid: (e.payments ?? []).some((p) => p.month === thisMonth),
       });
     }
     for (const b of borrowings) {
       if (!b.dueDate || borrowingSettled(b)) continue;
+      if (b.dueDate.slice(0, 7) !== thisMonth) continue;
       out.push({
         id: b.id,
         label: b.lender,
@@ -95,47 +85,89 @@ export const ComingUp = () => {
 
   if (items.length === 0) return null;
 
+  const dueTotal = items
+    .filter((i) => !i.paid)
+    .reduce((acc, i) => acc + i.amount, 0);
+
   return (
-    <section>
-      <SectionHeader title="Upcoming payments" caption="EMIs, SIPs & dues" />
-      <Card surface="solid" padded={false} className={styles.list}>
+    <section className={styles.section} aria-labelledby="coming-up-title">
+      <div className={styles.head}>
+        <div>
+          <h2 id="coming-up-title" className={styles.head_title}>
+            Upcoming payments
+          </h2>
+          <p className={styles.head_caption}>EMIs, SIPs & dues</p>
+        </div>
+        {dueTotal > 0 && (
+          <div className={styles.total}>
+            <span className={styles.total_label}>Due</span>
+            <span className={styles.total_value}>
+              {formatCurrency(dueTotal, currency)}
+            </span>
+          </div>
+        )}
+      </div>
+
+      <ul
+        className={styles.rail}
+        tabIndex={0}
+        aria-label="Upcoming payments, scroll for more"
+      >
         {items.map((item) => {
           const meta = META[item.type];
           const Icon = meta.icon;
           const days = daysUntil(item.date);
+          const urgency = days < 0 ? "overdue" : days <= 3 ? "soon" : "later";
           const when =
             days < 0
-              ? `Overdue by ${-days} day${days === -1 ? "" : "s"}`
+              ? `Overdue ${-days}d`
               : days === 0
                 ? "Due today"
                 : days === 1
                   ? "Tomorrow"
                   : `In ${days} days`;
           return (
-            <div key={item.id} className={styles.row}>
-              <span className={styles.row_icon} style={{ color: meta.color }}>
-                <Icon size={17} />
+            <li
+              key={item.id}
+              className={cn(
+                styles.ticket,
+                item.paid ? styles["ticket--paid"] : styles["ticket--pending"],
+              )}
+              style={{ "--tone": meta.color } as CSSProperties}
+            >
+              <span className={styles.cal} aria-hidden>
+                <span className={styles.cal_month}>
+                  {format(item.date, "MMM")}
+                </span>
+                <span className={styles.cal_day}>{format(item.date, "d")}</span>
               </span>
-              <span className={styles.row_info}>
-                <span className={styles.row_name}>{item.label}</span>
-                {item.paid ? (
-                  <span className={styles.row_paid}>
-                    <Check size={12} />
-                    Paid · {monthLabel(thisMonth)}
-                  </span>
-                ) : (
-                  <span className={styles.row_when}>
-                    {dayShort(item.date)} · {when}
+              <span className={styles.ticket_info}>
+                <span className={styles.ticket_name}>
+                  <Icon size={12} className={styles.ticket_icon} aria-hidden />
+                  <span className="sr-only">{meta.label}: </span>
+                  <span className={styles.ticket_label}>{item.label}</span>
+                </span>
+                <span className={styles.ticket_amount}>
+                  {formatCurrency(item.amount, currency)}
+                </span>
+                {!item.paid && (
+                  <span
+                    className={cn(styles.when, styles[`when--${urgency}`])}
+                    title={dayShort(item.date)}
+                  >
+                    {when}
                   </span>
                 )}
               </span>
-              <span className={styles.row_amount} style={{ color: meta.color }}>
-                {formatCurrency(item.amount, currency)}
-              </span>
-            </div>
+              {item.paid && (
+                <span className={styles.paid} role="img" aria-label="Paid">
+                  <Check size={15} strokeWidth={3} aria-hidden />
+                </span>
+              )}
+            </li>
           );
         })}
-      </Card>
+      </ul>
     </section>
   );
 };

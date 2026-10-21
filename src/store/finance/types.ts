@@ -43,6 +43,7 @@ export interface FinanceState {
   addTransaction: (input: TransactionInput) => void;
   updateTransaction: (id: string, input: TransactionInput) => void;
   deleteTransaction: (id: string) => void;
+  restoreTransaction: (transaction: Transaction) => void;
 
   setMajorAccount: (id: string) => void;
   setDailyAccount: (id: string) => void;

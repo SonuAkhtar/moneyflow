@@ -8,6 +8,11 @@ export interface SeedOptions {
   username?: string;
   fullName?: string;
   accounts?: Record<string, unknown>[];
+  transactions?: Record<string, unknown>[];
+  emis?: Record<string, unknown>[];
+  emiPayments?: Record<string, unknown>[];
+  borrowings?: Record<string, unknown>[];
+  borrowingPayments?: Record<string, unknown>[];
   onboarded?: boolean;
 }
 
@@ -52,6 +57,33 @@ export const seedUser = async (opts: SeedOptions = {}) => {
             color_tag: "#9b8cff",
           },
         ],
+        transactions: (opts.transactions ?? []).map((t) => ({
+          id: crypto.randomUUID(),
+          ...t,
+        })),
+        emis: (opts.emis ?? []).map((e) => ({
+          id: crypto.randomUUID(),
+          kind: "loan",
+          start_month: new Date().toISOString().slice(0, 7),
+          remaining_months: 12,
+          total_months: 12,
+          paid_months: 0,
+          account_id: null,
+          ...e,
+        })),
+        emi_payments: (opts.emiPayments ?? []).map((p) => ({
+          id: crypto.randomUUID(),
+          account_id: null,
+          ...p,
+        })),
+        borrowings: (opts.borrowings ?? []).map((b) => ({
+          id: crypto.randomUUID(),
+          ...b,
+        })),
+        borrowing_payments: (opts.borrowingPayments ?? []).map((p) => ({
+          id: crypto.randomUUID(),
+          ...p,
+        })),
       },
     }),
   });
@@ -87,9 +119,95 @@ export const signIn = async (
 export const signInSeeded = async (page: Page, opts: SeedOptions = {}) => {
   const user = await seedUser(opts);
   await signIn(page, user.email, user.password);
-  await expect(page.getByText("Monthly statement")).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Monthly statement" }),
+  ).toBeVisible();
   return user;
 };
 
 export const HDFC = "aaaaaaaa-0000-4000-8000-000000000001";
 export const SBI = "aaaaaaaa-0000-4000-8000-000000000002";
+
+export const day = (offset: number) => {
+  const d = new Date();
+  d.setDate(Math.max(1, d.getDate() - offset));
+  d.setHours(12, 0, 0, 0);
+  return d.toISOString();
+};
+const lastMonth = () => {
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() - 1);
+  d.setDate(10);
+  return d.toISOString();
+};
+
+export const SAMPLE_TXNS = [
+  {
+    account_id: HDFC,
+    type: "income",
+    amount: 85000,
+    category: "salary",
+    note: "Salary",
+    occurred_at: day(0),
+  },
+  {
+    account_id: HDFC,
+    type: "expense",
+    amount: 12000,
+    category: "shopping",
+    merchant: "Croma",
+    is_big_expense: true,
+    occurred_at: day(3),
+  },
+  {
+    account_id: HDFC,
+    type: "expense",
+    amount: 30000,
+    category: "travel",
+    merchant: "IndiGo",
+    is_big_expense: true,
+    occurred_at: day(1),
+  },
+  {
+    account_id: SBI,
+    type: "expense",
+    amount: 4500,
+    category: "health",
+    merchant: "Apollo",
+    is_big_expense: true,
+    occurred_at: day(2),
+  },
+  {
+    account_id: HDFC,
+    type: "expense",
+    amount: 250,
+    category: "food",
+    merchant: "Swiggy",
+    occurred_at: day(0),
+  },
+  {
+    account_id: HDFC,
+    type: "expense",
+    amount: 120,
+    category: "transport",
+    merchant: "Uber",
+    occurred_at: day(1),
+  },
+  {
+    account_id: SBI,
+    type: "expense",
+    amount: 900,
+    category: "groceries",
+    merchant: "BigBasket",
+    occurred_at: day(2),
+  },
+  {
+    account_id: HDFC,
+    type: "expense",
+    amount: 2000,
+    category: "food",
+    merchant: "Dominos",
+    occurred_at: lastMonth(),
+  },
+];

@@ -7,7 +7,11 @@ import type { FinanceState, SliceCreator } from "./types";
 
 type TransactionsSlice = Pick<
   FinanceState,
-  "addTransaction" | "updateTransaction" | "deleteTransaction" | "setSalary"
+  | "addTransaction"
+  | "updateTransaction"
+  | "deleteTransaction"
+  | "restoreTransaction"
+  | "setSalary"
 >;
 
 export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
@@ -55,6 +59,22 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
     });
     sync([
       step.removeTransaction(txn),
+      ...balanceSteps([[txn.accountId, delta]]),
+    ]);
+  },
+
+  restoreTransaction: (txn) => {
+    const s = get();
+    if (s.transactions.some((t) => t.id === txn.id)) return;
+    if (!s.accounts.some((a) => a.id === txn.accountId)) return;
+    ownerId();
+    const delta = balanceDelta(txn.type, txn.amount, txn.note);
+    set({
+      transactions: [txn, ...s.transactions],
+      accounts: applyBalance(s.accounts, txn.accountId, delta),
+    });
+    sync([
+      step.saveTransaction(txn),
       ...balanceSteps([[txn.accountId, delta]]),
     ]);
   },

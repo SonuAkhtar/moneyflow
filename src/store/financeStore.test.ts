@@ -125,6 +125,28 @@ describe("financeStore mutations (optimistic reducer)", () => {
     expect(s.accounts[0]!.balance).toBe(1000);
   });
 
+  it("restoreTransaction undoes a delete with the same id and balance", () => {
+    useFinanceStore.getState().addTransaction({
+      accountId: "acc1",
+      type: "expense",
+      amount: 200,
+      category: "food",
+      occurredAt: new Date().toISOString(),
+    });
+    const deleted = useFinanceStore.getState().transactions[0]!;
+    useFinanceStore.getState().deleteTransaction(deleted.id);
+    useFinanceStore.getState().restoreTransaction(deleted);
+
+    let s = useFinanceStore.getState();
+    expect(s.transactions.map((t) => t.id)).toEqual([deleted.id]);
+    expect(s.accounts[0]!.balance).toBe(800);
+
+    useFinanceStore.getState().restoreTransaction(deleted);
+    s = useFinanceStore.getState();
+    expect(s.transactions).toHaveLength(1);
+    expect(s.accounts[0]!.balance).toBe(800);
+  });
+
   it("addTransaction(income) increases balance", () => {
     seed({ accounts: [account(0)] });
     useFinanceStore.getState().addTransaction({
