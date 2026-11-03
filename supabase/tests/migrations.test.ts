@@ -19,7 +19,13 @@ create function auth.uid() returns uuid language sql stable as $$
 $$;
 grant usage on schema auth to anon, authenticated, service_role;
 create schema storage;
-create table storage.buckets (id text primary key, name text, public boolean);
+create table storage.buckets (
+  id text primary key,
+  name text,
+  public boolean,
+  file_size_limit bigint,
+  allowed_mime_types text[]
+);
 create table storage.objects (
   id uuid primary key default gen_random_uuid(),
   bucket_id text,
@@ -184,6 +190,220 @@ describe("baseline migration", () => {
         ),
       ),
     ).rejects.toThrow(/row-level security/);
+  });
+
+  it("only lets users edit their own app settings, never email or username", async () => {
+    await as("authenticated", BOB, () =>
+      db.query("update public.profiles set full_name = 'Bobby' where id = $1", [
+        BOB,
+      ]),
+    );
+    await expect(
+      as("authenticated", BOB, () =>
+        db.query("update public.profiles set email = 'alice@example.com'"),
+      ),
+    ).rejects.toThrow(/permission denied/);
+    await expect(
+      as("authenticated", BOB, () =>
+        db.query("update public.profiles set username = 'alice'"),
+      ),
+    ).rejects.toThrow(/permission denied/);
+    await db.query(
+      "update auth.users set email = 'bob2@example.com' where id = $1",
+      [BOB],
+    );
+    const { rows } = await db.query<{ email: string; full_name: string }>(
+      "select email, full_name from public.profiles where id = $1",
+      [BOB],
+    );
+    expect(rows[0]).toEqual({ email: "bob2@example.com", full_name: "Bobby" });
+  });
+
+  it("rejects links to another user's account", async () => {
+    const alicesAccount = "aaaaaaaa-0000-0000-0000-000000000001";
+    await expect(
+      as("authenticated", BOB, () =>
+        db.query(
+          "update public.profiles set major_account_id = $1 where id = $2",
+          [alicesAccount, BOB],
+        ),
+      ),
+    ).rejects.toThrow(/row-level security/);
+    await expect(
+      as("authenticated", BOB, () =>
+        db.query(
+          "insert into public.emis (user_id, account_id, name) values ($1, $2, 'x')",
+          [BOB, alicesAccount],
+        ),
+      ),
+    ).rejects.toThrow(/row-level security/);
+    await as("authenticated", BOB, () =>
+      db.query(
+        "insert into public.emis (id, user_id, name) values ('bbbbbbbb-0000-0000-0000-000000000001', $1, 'Car')",
+        [BOB],
+      ),
+    );
+    await expect(
+      as("authenticated", BOB, () =>
+        db.query(
+          `insert into public.emi_payments (emi_id, user_id, account_id, month)
+           values ('bbbbbbbb-0000-0000-0000-000000000001', $1, $2, '2026-01')`,
+          [BOB, alicesAccount],
+        ),
+      ),
+    ).rejects.toThrow(/row-level security/);
+  });
+
+  it("enforces data checks and one payment per EMI month", async () => {
+    const emi = "bbbbbbbb-0000-0000-0000-000000000001";
+    await expect(
+      as("authenticated", BOB, () =>
+        db.query(
+          "insert into public.emis (user_id, name, monthly_amount) values ($1, 'x', -1)",
+          [BOB],
+        ),
+      ),
+    ).rejects.toThrow(/check constraint/);
+    await expect(
+      as("authenticated", BOB, () =>
+        db.query(
+          "insert into public.emi_payments (emi_id, user_id, month) values ($1, $2, '2026-1')",
+          [emi, BOB],
+        ),
+      ),
+    ).rejects.toThrow(/check constraint/);
+    await as("authenticated", BOB, () =>
+      db.query(
+        "insert into public.emi_payments (emi_id, user_id, month) values ($1, $2, '2026-02')",
+        [emi, BOB],
+      ),
+    );
+    await expect(
+      as("authenticated", BOB, () =>
+        db.query(
+          "insert into public.emi_payments (emi_id, user_id, month) values ($1, $2, '2026-02')",
+          [emi, BOB],
+        ),
+      ),
+    ).rejects.toThrow(/duplicate key/);
+    await expect(
+      db.query(
+        `insert into auth.users (id, raw_user_meta_data)
+         values ('33333333-3333-3333-3333-333333333333', '{"username":"no spaces"}')`,
+      ),
+    ).rejects.toThrow(/check constraint/);
+  });
+
+  it("stores EMI amount changes as a JSON array", async () => {
+    const { rows } = await as("authenticated", BOB, () =>
+      db.query<{ amount_changes: unknown }>(
+        "insert into public.emis (user_id, name) values ($1, 'plain') returning amount_changes",
+        [BOB],
+      ),
+    );
+    expect(rows[0]!.amount_changes).toEqual([]);
+    await as("authenticated", BOB, () =>
+      db.query(
+        `insert into public.emis (user_id, name, amount_changes)
+         values ($1, 'stepped', '[{"from":"2027-01","amount":1200}]')`,
+        [BOB],
+      ),
+    );
+    await expect(
+      as("authenticated", BOB, () =>
+        db.query(
+          `insert into public.emis (user_id, name, amount_changes) values ($1, 'x', '{}')`,
+          [BOB],
+        ),
+      ),
+    ).rejects.toThrow(/check constraint/);
+  });
+
+  it("applies each balance op exactly once", async () => {
+    const acct = "aaaaaaaa-0000-0000-0000-000000000001";
+    const op = "cccccccc-0000-0000-0000-000000000001";
+    const adjust = (uid: string, delta: number, opId: string) =>
+      as("authenticated", uid, () =>
+        db.query<{ balance: string | null }>(
+          "select public.adjust_balance($1, $2, $3) as balance",
+          [acct, delta, opId],
+        ),
+      );
+    const before = Number(
+      (
+        await db.query<{ balance: string }>(
+          "select balance from public.accounts where id = $1",
+          [acct],
+        )
+      ).rows[0]!.balance,
+    );
+    const first = await adjust(ALICE, -100.25, op);
+    const replay = await adjust(ALICE, -100.25, op);
+    expect(Number(first.rows[0]!.balance)).toBe(before - 100.25);
+    expect(Number(replay.rows[0]!.balance)).toBe(before - 100.25);
+
+    const stranger = await adjust(
+      BOB,
+      1000,
+      "cccccccc-0000-0000-0000-000000000002",
+    );
+    expect(stranger.rows[0]!.balance).toBeNull();
+    const ledger = await as("authenticated", BOB, () =>
+      db.query("select op_id from public.balance_ops"),
+    );
+    expect(ledger.rows).toHaveLength(0);
+    await expect(
+      as("authenticated", BOB, () =>
+        db.query(
+          "insert into public.balance_ops (op_id, user_id, account_id) values (gen_random_uuid(), $1, $2)",
+          [BOB, acct],
+        ),
+      ),
+    ).rejects.toThrow(/row-level security/);
+    await expect(
+      as("authenticated", ALICE, () =>
+        db.query("delete from public.balance_ops"),
+      ),
+    ).rejects.toThrow(/permission denied/);
+    const after = await db.query<{ balance: string }>(
+      "select balance from public.accounts where id = $1",
+      [acct],
+    );
+    expect(Number(after.rows[0]!.balance)).toBe(before - 100.25);
+  });
+
+  it("rate limits through a service-role-only function", async () => {
+    const hit = () =>
+      as("service_role", null, () =>
+        db.query<{ wait: number }>(
+          "select public.hit_rate_limit('test:k', 2, 60) as wait",
+        ),
+      );
+    const waits = [];
+    for (let i = 0; i < 3; i += 1) waits.push((await hit()).rows[0]!.wait);
+    expect(waits.slice(0, 2)).toEqual([0, 0]);
+    expect(waits[2]).toBeGreaterThan(0);
+    await expect(
+      as("authenticated", BOB, () =>
+        db.query("select public.hit_rate_limit('test:k', 2, 60)"),
+      ),
+    ).rejects.toThrow(/permission denied/);
+    await expect(
+      as("authenticated", BOB, () =>
+        db.query("select * from public.rate_limits"),
+      ),
+    ).rejects.toThrow(/permission denied/);
+  });
+
+  it("keeps avatars private to their owner and limits uploads", async () => {
+    const seen = await as("authenticated", BOB, () =>
+      db.query("select name from storage.objects where bucket_id = 'avatars'"),
+    );
+    expect(seen.rows).toHaveLength(0);
+    const { rows } = await db.query<{ file_size_limit: string }>(
+      "select file_size_limit from storage.buckets where id = 'avatars'",
+    );
+    expect(Number(rows[0]!.file_size_limit)).toBe(2 * 1024 * 1024);
   });
 
   it("removes all of a user's data when the auth user is deleted", async () => {
