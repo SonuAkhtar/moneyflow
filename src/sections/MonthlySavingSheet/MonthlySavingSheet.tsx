@@ -28,8 +28,6 @@ export const MonthlySavingSheet = ({
   onClose,
   account,
 }: MonthlySavingSheetProps) => {
-  // The parent clears `account` on close: keep showing the last one while the
-  // sheet animates out, and start a fresh form on every open.
   const [shown, setShown] = useState(account);
   const [wasOpen, setWasOpen] = useState(false);
   const [session, setSession] = useState(0);

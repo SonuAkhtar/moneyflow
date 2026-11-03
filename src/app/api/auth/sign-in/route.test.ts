@@ -30,7 +30,6 @@ const call = (body: unknown, ip = "1.1.1.1") =>
 beforeEach(() => {
   lookup.mockReset();
   signInWithPassword.mockReset();
-  // Shared limiter unreachable by default, so the in-memory fallback applies.
   rateLimit.mockReset();
   rateLimit.mockResolvedValue({ data: null, error: { code: "PGRST" } });
   signInIpLimiter.local.reset();

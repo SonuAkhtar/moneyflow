@@ -89,14 +89,12 @@ export interface Emi {
   createdAt: string;
 }
 
-/** Monthly spending limits. `dailySince` (YYYY-MM-DD) is when the daily limit was set. */
 export interface SpendBudget {
   daily: number;
   major: number;
   dailySince: string | null;
 }
 
-/** From `from` (YYYY-MM) onward the loan's EMI is `amount`. */
 export interface EmiAmountChange {
   from: string;
   amount: number;

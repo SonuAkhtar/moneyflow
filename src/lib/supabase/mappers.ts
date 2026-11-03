@@ -51,7 +51,6 @@ export const profileToUpdate = (
     dailyAccountId?: string | null;
   },
 ): TablesUpdate<"profiles"> => {
-  // email and username are owned by auth and not writable by the client.
   const out: Record<string, unknown> = {};
   if (patch.fullName !== undefined) out.full_name = patch.fullName;
   if (patch.phone !== undefined) out.phone = patch.phone;

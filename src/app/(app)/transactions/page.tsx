@@ -10,6 +10,7 @@ import { Input } from "@/components/Input/Input";
 import { Select } from "@/components/Select/Select";
 import { SegmentedControl } from "@/components/SegmentedControl/SegmentedControl";
 import { EmptyState } from "@/components/EmptyState/EmptyState";
+import { SortToggle, type SortKey } from "@/components/SortToggle/SortToggle";
 import { TransactionItem } from "@/components/TransactionItem/TransactionItem";
 import { EditTransactionSheet } from "@/sections/EditTransactionSheet/EditTransactionSheet";
 import { TransferSheet } from "@/sections/TransferSheet/TransferSheet";
@@ -66,6 +67,7 @@ function TransactionsView() {
   }));
   const [panelOpen, setPanelOpen] = useState(false);
   const [limit, setLimit] = useState(PAGE_SIZE);
+  const [sortBy, setSortBy] = useState<SortKey>("date");
   const [editing, setEditing] = useState<Transaction | null>(null);
 
   const set = <K extends keyof TransactionFilters>(
@@ -80,7 +82,18 @@ function TransactionsView() {
     () => filterTransactions(transactions, filters),
     [transactions, filters],
   );
-  const visible = useMemo(() => results.slice(0, limit), [results, limit]);
+  const sorted = useMemo(
+    () =>
+      sortBy === "amount"
+        ? [...results].sort(
+            (a, b) =>
+              monthKey(b.occurredAt).localeCompare(monthKey(a.occurredAt)) ||
+              b.amount - a.amount,
+          )
+        : results,
+    [results, sortBy],
+  );
+  const visible = useMemo(() => sorted.slice(0, limit), [sorted, limit]);
   const groups = useMemo(() => groupByMonth(visible), [visible]);
   const netByMonth = useMemo(() => {
     const totals = new Map<string, number>();
@@ -244,19 +257,29 @@ function TransactionsView() {
               ? `Showing ${visible.length} of ${results.length}`
               : `${results.length} transaction${results.length === 1 ? "" : "s"}`}
         </p>
-        {hasAnyFilter && (
-          <button
-            type="button"
-            className={styles.clear}
-            onClick={() => {
-              setFilters(EMPTY_FILTERS);
-              setLimit(PAGE_SIZE);
-            }}
-          >
-            <X size={14} />
-            Clear filters
-          </button>
-        )}
+        <div className={styles.summary_actions}>
+          {hasAnyFilter && (
+            <button
+              type="button"
+              className={styles.clear}
+              aria-label="Clear filters"
+              onClick={() => {
+                setFilters(EMPTY_FILTERS);
+                setLimit(PAGE_SIZE);
+              }}
+            >
+              <X size={14} />
+              Clear
+            </button>
+          )}
+          {results.length > 1 && (
+            <SortToggle
+              value={sortBy}
+              onChange={setSortBy}
+              label="Sort transactions"
+            />
+          )}
+        </div>
       </div>
 
       {results.length === 0 ? (

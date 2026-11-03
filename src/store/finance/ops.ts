@@ -32,7 +32,6 @@ export type Op =
       k: "account.adjust";
       id: string;
       delta: number;
-      /** Idempotency key for the server; assigned once and persisted. */
       opId?: string;
     }
   | { k: "txn.save"; txn: Transaction }

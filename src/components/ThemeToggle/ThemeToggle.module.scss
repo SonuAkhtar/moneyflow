@@ -9,7 +9,6 @@
   flex-shrink: 0;
   transition: background var(--dur-base) var(--ease-smooth);
 
-  // Grow the hit area to --tap-min without changing the visual size.
   &::before {
     content: "";
     position: absolute;

@@ -16,8 +16,7 @@
     max-width: 70%;
     background: transparent;
     border: none;
-    border-radius: var(--radius-md);
-    @include focus-ring;
+    outline: none;
     text-align: center;
     font-family: var(--num-font);
     font-size: var(--font-4xl);

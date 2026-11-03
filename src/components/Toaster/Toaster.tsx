@@ -22,8 +22,6 @@ const ToastItem = ({ toast }: { toast: ToastMessage }) => {
   const [focused, setFocused] = useState(false);
   const paused = hovered || focused;
 
-  // Hover or keyboard focus pauses auto-dismiss; the full duration restarts
-  // once the toast is left.
   useEffect(() => {
     if (paused) return;
     const duration = toast.duration ?? (toast.action ? 10000 : 3600);

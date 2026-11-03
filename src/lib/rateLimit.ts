@@ -46,7 +46,6 @@ export interface RateRule {
   name: string;
   limit: number;
   windowMs: number;
-  /** Per-instance fallback for when the shared limiter is unreachable. */
   local: RateLimiter;
 }
 
@@ -61,7 +60,6 @@ export const rateRule = (
   local: createRateLimiter(limit, windowMs),
 });
 
-/** Counts a hit in Postgres so the limit holds across serverless instances. */
 export const hitRateLimit = async (
   serviceClient: SupabaseClient,
   rule: RateRule,
@@ -79,8 +77,6 @@ export const hitRateLimit = async (
   return { ok: data === 0, retryAfter: data };
 };
 
-// Platform-set headers first; a client can prepend fake x-forwarded-for
-// entries, but the last one is added by the proxy in front of us.
 export const clientIp = (headers: Headers): string =>
   headers.get("x-vercel-forwarded-for")?.trim() ||
   headers.get("x-real-ip")?.trim() ||

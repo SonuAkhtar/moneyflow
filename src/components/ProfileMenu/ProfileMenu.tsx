@@ -51,7 +51,6 @@ export const ProfileMenu = ({
     return () => {
       document.removeEventListener("keydown", onKeyDown);
       window.clearTimeout(timer);
-      // Return focus to the trigger unless the user already moved it elsewhere.
       const active = document.activeElement;
       if (!active || active === document.body || menu?.contains(active)) {
         trigger?.focus();
@@ -83,8 +82,6 @@ export const ProfileMenu = ({
               aria-label="Profile menu"
               onBlur={(e) => {
                 const next = e.relatedTarget;
-                // Close when focus moves to another control on the page; the
-                // trigger toggles the menu itself.
                 if (
                   next &&
                   !e.currentTarget.contains(next) &&

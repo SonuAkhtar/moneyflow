@@ -2,17 +2,14 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { m } from "framer-motion";
 import {
-  CalendarDays,
   ChevronDown,
   ChevronRight,
-  IndianRupee,
   Plus,
   Receipt,
   TrendingUp,
-  type LucideIcon,
 } from "lucide-react";
+import { SortToggle, type SortKey } from "@/components/SortToggle/SortToggle";
 import { primeKeyboard } from "@/components/BottomSheet/BottomSheet";
 import { EmptyState } from "@/components/EmptyState/EmptyState";
 import { ExpenseRow } from "@/components/ExpenseRow/ExpenseRow";
@@ -24,19 +21,12 @@ import { useBalanceTrail } from "@/hooks/useBalanceTrail";
 import { cn, currentMonthKey, formatCurrency, monthKey, sumBy } from "@/utils";
 import { ROUTES } from "@/constants";
 import { computeBudgetStatus } from "@/utils/spendPace";
-import type { CategoryId, Transaction } from "@/types";
+import type { Transaction } from "@/types";
 import styles from "./ExpenseSection.module.scss";
 
 interface ExpenseSectionProps {
   variant: "major" | "daily";
 }
-
-type SortKey = "amount" | "date";
-
-const SORT_OPTIONS: { value: SortKey; label: string; icon: LucideIcon }[] = [
-  { value: "amount", label: "Sort by amount", icon: IndianRupee },
-  { value: "date", label: "Sort by date", icon: CalendarDays },
-];
 
 const PREVIEW_COUNT = 5;
 
@@ -103,7 +93,6 @@ export const ExpenseSection = ({ variant }: ExpenseSectionProps) => {
 
   const title = isMajor ? "Major expenses" : "Daily expenses";
   const emptyIcon = isMajor ? TrendingUp : Receipt;
-  const defaultCategory: CategoryId = isMajor ? "shopping" : "food";
 
   const openPicker = () => {
     setDraftBank(fallbackBankId ?? "");
@@ -119,50 +108,17 @@ export const ExpenseSection = ({ variant }: ExpenseSectionProps) => {
   return (
     <section data-surface="wallet">
       {isMajor && items.length > 1 && (
-        <div
+        <SortToggle
+          value={sortBy}
+          onChange={setSortBy}
+          label="Sort major expenses"
           className={styles.sort}
-          role="group"
-          aria-label="Sort major expenses"
-        >
-          {SORT_OPTIONS.map((option) => {
-            const active = sortBy === option.value;
-            return (
-              <button
-                key={option.value}
-                type="button"
-                className={cn(
-                  styles.sort_item,
-                  active && styles["sort_item--active"],
-                )}
-                aria-pressed={active}
-                aria-label={option.label}
-                title={option.label}
-                onClick={() => setSortBy(option.value)}
-              >
-                {active && (
-                  <m.span
-                    layoutId={`sort-pill-${variant}`}
-                    className={styles.sort_pill}
-                    transition={{
-                      type: "spring",
-                      stiffness: 520,
-                      damping: 36,
-                    }}
-                  />
-                )}
-                <option.icon size={15} className={styles.sort_icon} />
-              </button>
-            );
-          })}
-        </div>
+        />
       )}
 
       <div className={styles.card}>
         <div className={styles.card_top}>
-          <h3 className={styles.card_kind}>
-            {isMajor ? "Major" : "Daily"}
-            <span className="sr-only"> expenses</span>
-          </h3>
+          <h3 className={styles.card_kind}>{title}</h3>
           <button
             type="button"
             className={styles.card_add}
@@ -176,17 +132,18 @@ export const ExpenseSection = ({ variant }: ExpenseSectionProps) => {
           </button>
         </div>
         <div className={styles.card_body}>
-          <span className={styles.card_total}>
-            {formatCurrency(total, currency)}
-          </span>
-          <span className={styles.card_caption}>
-            Spent this month · {items.length}{" "}
-            {items.length === 1 ? "entry" : "entries"}
-          </span>
-          <div className={styles.card_meta}>
+          <div className={styles.card_head}>
+            <div className={styles.card_sum}>
+              <span className={styles.card_total}>
+                {formatCurrency(total, currency)}
+              </span>
+              <span className={styles.card_caption}>
+                {items.length} {items.length === 1 ? "entry" : "entries"}
+              </span>
+            </div>
             <button
               type="button"
-              className={styles.card_field}
+              className={cn(styles.card_field, styles["card_field--end"])}
               onClick={openPicker}
             >
               <span className={styles.card_label}>Bank</span>
@@ -197,8 +154,10 @@ export const ExpenseSection = ({ variant }: ExpenseSectionProps) => {
                 <ChevronDown size={14} />
               </span>
             </button>
-            {budgetLeft !== null && (
-              <div className={cn(styles.card_field, styles["card_field--end"])}>
+          </div>
+          {budgetLeft !== null && (
+            <div className={styles.card_meta}>
+              <div className={styles.card_field}>
                 <span className={styles.card_label}>
                   {isMajor ? "Left this month" : "Left today"}
                 </span>
@@ -207,8 +166,8 @@ export const ExpenseSection = ({ variant }: ExpenseSectionProps) => {
                   {budgetLeft < 0 && " over"}
                 </span>
               </div>
-            )}
-          </div>
+            </div>
+          )}
           <div className={styles.card_list}>
             {items.length === 0 ? (
               <EmptyState
@@ -253,7 +212,6 @@ export const ExpenseSection = ({ variant }: ExpenseSectionProps) => {
         onClose={() => setSheetOpen(false)}
         title={`Add ${isMajor ? "major" : "daily"} expense`}
         big={isMajor}
-        defaultCategory={defaultCategory}
         accountId={bank?.id}
       />
       <EditTransactionSheet

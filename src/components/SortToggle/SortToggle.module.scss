@@ -1,0 +1,40 @@
+.sort {
+  position: relative;
+  display: flex;
+  width: fit-content;
+  padding: 0 1px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-input);
+  border: 1px solid var(--border-subtle);
+
+  &_item {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-width: var(--tap-min);
+    min-height: var(--tap-min);
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-pill);
+    color: var(--text-tertiary);
+    transition: color var(--dur-base) var(--ease-smooth);
+    @include tap-highlight-none;
+    @include focus-ring;
+
+    &--active {
+      color: var(--text-on-accent);
+    }
+  }
+
+  &_pill {
+    position: absolute;
+    inset: 3px 0;
+    border-radius: var(--radius-pill);
+    background: var(--accent-solid);
+    box-shadow: var(--shadow-soft);
+  }
+
+  &_icon {
+    position: relative;
+    z-index: 1;
+  }
+}

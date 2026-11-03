@@ -36,7 +36,6 @@ export const createCoreSlice: SliceCreator<CoreSlice> = (
     discardPending,
   },
 ) => {
-  // Bumped by every hydrate and reset so a slower, older fetch is ignored.
   let generation = 0;
 
   const loadOlder = async (from: string) => {
@@ -48,13 +47,10 @@ export const createCoreSlice: SliceCreator<CoreSlice> = (
     try {
       let older = await transactionRepo.listRange(uid, from, s.historyFrom);
       let exhausted = from <= EPOCH;
-      // An empty range almost always means the start was reached: fetch
-      // whatever is left once so "Load older" can stop.
       if (older.length === 0 && !exhausted) {
         older = await transactionRepo.listRange(uid, EPOCH, from);
         exhausted = true;
       }
-      // A reload or sign-out replaced the loaded range meanwhile.
       if (get().historyFrom !== s.historyFrom) return;
       const known = new Set(get().transactions.map((t) => t.id));
       set({
@@ -85,8 +81,6 @@ export const createCoreSlice: SliceCreator<CoreSlice> = (
         if (gen !== generation) return;
         const prev = get();
         const hasLocal = prev.profile?.id === userId;
-        // Changes queued during the fetch aren't in the snapshot: keep the
-        // optimistic state and resync once they're sent.
         if (hasLocal && pendingCount() > 0) {
           deferResync();
           set({ hasHydrated: true });
@@ -126,7 +120,6 @@ export const createCoreSlice: SliceCreator<CoreSlice> = (
           spendBudget: snap.spendBudget,
           historyFrom: snap.historyFrom,
         });
-        // Re-fetch older history the user had already loaded (null = all).
         if (
           snap.historyFrom &&
           keepFrom !== undefined &&

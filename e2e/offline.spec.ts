@@ -67,7 +67,6 @@ test("queued changes survive a reload and sync afterwards", async ({
   ).toBeVisible();
 
   await page.unroute("**/rest/v1/transactions*");
-  // The queue may already have retried, so the badge can be gone.
   await page
     .getByRole("button", { name: /waiting to sync/ })
     .click({ timeout: 3000 })

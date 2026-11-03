@@ -15,8 +15,6 @@ const emit = (
   else console[level](prefix);
 };
 
-// Errors carrying a `code` (Supabase/PostgREST) embed raw server text that can
-// include the user's values, so Sentry gets only the code.
 const reportable = (context: string, detail: unknown): Error => {
   const code = (detail as { code?: unknown } | null)?.code;
   if (typeof code === "string")

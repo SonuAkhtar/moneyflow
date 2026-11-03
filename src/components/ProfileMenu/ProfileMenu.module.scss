@@ -4,9 +4,6 @@
   z-index: z("drawer");
 }
 
-// Portaled to <body>: anchor below the sticky AppHeader (safe-area + header
-// padding + avatar button + gap), aligned with its right padding inside the
-// centred app column.
 .menu {
   position: fixed;
   top: calc(

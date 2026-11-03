@@ -1,6 +1,5 @@
 "use client";
 
-import type { CSSProperties } from "react";
 import { m } from "framer-motion";
 import { getCategoryMeta } from "@/constants/categories";
 import { cn } from "@/utils";
@@ -23,16 +22,7 @@ export const CategoryPicker = ({
   labelledBy,
 }: CategoryPickerProps) => (
   <div
-    className={styles.grid}
-    // One row for up to 5 categories, otherwise two rows.
-    style={
-      {
-        "--cols":
-          categories.length <= 5
-            ? categories.length
-            : Math.ceil(categories.length / 2),
-      } as CSSProperties
-    }
+    className={styles.row}
     role="group"
     aria-label={labelledBy ? undefined : label}
     aria-labelledby={labelledBy}
@@ -50,10 +40,8 @@ export const CategoryPicker = ({
           onClick={() => onChange(id)}
           whileTap={{ scale: 0.94 }}
         >
-          <span className={styles.chip_icon}>
-            <Icon size={16} />
-          </span>
-          <span className={styles.chip_label}>{meta.label}</span>
+          <Icon size={15} className={styles.chip_icon} aria-hidden />
+          {meta.label}
         </m.button>
       );
     })}

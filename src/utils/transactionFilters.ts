@@ -82,7 +82,6 @@ export interface MonthBucket {
   items: Transaction[];
 }
 
-/** Expects transactions sorted newest first. */
 export const groupByMonth = (transactions: Transaction[]): MonthBucket[] => {
   const buckets: MonthBucket[] = [];
   for (const t of transactions) {

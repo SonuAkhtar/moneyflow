@@ -455,7 +455,6 @@ const handleAuth = async (req, res, url, rest) => {
   if (admin && req.method === "DELETE") {
     if (!caller(req).service) return send(res, 403, { msg: "forbidden" });
     users.delete(admin[1]);
-    // Mirrors the on-delete-cascade foreign keys to auth.users.
     for (const table of TABLES)
       db[table] = db[table].filter((r) =>
         table === "profiles" ? r.id !== admin[1] : r.user_id !== admin[1],

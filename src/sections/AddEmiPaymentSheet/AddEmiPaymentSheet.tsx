@@ -66,7 +66,6 @@ export const AddEmiPaymentSheet = ({
         ? `${defaultMonth}-01`
         : currentDateKey()),
   );
-  // Editing a payment that wasn't paid from a bank must not start debiting one.
   const [bankId, setBankId] = useState(
     payment && !payment.accountId ? "" : defaultBankId,
   );
@@ -81,7 +80,6 @@ export const AddEmiPaymentSheet = ({
   }));
   if (isEdit) bankOptions.unshift({ label: "No bank", value: "" });
 
-  // One payment per instalment month (enforced by the database too).
   const monthTaken = (payments ?? []).some(
     (p) => p.month === month && p.id !== payment?.id,
   );
@@ -148,7 +146,6 @@ export const AddEmiPaymentSheet = ({
           label={`${noun} for`}
           value={month}
           onChange={(e) => {
-            // Keep the prefilled amount in step unless the user changed it.
             if (amount === defaultAmount(month))
               setAmount(defaultAmount(e.target.value));
             setMonth(e.target.value);

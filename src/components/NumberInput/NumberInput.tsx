@@ -17,7 +17,6 @@ export const sanitizeNumber = (raw: string, decimal: boolean): string => {
         .slice(0, 2)}`;
 };
 
-// Avoids type="number", which accepts "e" and changes value on wheel scroll.
 export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
   (
     {
@@ -40,7 +39,6 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
         const decimal = inputMode !== "numeric";
         const next = sanitizeNumber(input.value, decimal);
         if (next !== input.value) {
-          // Keep the caret where it was, minus any characters removed before it.
           const caret = input.selectionStart ?? input.value.length;
           const pos = Math.min(
             next.length,

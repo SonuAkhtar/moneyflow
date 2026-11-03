@@ -2,9 +2,9 @@ import type { Metadata, Viewport } from "next";
 import {
   Bricolage_Grotesque,
   Fraunces,
-  Plus_Jakarta_Sans,
-  Sora,
-  Space_Grotesk,
+  Fredoka,
+  Syne,
+  Outfit,
 } from "next/font/google";
 import { Providers } from "./providers";
 import { env, siteConfig } from "@/config";
@@ -15,18 +15,17 @@ const bricolage = Bricolage_Grotesque({
   display: "swap",
   variable: "--font-bricolage",
 });
-// The other choices only download when the user picks one.
-const jakarta = Plus_Jakarta_Sans({
+const syne = Syne({
   subsets: ["latin"],
   display: "swap",
   preload: false,
-  variable: "--font-jakarta",
+  variable: "--font-syne",
 });
-const spaceGrotesk = Space_Grotesk({
+const fredoka = Fredoka({
   subsets: ["latin"],
   display: "swap",
   preload: false,
-  variable: "--font-space",
+  variable: "--font-fredoka",
 });
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -34,13 +33,13 @@ const fraunces = Fraunces({
   preload: false,
   variable: "--font-fraunces",
 });
-const sora = Sora({
+const outfit = Outfit({
   subsets: ["latin"],
   display: "swap",
   preload: false,
-  variable: "--font-sora",
+  variable: "--font-outfit",
 });
-const fontVariables = [bricolage, jakarta, spaceGrotesk, fraunces, sora]
+const fontVariables = [bricolage, syne, fredoka, fraunces, outfit]
   .map((font) => font.variable)
   .join(" ");
 
@@ -96,7 +95,6 @@ export const metadata: Metadata = {
   },
 };
 
-// Keep in sync with THEME_COLORS in src/store/themeStore.ts.
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f5f1e8" },

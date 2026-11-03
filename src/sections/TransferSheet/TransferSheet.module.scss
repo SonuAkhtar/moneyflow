@@ -111,7 +111,6 @@
   cursor: pointer;
   @include focus-ring;
 
-  // Keep a 44px tap area around the 36px button.
   &::before {
     content: "";
     position: absolute;

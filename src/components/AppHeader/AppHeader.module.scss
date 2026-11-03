@@ -15,13 +15,21 @@
   box-shadow: var(--shadow-soft);
   transition:
     padding var(--dur-base) var(--ease-smooth),
+    margin var(--dur-base) var(--ease-smooth),
     box-shadow var(--dur-base) var(--ease-smooth);
 
   &--scrolled {
+    padding-top: calc(2px + env(safe-area-inset-top, 0px));
+    padding-bottom: 2px;
+    margin-bottom: calc(var(--space-5) + 12px);
     box-shadow: var(--shadow-card);
 
     .header_logoImg {
-      height: 32px;
+      height: 28px;
+    }
+
+    .header_actions {
+      transform: scale(0.84);
     }
   }
 
@@ -45,6 +53,8 @@
     display: flex;
     align-items: center;
     gap: var(--space-2);
+    transform-origin: right center;
+    transition: transform var(--dur-base) var(--ease-smooth);
   }
 
   &_avatar {

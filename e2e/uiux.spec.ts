@@ -92,11 +92,11 @@ test("budgets are set on the profile and shown on home and in the add sheet", as
 
   await page.getByRole("button", { name: "Add major expense" }).click();
   const sheet = page.getByRole("dialog");
+  await sheet.getByRole("button", { name: "Shopping" }).click();
   await sheet.getByLabel("Expense amount").fill("200");
-  await expect(sheet.getByText("This month")).toBeVisible();
-  await expect(
-    sheet.locator("strong", { hasText: "₹19,800 left" }),
-  ).toBeVisible();
+  await expect(sheet.getByText("Safe to spend this month")).toBeVisible();
+  await expect(sheet.locator("strong", { hasText: "₹19,800" })).toBeVisible();
+  await expect(sheet.getByText("₹20,000 before this")).toBeVisible();
   await sheet.getByRole("button", { name: "Add expense" }).click();
 
   await expect(sheet).toBeHidden();
@@ -109,13 +109,13 @@ test("the font picked on the profile applies to the whole app", async ({
   await signInSeeded(page);
   await page.goto("/profile");
   await page.getByRole("button", { name: /Font/ }).click();
-  await page.getByRole("radio", { name: /Space Grotesk/ }).click();
-  await expect(page.locator("html")).toHaveAttribute("data-font", "space");
+  await page.getByRole("radio", { name: /Syne/ }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-font", "syne");
   await expect
     .poll(() => page.evaluate(() => getComputedStyle(document.body).fontFamily))
-    .toContain("Space Grotesk");
+    .toContain("Syne");
   await page.reload();
-  await expect(page.locator("html")).toHaveAttribute("data-font", "space");
+  await expect(page.locator("html")).toHaveAttribute("data-font", "syne");
 });
 
 test("monthly amounts start hidden and the eye shows them", async ({
@@ -289,7 +289,6 @@ test("home shows spending pace, budget use and health score @mobile", async ({
 test("major expenses sort by amount by default and can sort by date", async ({
   page,
 }) => {
-  // Seed dates are clamped to the 1st, so early in a month they collide.
   test.skip(new Date().getDate() <= 3, "needs 3 earlier days this month");
   await signInSeeded(page, { transactions: SAMPLE_TXNS });
   const major = page.locator("section", {
@@ -315,6 +314,7 @@ test("every control on home is at least 44px to tap @mobile", async ({
   page,
 }) => {
   await signInSeeded(page, { transactions: SAMPLE_TXNS });
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(600);
   const small = await page.evaluate(() =>
     [
@@ -440,4 +440,57 @@ test("upcoming payments stay in the current month with overdue and paid states @
   );
   await expect(page.getByText("₹29,000")).toBeVisible();
   expect(await seriousViolations(page)).toEqual([]);
+});
+
+test("the add sheet opens at the top with the amount ready to type @mobile", async ({
+  page,
+}) => {
+  await signInSeeded(page, { transactions: SAMPLE_TXNS });
+  await page.getByRole("button", { name: "Add major expense" }).click();
+  const amount = page.getByRole("dialog").getByLabel("Expense amount");
+  await expect(amount).toBeFocused();
+  await page.waitForTimeout(600);
+  await expect(amount).toBeInViewport();
+  const scrollTop = await page
+    .locator('[role="dialog"] [class*="sheet_body"]')
+    .evaluate((el) => el.scrollTop);
+  expect(scrollTop).toBe(0);
+});
+
+test("scrolling down hides the nav and shrinks the header; scrolling up restores them @mobile", async ({
+  page,
+}) => {
+  await signInSeeded(page, { transactions: SAMPLE_TXNS });
+  const nav = page.getByRole("navigation");
+  const header = page.locator("header").first();
+  const fullHeight = (await header.boundingBox())!.height;
+
+  await page.evaluate(() => window.scrollBy(0, 600));
+  await expect(nav).toHaveCSS("opacity", "0");
+  await expect
+    .poll(async () => (await header.boundingBox())!.height)
+    .toBeLessThan(fullHeight);
+
+  await page.evaluate(() => window.scrollBy(0, -300));
+  await expect(nav).toHaveCSS("opacity", "1");
+
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect
+    .poll(async () => (await header.boundingBox())!.height)
+    .toBe(fullHeight);
+});
+
+test("transactions sort by amount within each month", async ({ page }) => {
+  await signInSeeded(page, { transactions: SAMPLE_TXNS });
+  await page.goto("/transactions");
+  await page.getByRole("button", { name: "Sort by amount" }).click();
+  const months = page.locator("main section");
+  await expect(months).toHaveCount(2);
+  const amounts = async (i: number) =>
+    (await months.nth(i).getByRole("button").allInnerTexts()).map((t) =>
+      Number(t.match(/₹([\d,]+)/)![1]!.replace(/,/g, "")),
+    );
+  const thisMonth = await amounts(0);
+  expect(thisMonth).toEqual([...thisMonth].sort((a, b) => b - a));
+  expect(await amounts(1)).toEqual([2000]);
 });

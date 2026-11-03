@@ -100,7 +100,6 @@ export const createEmisSlice: SliceCreator<EmisSlice> = (
   addEmiPayment: (emiId, input) => {
     const s = get();
     const old = s.emis.find((e) => e.id === emiId);
-    // The server allows one payment per EMI per month.
     if (!old || (old.payments ?? []).some((p) => p.month === input.month))
       return;
     ownerId();

@@ -1,7 +1,5 @@
 alter function public.set_updated_at() set search_path = '';
 
--- Profiles: users may only edit their own app settings. email and username are
--- owned by auth (email_for_username trusts profiles.email).
 revoke update on public.profiles from authenticated;
 grant update (
   full_name, phone, avatar_url, currency, monthly_salary, savings_target,
@@ -20,12 +18,10 @@ create trigger on_auth_user_email_changed after update of email on auth.users
   for each row when (old.email is distinct from new.email)
   execute function public.handle_user_email_change();
 
--- Repair any email that was rewritten through the old table-wide grant.
 update public.profiles p set email = u.email
 from auth.users u
 where u.id = p.id and u.email is not null and p.email is distinct from u.email;
 
--- Referenced accounts must belong to the same user.
 drop policy if exists profiles_update_own on public.profiles;
 create policy profiles_update_own on public.profiles
   for update to authenticated
@@ -75,7 +71,6 @@ create index if not exists emi_payments_account_id_idx on public.emi_payments (a
 create index if not exists profiles_major_account_id_idx on public.profiles (major_account_id);
 create index if not exists profiles_daily_account_id_idx on public.profiles (daily_account_id);
 
--- Skipped (with a notice) rather than deleting user data when duplicates exist.
 do $$ begin
   if exists (
     select 1 from public.emi_payments group by emi_id, month having count(*) > 1
@@ -87,7 +82,6 @@ do $$ begin
   end if;
 end $$;
 
--- NOT VALID: enforced for new writes without blocking on existing rows.
 do $$
 declare
   c record;
@@ -123,8 +117,6 @@ begin
   end loop;
 end $$;
 
--- Avatars: served through public URLs, which don't need a select policy.
--- Owners still need select for list() and upsert.
 update storage.buckets
 set file_size_limit = 2097152,
     allowed_mime_types = array['image/jpeg', 'image/png', 'image/webp']
@@ -139,7 +131,6 @@ create policy avatars_owner_read on storage.objects
     and (storage.foldername(name))[1] = (select auth.uid())::text
   );
 
--- Balance changes: one ledger row per client op makes replays no-ops.
 create table if not exists public.balance_ops (
   op_id uuid primary key,
   user_id uuid not null references auth.users (id) on delete cascade,
@@ -164,8 +155,6 @@ create policy balance_ops_own on public.balance_ops
     )
   );
 
--- Returns the new balance, the current one if p_op_id was already applied,
--- or null when the account isn't the caller's.
 create or replace function public.adjust_balance(
   p_account_id uuid, p_delta numeric, p_op_id uuid
 )
@@ -196,7 +185,6 @@ end $$;
 revoke execute on function public.adjust_balance(uuid, numeric, uuid) from public, anon;
 grant execute on function public.adjust_balance(uuid, numeric, uuid) to authenticated;
 
--- Rate limits shared by all server instances; only the service role may hit them.
 create table if not exists public.rate_limits (
   key text primary key,
   count integer not null,
@@ -206,7 +194,6 @@ create index if not exists rate_limits_reset_at_idx on public.rate_limits (reset
 alter table public.rate_limits enable row level security;
 revoke all on public.rate_limits from anon, authenticated;
 
--- Returns 0 when allowed, otherwise the seconds until the window resets.
 create or replace function public.hit_rate_limit(
   p_key text, p_max integer, p_window_seconds integer
 )
@@ -221,7 +208,6 @@ begin
     count = case when r.reset_at <= now() then 1 else r.count + 1 end,
     reset_at = case when r.reset_at <= now() then excluded.reset_at else r.reset_at end
   returning count, reset_at into v_count, v_reset;
-  -- Occasionally prune expired windows so the table stays small.
   if random() < 0.01 then
     delete from public.rate_limits where reset_at < now();
   end if;

@@ -70,7 +70,6 @@ export const ComingUp = () => {
         paid: (e.payments ?? []).some((p) => p.month === thisMonth),
       });
     }
-    // Includes dues from earlier months that are still unpaid (overdue).
     for (const b of borrowings) {
       if (!b.dueDate || borrowingSettled(b)) continue;
       if (b.dueDate.slice(0, 7) > thisMonth) continue;

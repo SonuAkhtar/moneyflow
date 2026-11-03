@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useRef } from "react";
 import { cn, getCurrencySymbol } from "@/utils";
 import styles from "./AmountField.module.scss";
 
@@ -16,7 +17,6 @@ interface AmountFieldProps {
   "aria-describedby"?: string;
 }
 
-// Commas are thousands separators ("1,00,000"); the first "." is the decimal.
 const sanitizeAmount = (raw: string): string => {
   const cleaned = raw.replace(/[^0-9.]/g, "");
   const dot = cleaned.indexOf(".");
@@ -40,20 +40,28 @@ export const AmountField = ({
   "aria-label": ariaLabel = "Amount",
   "aria-invalid": ariaInvalid,
   "aria-describedby": ariaDescribedBy,
-}: AmountFieldProps) => (
-  <div className={cn(styles.amount, tone && styles[`amount--${tone}`])}>
-    <span className={styles.amount_symbol}>{symbol}</span>
-    <input
-      id={id}
-      className={styles.amount_input}
-      inputMode="decimal"
-      aria-label={ariaLabel}
-      aria-invalid={ariaInvalid || undefined}
-      aria-describedby={ariaDescribedBy}
-      placeholder={placeholder}
-      value={value}
-      onChange={(e) => onChange(sanitizeAmount(e.target.value))}
-      autoFocus={autoFocus}
-    />
-  </div>
-);
+}: AmountFieldProps) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useLayoutEffect(() => {
+    if (autoFocus) inputRef.current?.focus({ preventScroll: true });
+  }, [autoFocus]);
+
+  return (
+    <div className={cn(styles.amount, tone && styles[`amount--${tone}`])}>
+      <span className={styles.amount_symbol}>{symbol}</span>
+      <input
+        ref={inputRef}
+        id={id}
+        className={styles.amount_input}
+        inputMode="decimal"
+        aria-label={ariaLabel}
+        aria-invalid={ariaInvalid || undefined}
+        aria-describedby={ariaDescribedBy}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(sanitizeAmount(e.target.value))}
+      />
+    </div>
+  );
+};

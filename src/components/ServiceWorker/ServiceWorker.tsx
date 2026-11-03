@@ -18,8 +18,6 @@ export const ServiceWorker = () => {
 
     let reg: ServiceWorkerRegistration | undefined;
 
-    // Only reload once the user asked for the update, so a deploy never
-    // wipes in-progress input.
     let reloadRequested = false;
     let refreshing = false;
     const onControllerChange = () => {
@@ -38,14 +36,12 @@ export const ServiceWorker = () => {
           label: "Reload",
           onClick: () => {
             reloadRequested = true;
-            // Another tab may have activated this update already.
             if (worker.state === "activated") window.location.reload();
             else worker.postMessage({ type: "SKIP_WAITING" });
           },
         },
       });
     };
-    // A waiting worker only matters when an older one controls this page.
     const checkWaiting = () => {
       if (reg?.waiting && navigator.serviceWorker.controller) {
         promptUpdate(reg.waiting);

@@ -48,8 +48,6 @@ export const EditTransactionSheet = ({
   open,
   onClose,
 }: EditTransactionSheetProps) => {
-  // The parent clears `transaction` on close: keep showing the last one while
-  // the sheet animates out, and start a fresh form on every open.
   const [shown, setShown] = useState(transaction);
   const [wasOpen, setWasOpen] = useState(false);
   const [session, setSession] = useState(0);
@@ -143,7 +141,6 @@ const EditForm = ({ transaction, onClose }: EditFormProps) => {
   const kindCategories = transaction.isBigExpense
     ? MAJOR_EXPENSE_CATEGORIES
     : DAILY_EXPENSE_CATEGORIES;
-  // Older entries can use a category outside today's short list.
   const categories = kindCategories.includes(transaction.category)
     ? kindCategories
     : [transaction.category, ...kindCategories];

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { m } from "framer-motion";
@@ -16,9 +17,22 @@ const SPRING = {
 
 export const BottomNav = () => {
   const pathname = usePathname();
+  const [hidden, setHidden] = useState(false);
+
+  useEffect(() => {
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (Math.abs(y - last) < 8) return;
+      setHidden(y > last && y > 80);
+      last = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
-    <nav className={styles.nav}>
+    <nav className={cn(styles.nav, hidden && styles["nav--hidden"])}>
       <div className={styles.nav_bar}>
         {BOTTOM_NAV.map((item) => {
           const Icon = item.icon;

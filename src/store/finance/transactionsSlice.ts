@@ -123,8 +123,6 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
   setSalary: (month, amount, accountId) => {
     const s = get();
     const uid = ownerId();
-    // The editor shows the month's total, so the first salary row takes the
-    // new amount and any extra rows for that month are removed.
     const [existing, ...extras] = s.transactions.filter(
       (t) =>
         t.type === "income" &&

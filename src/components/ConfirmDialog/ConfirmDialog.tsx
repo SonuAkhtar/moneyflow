@@ -78,7 +78,6 @@ export const ConfirmDialog = ({
       document.removeEventListener("keydown", onKeyDown);
       window.clearTimeout(focusTimer);
       unlockScroll();
-      // The opener may be gone (e.g. an item in a menu that has closed).
       if (previouslyFocused?.isConnected) previouslyFocused.focus();
     };
   }, [open]);

@@ -110,20 +110,19 @@ export const INCOME_CATEGORIES: CategoryId[] = [
 ];
 
 export const DAILY_EXPENSE_CATEGORIES: CategoryId[] = [
-  "food",
-  "transport",
-  "shopping",
   "groceries",
+  "transport",
+  "food",
+  "shopping",
   "other",
 ];
 
 export const MAJOR_EXPENSE_CATEGORIES: CategoryId[] = [
-  "shopping",
-  "travel",
   "rent",
   "bills",
+  "shopping",
+  "travel",
   "health",
-  "education",
   "entertainment",
   "other",
 ];

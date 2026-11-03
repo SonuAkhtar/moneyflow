@@ -6,7 +6,6 @@ import type { ToastMessage } from "@/types";
 
 interface UiState {
   toasts: ToastMessage[];
-  /** The monthly statement's amounts start hidden on every app load. */
   amountsHidden: boolean;
   toggleAmounts: () => void;
   pushToast: (toast: Omit<ToastMessage, "id">) => void;

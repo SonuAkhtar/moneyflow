@@ -35,10 +35,6 @@ export const unlockScroll = () => {
 let keyboardProxy: HTMLInputElement | null = null;
 let primedFrom: HTMLElement | null = null;
 
-// iOS only shows the keyboard for focus() inside the tap itself, but the
-// sheet's autoFocus field mounts after it. Call this from the tap that opens
-// a sheet: a throwaway input takes focus now, and the keyboard stays up when
-// the real field takes over.
 export const primeKeyboard = () => {
   if (!window.matchMedia("(pointer: coarse)").matches) return;
   keyboardProxy?.remove();
@@ -46,7 +42,6 @@ export const primeKeyboard = () => {
   const input = document.createElement("input");
   input.setAttribute("aria-hidden", "true");
   input.tabIndex = -1;
-  // 16px stops iOS zooming in on focus.
   input.style.cssText =
     "position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px;";
   document.body.appendChild(input);
@@ -82,9 +77,9 @@ export const BottomSheet = ({
   const descId = useId();
   const onCloseRef = useRef(onClose);
   const panelRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const settledRef = useRef(false);
 
-  // Record the opener while rendering the open transition: by the time any
-  // effect runs, an autoFocus child inside the sheet already has focus.
   const [wasOpen, setWasOpen] = useState(false);
   const [opener, setOpener] = useState<HTMLElement | null>(null);
   if (open !== wasOpen) {
@@ -101,6 +96,7 @@ export const BottomSheet = ({
 
   useEffect(() => {
     if (!open) return;
+    settledRef.current = false;
     lockScroll();
 
     const close = () => onCloseRef.current();
@@ -154,7 +150,6 @@ export const BottomSheet = ({
 
   return (
     <Portal>
-      {/* inert keeps the sheet from taking taps while it animates out. */}
       <div inert={!open}>
         <AnimatePresence>
           {open && (
@@ -172,6 +167,11 @@ export const BottomSheet = ({
                 animate={{ y: 0 }}
                 exit={{ y: "100%" }}
                 transition={{ duration: 0.36, ease: [0.32, 0.72, 0, 1] }}
+                onAnimationComplete={() => {
+                  if (settledRef.current) return;
+                  settledRef.current = true;
+                  bodyRef.current?.scrollTo({ top: 0 });
+                }}
               >
                 <m.div
                   ref={panelRef}
@@ -182,8 +182,10 @@ export const BottomSheet = ({
                   aria-labelledby={title ? titleId : undefined}
                   aria-describedby={description ? descId : undefined}
                   onFocus={(e) => {
-                    // Keep the focused field visible above the on-screen keyboard.
-                    if (e.target.matches("input, textarea, select")) {
+                    if (
+                      settledRef.current &&
+                      e.target.matches("input, textarea, select")
+                    ) {
                       e.target.scrollIntoView({ block: "nearest" });
                     }
                   }}
@@ -212,7 +214,9 @@ export const BottomSheet = ({
                       </button>
                     </header>
                   )}
-                  <div className={styles.sheet_body}>{children}</div>
+                  <div ref={bodyRef} className={styles.sheet_body}>
+                    {children}
+                  </div>
                   {footer && (
                     <div className={styles.sheet_footer}>{footer}</div>
                   )}

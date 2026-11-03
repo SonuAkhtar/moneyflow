@@ -54,8 +54,6 @@ export const authService = {
       },
     });
     if (error) {
-      // The profile insert failed: in practice the username was claimed
-      // between the availability check and sign-up.
       if (/database error saving new user/i.test(error.message))
         return { ok: false, message: "That username is taken" };
       return { ok: false, message: error.message };

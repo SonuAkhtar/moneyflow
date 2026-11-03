@@ -98,7 +98,6 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
     emi ? startDateOf(emi) : currentDateKey(),
   );
   const [tenure, setTenure] = useState(emi ? intStr(emi.totalMonths) : "");
-  // Kept as typed so browsers without a month picker can enter it as text.
   const [endInput, setEndInput] = useState(() =>
     emi ? endMonthOf(emiStartMonth(emi), intStr(emi.totalMonths)) : "",
   );
@@ -144,7 +143,6 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
 
   const resolvedName = type === "Other" ? customName.trim() : type;
 
-  // Tenure is the stored source of truth; the end month follows it.
   const startMonth = monthOfDate(startDate);
   const tenureNum = Math.max(0, Math.floor(Number(tenure) || 0));
   const endMonth = endMonthOf(startMonth, tenure);
@@ -273,8 +271,6 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
     submitted.current = true;
     const sched = schedule();
     const month = startMonth;
-    // The shown date clamps the due day to the start month (31 shows as 28 in
-    // February), so keep the stored day unless the date was changed.
     const due =
       emi && startDate === startDateOf(emi)
         ? emi.dueDay

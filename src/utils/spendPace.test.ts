@@ -22,11 +22,11 @@ const t = (
 });
 
 describe("computeSpendPace", () => {
-  const today = new Date(2026, 9, 10, 15); // 10 Oct 2026
+  const today = new Date(2026, 9, 10, 15);
   const data = [
     t("2026-10-02T12:00:00", 100),
     t("2026-10-09T12:00:00", 50, { category: "travel" }),
-    t("2026-10-12T12:00:00", 999), // future day this month: ignored
+    t("2026-10-12T12:00:00", 999),
     t("2026-09-05T12:00:00", 300),
     t("2026-09-20T12:00:00", 700),
     t("2026-10-03T12:00:00", 5000, { type: "income", category: "salary" }),
@@ -51,7 +51,6 @@ describe("computeSpendPace", () => {
 });
 
 describe("computeBudgetStatus", () => {
-  // November has 30 days: ₹15,000 is ₹500 a day.
   const budget = { daily: 15000, major: 20000, dailySince: null };
   const on = (day: number) => new Date(2026, 10, day, 15);
   const nov = (day: number) =>

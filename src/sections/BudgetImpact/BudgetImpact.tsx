@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
+import { Wallet } from "lucide-react";
 import { useFinanceStore } from "@/store/financeStore";
 import { cn, formatCurrency, monthKey } from "@/utils";
 import {
@@ -12,7 +12,6 @@ import styles from "./BudgetImpact.module.scss";
 
 interface BudgetImpactProps {
   draft: BudgetExpense;
-  /** The expense being edited, replaced by `draft` in the preview. */
   replaceId?: string;
 }
 
@@ -39,25 +38,39 @@ export const BudgetImpact = ({ draft, replaceId }: BudgetImpactProps) => {
       draft,
     ]),
   );
-  const label = (left: number) =>
-    left < 0
-      ? `${formatCurrency(-left, currency)} over`
-      : `${formatCurrency(left, currency)} left`;
+  const fmt = (n: number) => formatCurrency(n, currency);
+  const over = after < 0;
+  const ratio = before > 0 ? Math.max(0, Math.min(1, after / before)) : 0;
 
   return (
-    <p className={styles.line} aria-live="polite">
-      <span className={styles.line_scope}>
-        {major ? "This month" : "Today"}
-      </span>
-      <span className={cn(before < 0 && styles.over)}>{label(before)}</span>
-      {after !== before && (
-        <>
-          <ArrowRight size={14} aria-label="becomes" />
-          <strong className={cn(after < 0 && styles.over)}>
-            {label(after)}
-          </strong>
-        </>
+    <div
+      className={cn(
+        styles.card,
+        over ? styles["card--over"] : ratio < 0.25 && styles["card--low"],
       )}
-    </p>
+      aria-live="polite"
+    >
+      <span className={styles.card_icon} aria-hidden>
+        <Wallet size={18} />
+      </span>
+      <span className={styles.card_text}>
+        <span className={styles.card_label}>
+          {major ? "Safe to spend this month" : "Safe to spend today"}
+        </span>
+        <strong className={styles.card_value}>
+          {over ? `${fmt(-after)} over budget` : fmt(after)}
+        </strong>
+        {after !== before && (
+          <span className={styles.card_note}>
+            {before < 0
+              ? `Already ${fmt(-before)} over`
+              : `${fmt(before)} before this`}
+          </span>
+        )}
+      </span>
+      <span className={styles.card_meter} aria-hidden>
+        <span style={{ width: `${ratio * 100}%` }} />
+      </span>
+    </div>
   );
 };

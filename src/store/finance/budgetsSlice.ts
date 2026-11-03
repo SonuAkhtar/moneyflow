@@ -33,7 +33,6 @@ export const createBudgetsSlice: SliceCreator<BudgetsSlice> = (
           ? {
               daily: round2(Math.max(0, daily)),
               major: round2(Math.max(0, major)),
-              // Keeps the start day when only the amount changes.
               dailySince:
                 daily > 0
                   ? prev?.daily

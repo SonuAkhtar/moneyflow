@@ -30,7 +30,6 @@ export const PullToRefresh = ({ onRefresh, children }: PullToRefreshProps) => {
   useEffect(() => {
     const begin = (e: TouchEvent) => {
       if (refreshingRef.current) return;
-      // Ignore gestures inside open sheets/dialogs or while scroll is locked.
       const target = e.target instanceof Element ? e.target : null;
       if (
         window.scrollY > 0 ||

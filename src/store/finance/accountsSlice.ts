@@ -133,8 +133,6 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (
       if (!current) return;
       const uid = ownerId();
       const adjustment = round2(savingAdjustment);
-      // The savings entry is part of the balance change, which `patch.balance`
-      // (when given) already sets in full.
       const delta =
         patch.balance !== undefined
           ? round2(patch.balance - current.balance)

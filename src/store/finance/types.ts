@@ -39,7 +39,6 @@ export interface FinanceState {
   flushSync: () => Promise<void>;
   loadHistory: (month: string) => Promise<void>;
   retrySync: () => void;
-  /** Drops queued changes for `uid` (default: the current user). */
   discardPendingSync: (uid?: string) => void;
   resetAll: () => void;
   updateProfile: (patch: Partial<Profile>) => void;
@@ -53,7 +52,6 @@ export interface FinanceState {
   setDailyAccount: (id: string) => void;
 
   addAccount: (input: AccountInput) => void;
-  /** `savingAdjustment` also records a savings deposit (+) / withdrawal (-). */
   updateAccount: (
     id: string,
     patch: Partial<Account>,

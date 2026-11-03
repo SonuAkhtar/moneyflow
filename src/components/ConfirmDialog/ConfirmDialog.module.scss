@@ -45,7 +45,6 @@
   }
 }
 
-// Exiting dialog (wrapper is inert while closed) must not catch taps.
 [inert] > .dialog,
 [inert] > .dialog * {
   pointer-events: none;

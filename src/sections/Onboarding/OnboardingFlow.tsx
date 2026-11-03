@@ -46,7 +46,6 @@ export const OnboardingFlow = () => {
   const symbol = getCurrencySymbol(currency);
   const [transitioning, setTransitioning] = useState(false);
   const moved = useRef(false);
-  // Move focus to each new step's heading, but not on first load.
   const focusHeading = useCallback((el: HTMLHeadingElement | null) => {
     if (el && moved.current) el.focus();
   }, []);

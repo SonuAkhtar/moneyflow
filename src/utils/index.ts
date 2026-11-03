@@ -130,11 +130,9 @@ export const emiPaidAmount = (e: Emi): number => {
 export const shiftMonth = (month: string, n: number): string =>
   monthKey(addMonths(parseISO(`${month}-01`), n));
 
-/** Last instalment month of a loan with a tenure. */
 export const emiEndMonth = (e: Emi): string =>
   shiftMonth(emiStartMonth(e), e.totalMonths - 1);
 
-/** The EMI due for `month`: the latest amount change on or before it. */
 export const emiAmountFor = (e: Emi, month: string): number => {
   let latest: Emi["amountChanges"][number] | undefined;
   for (const c of e.amountChanges ?? [])
@@ -142,7 +140,6 @@ export const emiAmountFor = (e: Emi, month: string): number => {
   return latest?.amount ?? e.monthlyAmount;
 };
 
-/** Total of the first `months` instalments from the start month. */
 export const emiScheduledAmount = (e: Emi, months: number): number => {
   if (!e.amountChanges?.length) return months * e.monthlyAmount;
   const start = emiStartMonth(e);
@@ -152,7 +149,6 @@ export const emiScheduledAmount = (e: Emi, months: number): number => {
   return round2(total);
 };
 
-/** Standard amortised EMI, rounded to a whole unit; 0 if inputs are missing. */
 export const suggestedEmi = (
   principal: number,
   annualRatePct: number,
@@ -225,7 +221,6 @@ export const formatMoneyShort = (value: number): string =>
 export const formatPercent = (value: number, digits = 0): string =>
   `${value.toFixed(digits)}%`;
 
-/** One "*" per whole digit, so a hidden amount keeps its rough size. */
 export const maskDigits = (value: number): string =>
   "*".repeat(Math.max(1, String(Math.floor(Math.abs(value))).length));
 

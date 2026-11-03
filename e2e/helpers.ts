@@ -116,7 +116,6 @@ export const signIn = async (
   await page.getByRole("button", { name: "Sign in" }).click();
 };
 
-/** The monthly statement's amounts start hidden; most tests read them. */
 export const showAmounts = async (page: Page) => {
   await page.getByRole("button", { name: "Show monthly amounts" }).click();
 };

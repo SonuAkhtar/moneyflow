@@ -50,8 +50,6 @@ export const AccountsList = () => {
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<Account | null>(null);
-  // Bumped on every open: the sheet remounts with fresh form state, but keeps
-  // its content (and exit animation) while closing.
   const [openCount, setOpenCount] = useState(0);
   const [transferOpen, setTransferOpen] = useState(false);
   const [editingTransfer, setEditingTransfer] = useState<Transaction | null>(

@@ -5,13 +5,11 @@ export interface OutboxGroup {
   uid: string;
   steps: SyncStep[];
   cursor: number;
-  /** A step failed: the steps before `cursor` are being rolled back. */
   undoing?: boolean;
 }
 
 export const OUTBOX_KEY = "mf-outbox";
 let memory: OutboxGroup[] = [];
-// Set when localStorage rejected a write, so reads don't return stale data.
 let memoryOnly = false;
 
 const storage = (): Storage | null => {

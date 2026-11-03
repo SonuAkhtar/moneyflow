@@ -10,7 +10,6 @@ const AVATAR_PAGE = 100;
 const json = (body: unknown, status = 200) =>
   NextResponse.json(body, { status });
 
-// Lists from offset 0 each time because removed files shift later pages.
 const removeAvatars = async (admin: SupabaseClient, userId: string) => {
   const avatars = admin.storage.from("avatars");
   for (;;) {
@@ -62,7 +61,6 @@ export async function POST(request: NextRequest) {
   if (authError || !user)
     return json({ ok: false, message: "Not signed in" }, 401);
 
-  // Every app table cascades from auth.users, so this removes all rows at once.
   const { error: deleteError } = await admin.auth.admin.deleteUser(user.id);
   if (deleteError) {
     return json(
@@ -74,7 +72,6 @@ export async function POST(request: NextRequest) {
   try {
     await removeAvatars(admin, user.id);
   } catch (err) {
-    // The account is gone either way; leftover files are cleaned up manually.
     logger.error("account.delete.avatars", err, { userId: user.id });
   }
   return json({ ok: true });

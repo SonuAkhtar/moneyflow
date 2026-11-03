@@ -31,7 +31,6 @@ interface AddExpenseSheetProps {
   onClose: () => void;
   title: string;
   big?: boolean;
-  defaultCategory?: CategoryId;
   accountId?: string;
 }
 
@@ -40,16 +39,14 @@ export const AddExpenseSheet = ({
   onClose,
   title,
   big = false,
-  defaultCategory = "food",
   accountId,
 }: AddExpenseSheetProps) => (
   <BottomSheet open={open} onClose={onClose} title={title}>
     {open && (
       <ExpenseForm
-        key={`${accountId ?? "none"}-${defaultCategory}`}
+        key={accountId ?? "none"}
         onClose={onClose}
         big={big}
-        defaultCategory={defaultCategory}
         accountId={accountId}
       />
     )}
@@ -59,16 +56,10 @@ export const AddExpenseSheet = ({
 interface ExpenseFormProps {
   onClose: () => void;
   big: boolean;
-  defaultCategory: CategoryId;
   accountId?: string;
 }
 
-const ExpenseForm = ({
-  onClose,
-  big,
-  defaultCategory,
-  accountId,
-}: ExpenseFormProps) => {
+const ExpenseForm = ({ onClose, big, accountId }: ExpenseFormProps) => {
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
   const addTransaction = useFinanceStore((s) => s.addTransaction);
   const { banks, defaultBankId, resolve } = useSpendAccounts(accountId);
@@ -76,7 +67,8 @@ const ExpenseForm = ({
   const symbol = getCurrencySymbol();
 
   const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState<CategoryId>(defaultCategory);
+  const categories = big ? MAJOR_EXPENSE_CATEGORIES : DAILY_EXPENSE_CATEGORIES;
+  const [category, setCategory] = useState<CategoryId>(categories[0]!);
   const [bankId, setBankId] = useState(defaultBankId);
   const [merchant, setMerchant] = useState("");
   const [date, setDate] = useState(currentDateKey());
@@ -85,7 +77,6 @@ const ExpenseForm = ({
   const categoryLabelId = useId();
 
   const value = Number(amount);
-  const categories = big ? MAJOR_EXPENSE_CATEGORIES : DAILY_EXPENSE_CATEGORIES;
 
   const account = resolve(bankId);
   const blocker =

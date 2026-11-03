@@ -1,12 +1,9 @@
 $tab-height: 44px;
 $notch: 20px;
 
-// Folder-style card: a label block and a separate "+" tab on top, joined to
-// the body by a concave fillet so the shape works on any background.
 .card {
   --card-bg: var(--surface-card-solid);
   color: var(--text-primary);
-  // Follows the folder shape: a hairline outline plus the usual card shadow.
   filter: drop-shadow(0 0 0.5px var(--border-strong))
     drop-shadow(0 6px 14px rgba(0, 0, 0, 0.08));
 
@@ -68,7 +65,21 @@ $notch: 20px;
     background: var(--card-bg);
   }
 
+  &_head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  &_sum {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
   &_total {
+    color: var(--color-danger);
     font-family: var(--num-font);
     font-size: var(--font-3xl);
     font-weight: var(--weight-bold);
@@ -142,45 +153,7 @@ $notch: 20px;
 }
 
 .sort {
-  position: relative;
-  display: flex;
-  width: fit-content;
   margin: 0 0 var(--space-3) auto;
-  padding: 0 1px;
-  border-radius: var(--radius-pill);
-  background: var(--surface-input);
-  border: 1px solid var(--border-subtle);
-
-  &_item {
-    position: relative;
-    display: grid;
-    place-items: center;
-    min-width: var(--tap-min);
-    min-height: var(--tap-min);
-    padding: 0 var(--space-2);
-    border-radius: var(--radius-pill);
-    color: var(--text-tertiary);
-    transition: color var(--dur-base) var(--ease-smooth);
-    @include tap-highlight-none;
-    @include focus-ring;
-
-    &--active {
-      color: var(--text-on-accent);
-    }
-  }
-
-  &_pill {
-    position: absolute;
-    inset: 3px 0;
-    border-radius: var(--radius-pill);
-    background: var(--accent-solid);
-    box-shadow: var(--shadow-soft);
-  }
-
-  &_icon {
-    position: relative;
-    z-index: 1;
-  }
 }
 
 .rows {

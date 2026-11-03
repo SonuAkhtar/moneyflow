@@ -30,7 +30,6 @@ export const DateField = ({
   const errorId = useId();
   const [error, setError] = useState<string | null>(null);
 
-  // Typed dates bypass the picker's min/max, so reject them here.
   const handleInput = (next: string) => {
     if (!next) return;
     if (next > max || (min && next < min)) {

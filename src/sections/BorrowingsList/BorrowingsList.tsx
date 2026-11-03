@@ -59,8 +59,6 @@ export const BorrowingsList = () => {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [childTarget, setChildTarget] = useState<ChildTarget | null>(null);
   const [childOpen, setChildOpen] = useState(false);
-  // Bumped on every open: the sheet remounts with fresh form state, but keeps
-  // its content (and exit animation) while closing.
   const [openCount, setOpenCount] = useState(0);
 
   const totalOutstanding = sumBy(borrowings, borrowingOutstanding);

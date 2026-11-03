@@ -84,7 +84,6 @@ export default function AnalyticsPage() {
   const historyFrom = useFinanceStore((s) => s.historyFrom);
   const historyLoading = useFinanceStore((s) => s.historyLoading);
   const loadHistory = useFinanceStore((s) => s.loadHistory);
-  // The 6-month trend (which includes the previous month) reaches furthest back.
   const earliestMonth = lastNMonthKeys(TREND_MONTHS, month)[0]!;
   useEffect(() => {
     void loadHistory(earliestMonth);

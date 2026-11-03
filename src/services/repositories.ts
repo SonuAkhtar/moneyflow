@@ -42,7 +42,6 @@ interface ApiError {
   code?: string;
 }
 
-// `code` lets the logger report the failure without the raw server text.
 const repoError = (context: string, error: ApiError | null) =>
   Object.assign(new Error(`${context}: ${error?.message ?? "unknown error"}`), {
     code: error?.code || "unknown",
@@ -52,8 +51,6 @@ const fail = (context: string, error: ApiError | null): never => {
   throw repoError(context, error);
 };
 
-// Must not exceed the PostgREST max-rows setting (Supabase default 1000), or
-// a capped page would look like the last one.
 const PAGE_SIZE = 1000;
 
 const fetchAll = async <R>(
@@ -111,7 +108,6 @@ function makeRepo<T extends { id: string }>(
       const rows = await fetchAll<any>(`${table}.list`, (from, to) => {
         let query = sb().from(table).select("*").eq("user_id", userId);
         if (opts?.since) query = query.gte(opts.since.column, opts.since.value);
-        // id breaks ties so pages never overlap or skip rows.
         return query
           .order(orderBy.column, { ascending: orderBy.ascending })
           .order("id")
@@ -149,8 +145,6 @@ export type AccountMetaPatch = Partial<
 export const accountRepo = {
   list: baseAccountRepo.list,
   remove: baseAccountRepo.remove,
-  // Never overwrites: a replayed insert must not reset a balance that later
-  // adjustments already changed on the server.
   async insert(account: Account): Promise<void> {
     const { error } = await sb()
       .from("accounts")
@@ -179,7 +173,6 @@ export const accountRepo = {
       .eq("user_id", userId);
     if (error) fail("accounts.updateMeta", error);
   },
-  /** Applies `delta` once per `opId`, so replays are safe. */
   async adjustBalance(
     id: string,
     delta: number,
@@ -428,7 +421,6 @@ export const avatarRepo = {
       upsert: true,
     });
     if (error) fail("avatars.upload", error);
-    // The new avatar is saved; failing to clean up old ones is only logged.
     const { data: listed, error: listError } = await bucket.list(userId);
     if (listError)
       logger.error("avatars.list", repoError("avatars.list", listError));

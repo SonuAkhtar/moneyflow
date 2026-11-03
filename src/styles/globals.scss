@@ -111,7 +111,6 @@
   --font-xs: 0.75rem;
   --font-sm: 0.8125rem;
   --font-md: 0.9375rem;
-  // iOS Safari zooms on focus when field text is below 16px.
   --font-input: 1rem;
   --font-lg: 1.0625rem;
   --font-subhead: 1.125rem;
@@ -458,18 +457,18 @@ textarea {
   border: 0;
 }
 
-:root[data-font="jakarta"] {
-  --font-app: var(--font-jakarta);
+:root[data-font="syne"] {
+  --font-app: var(--font-syne);
 }
 
-:root[data-font="space"] {
-  --font-app: var(--font-space);
+:root[data-font="fredoka"] {
+  --font-app: var(--font-fredoka);
 }
 
 :root[data-font="fraunces"] {
   --font-app: var(--font-fraunces);
 }
 
-:root[data-font="sora"] {
-  --font-app: var(--font-sora);
+:root[data-font="outfit"] {
+  --font-app: var(--font-outfit);
 }

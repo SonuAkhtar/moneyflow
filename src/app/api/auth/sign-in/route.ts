@@ -76,7 +76,6 @@ export async function POST(request: NextRequest) {
   ).auth.signInWithPassword({ email, password });
   if (error) {
     if (error.status === 429) return tooMany(60);
-    // No status means the request never got a response.
     if (!error.status || error.status >= 500) return unavailable();
     const unconfirmed = error.code === "email_not_confirmed";
     return NextResponse.json(

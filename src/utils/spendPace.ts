@@ -69,7 +69,6 @@ export const computeSpendPace = (
   };
 };
 
-// Fixed commitments, like EMIs, never count against a spending budget.
 export const FIXED_COSTS: CategoryId[] = ["rent", "bills"];
 
 export type BudgetExpense = Pick<
@@ -79,7 +78,6 @@ export type BudgetExpense = Pick<
 
 export interface BudgetStatus {
   dailyShare: number;
-  /** Today's budget: unspent days carry forward, overspending goes negative. */
   todayLeft: number;
   majorLeft: number;
 }
@@ -92,7 +90,6 @@ export const computeBudgetStatus = (
   const thisKey = monthKey(today);
   const day = getDate(today);
   const days = getDaysInMonth(today);
-  // A limit set mid-month counts from that day, so it doesn't start in the red.
   const startDay =
     budget.dailySince && monthKey(budget.dailySince) === thisKey
       ? getDate(parseISO(budget.dailySince))
@@ -108,7 +105,6 @@ export const computeBudgetStatus = (
       dailySpent += t.amount;
   }
 
-  // Budgets are shown in whole currency units.
   const dailyShare = budget.daily / (days - startDay + 1);
   return {
     dailyShare: Math.round(dailyShare),

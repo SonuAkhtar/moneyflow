@@ -50,16 +50,12 @@ export const createMutationHelpers = (
   let needsResync = false;
   let retryTimer: ReturnType<typeof setTimeout> | null = null;
   let retryIndex = 0;
-  // Groups queued by this tab. If one vanishes from storage, another tab
-  // synced or dropped it, so this tab's optimistic state needs a resync.
   const created = new Set<string>();
 
   const currentUid = () =>
     get().profile?.id ?? useAuthStore.getState().user?.id ?? null;
   const mine = () => groups.filter((g) => g.uid === currentUid());
 
-  // The outbox is shared by every open tab, so each change is applied to the
-  // stored list instead of overwriting it with this tab's copy.
   const commit = (update: (stored: OutboxGroup[]) => OutboxGroup[]) => {
     groups = update(loadOutbox());
     saveOutbox(groups);
@@ -113,8 +109,6 @@ export const createMutationHelpers = (
     }
   };
 
-  // Rolls back the steps before the cursor. Stops (keeping the group) when
-  // blocked, so the rollback resumes on the next run instead of re-running it.
   const undoGroup = async (group: OutboxGroup): Promise<GroupResult> => {
     while (group.cursor > 0) {
       for (const op of group.steps[group.cursor - 1]?.undo ?? []) {
@@ -146,8 +140,6 @@ export const createMutationHelpers = (
         await runWithRetry(exec);
       } catch (err) {
         if (isNetworkError(err)) return "blocked";
-        // A session error is retried once after a refresh. If the refresh
-        // fails the user is signed out, and the change waits for sign-in.
         if (isAuthError(err)) {
           if (!(await refreshSession())) return "blocked";
           if (!authRetried) {
@@ -200,7 +192,6 @@ export const createMutationHelpers = (
   const processQueue = async () => {
     blocked = false;
     for (;;) {
-      // Another tab may have added, advanced or finished groups meanwhile.
       refresh();
       publish();
       const group = mine()[0];

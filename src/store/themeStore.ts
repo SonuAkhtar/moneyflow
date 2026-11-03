@@ -9,10 +9,10 @@ const FONT_KEY = "mf-font";
 
 export const FONTS = [
   { id: "bricolage", label: "Bricolage", note: "Bold and characterful" },
-  { id: "jakarta", label: "Plus Jakarta", note: "Clean, modern fintech" },
-  { id: "space", label: "Space Grotesk", note: "Technical and sharp" },
+  { id: "syne", label: "Syne", note: "Artsy and expressive" },
+  { id: "fredoka", label: "Fredoka", note: "Funky and rounded" },
   { id: "fraunces", label: "Fraunces", note: "Soft editorial serif" },
-  { id: "sora", label: "Sora", note: "Geometric and airy" },
+  { id: "outfit", label: "Outfit", note: "Modern and geometric" },
 ] as const;
 
 export type FontId = (typeof FONTS)[number]["id"];
@@ -20,7 +20,6 @@ export type FontId = (typeof FONTS)[number]["id"];
 const isFont = (value: unknown): value is FontId =>
   FONTS.some((f) => f.id === value);
 
-// Same values as the themeColor entries in src/app/layout.tsx.
 const THEME_COLORS: Record<Theme, string> = {
   light: "#f5f1e8",
   dark: "#17140f",
