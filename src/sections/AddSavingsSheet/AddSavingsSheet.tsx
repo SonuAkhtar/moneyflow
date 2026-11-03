@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Landmark } from "lucide-react";
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
 import { Input } from "@/components/Input/Input";
@@ -39,8 +39,6 @@ export const AddSavingsSheet = ({
   const addAccount = useFinanceStore((s) => s.addAccount);
   const updateAccount = useFinanceStore((s) => s.updateAccount);
   const deleteAccount = useFinanceStore((s) => s.deleteAccount);
-  const addSavingDeposit = useFinanceStore((s) => s.addSavingDeposit);
-  const addSavingWithdrawal = useFinanceStore((s) => s.addSavingWithdrawal);
   const transactions = useFinanceStore((s) => s.transactions);
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
   const toast = useToast();
@@ -64,9 +62,10 @@ export const AddSavingsSheet = ({
     account ? String(account.balance) : "",
   );
   const [savedLast, setSavedLast] = useState(
-    account ? String(account.balance - thisMonthDelta) : "",
+    account ? String(round2(account.balance - thisMonthDelta)) : "",
   );
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const submitted = useRef(false);
 
   const selectedBank =
     BANK_PRESETS.find((b) => b.id === bankId) ?? BANK_PRESETS[0]!;
@@ -87,18 +86,20 @@ export const AddSavingsSheet = ({
     (isEdit ? savedLast.trim() !== "" : balanceValue >= 0);
 
   const submit = () => {
-    if (!canSave) return;
+    if (!canSave || submitted.current) return;
+    submitted.current = true;
     if (account) {
       const adjustment = round2(currentValue - savedLastValue - thisMonthDelta);
-      if (adjustment > 0.005) addSavingDeposit(account.id, adjustment);
-      else if (adjustment < -0.005)
-        addSavingWithdrawal(account.id, -adjustment);
-      updateAccount(account.id, {
-        name: bankName,
-        institution: bankName,
-        balance: currentValue,
-        colorTag: selectedBank.color,
-      });
+      updateAccount(
+        account.id,
+        {
+          name: bankName,
+          institution: bankName,
+          balance: currentValue,
+          colorTag: selectedBank.color,
+        },
+        adjustment,
+      );
       toast({
         title: "Bank updated",
         description: bankName,

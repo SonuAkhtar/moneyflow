@@ -48,8 +48,11 @@ export const AccountsList = () => {
   const accounts = useFinanceStore((s) => s.accounts);
   const transactions = useFinanceStore((s) => s.transactions);
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
-  const [addOpen, setAddOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<Account | null>(null);
+  // Bumped on every open: the sheet remounts with fresh form state, but keeps
+  // its content (and exit animation) while closing.
+  const [openCount, setOpenCount] = useState(0);
   const [transferOpen, setTransferOpen] = useState(false);
   const [editingTransfer, setEditingTransfer] = useState<Transaction | null>(
     null,
@@ -116,10 +119,10 @@ export const AccountsList = () => {
     return groups;
   }, [visibleTransfers]);
 
-  const sheetOpen = addOpen || editing !== null;
-  const closeSheet = () => {
-    setAddOpen(false);
-    setEditing(null);
+  const openSheet = (bank: Account | null) => {
+    setEditing(bank);
+    setSheetOpen(true);
+    setOpenCount((n) => n + 1);
   };
 
   return (
@@ -173,11 +176,11 @@ export const AccountsList = () => {
                 role="button"
                 tabIndex={0}
                 aria-label={`Edit ${bank.name}`}
-                onClick={() => setEditing(bank)}
+                onClick={() => openSheet(bank)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    setEditing(bank);
+                    openSheet(bank);
                   }
                 }}
               >
@@ -236,7 +239,7 @@ export const AccountsList = () => {
           variants={listItem}
           type="button"
           className={styles.add}
-          onClick={() => setAddOpen(true)}
+          onClick={() => openSheet(null)}
         >
           <Plus size={18} />
           <span>Add bank</span>
@@ -336,10 +339,10 @@ export const AccountsList = () => {
       />
 
       <AddSavingsSheet
-        key={editing?.id ?? "new"}
+        key={openCount}
         open={sheetOpen}
         account={editing}
-        onClose={closeSheet}
+        onClose={() => setSheetOpen(false)}
       />
     </section>
   );

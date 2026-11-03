@@ -30,6 +30,8 @@ let users;
 let refreshTokens;
 let objects;
 let failures;
+let balanceOps;
+let rateLimits;
 
 const reset = () => {
   db = Object.fromEntries(TABLES.map((t) => [t, []]));
@@ -37,6 +39,8 @@ const reset = () => {
   refreshTokens = new Map();
   objects = new Map();
   failures = [];
+  balanceOps = new Set();
+  rateLimits = new Map();
 };
 reset();
 
@@ -144,7 +148,12 @@ const DEFAULTS = {
     institution: null,
   }),
   transactions: () => ({ note: null, merchant: null, is_big_expense: false }),
-  emis: () => ({ status: "active", principal: 0, interest_rate: 0 }),
+  emis: () => ({
+    status: "active",
+    principal: 0,
+    interest_rate: 0,
+    amount_changes: [],
+  }),
   emi_payments: () => ({ account_id: null }),
   borrowings: () => ({ purpose: null, due_date: null, note: null }),
   borrowing_payments: () => ({ note: null }),
@@ -253,11 +262,18 @@ const handleRest = async (req, res, url, table) => {
     let rows = applyFilters(scoped, params);
     const order = url.searchParams.get("order");
     if (order) {
-      const [col, dir] = order.split(".");
-      rows = [...rows].sort(
-        (a, b) => compare(a[col], b[col]) * (dir === "desc" ? -1 : 1),
-      );
+      const keys = order.split(",").map((o) => o.split("."));
+      rows = [...rows].sort((a, b) => {
+        for (const [col, dir] of keys) {
+          const c = compare(a[col], b[col]) * (dir === "desc" ? -1 : 1);
+          if (c) return c;
+        }
+        return 0;
+      });
     }
+    const offset = Number(url.searchParams.get("offset") || 0);
+    const limit = url.searchParams.get("limit");
+    rows = rows.slice(offset, limit ? offset + Number(limit) : undefined);
     return send(res, 200, project(rows, url.searchParams.get("select")));
   }
 
@@ -278,6 +294,7 @@ const handleRest = async (req, res, url, table) => {
       }
       const idx = db[table].findIndex((r) => r.id === row.id);
       if (idx >= 0) {
+        if (prefer.includes("ignore-duplicates")) continue;
         if (!prefer.includes("merge-duplicates"))
           return send(res, 409, { code: "23505", message: "duplicate key" });
         if (!owns(table, db[table][idx], who))
@@ -295,6 +312,15 @@ const handleRest = async (req, res, url, table) => {
   }
 
   if (req.method === "PATCH") {
+    if (
+      table === "profiles" &&
+      !who.service &&
+      ("email" in payload || "username" in payload)
+    )
+      return send(res, 403, {
+        code: "42501",
+        message: "permission denied for table profiles",
+      });
     const rows = applyFilters(scoped, params);
     for (const r of rows)
       Object.assign(r, payload, { updated_at: new Date().toISOString() });
@@ -327,6 +353,38 @@ const handleRpc = async (req, res, fn) => {
   const uname = String(args.uname || "").toLowerCase();
   const profile = db.profiles.find((p) => p.username === uname);
   if (fn === "username_available") return send(res, 200, !profile);
+  if (fn === "adjust_balance") {
+    const acct = db.accounts.find(
+      (a) => a.id === args.p_account_id && a.user_id === who.uid,
+    );
+    if (!acct) return send(res, 200, null);
+    if (!balanceOps.has(args.p_op_id)) {
+      balanceOps.add(args.p_op_id);
+      acct.balance =
+        Math.round((Number(acct.balance) + Number(args.p_delta)) * 100) / 100;
+      acct.updated_at = new Date().toISOString();
+    }
+    return send(res, 200, Number(acct.balance));
+  }
+  if (fn === "hit_rate_limit") {
+    if (!who.service)
+      return send(res, 401, {
+        code: "42501",
+        message: "permission denied for function hit_rate_limit",
+      });
+    const now = Date.now();
+    let w = rateLimits.get(args.p_key);
+    if (!w || w.resetAt <= now) {
+      w = { count: 0, resetAt: now + args.p_window_seconds * 1000 };
+      rateLimits.set(args.p_key, w);
+    }
+    w.count += 1;
+    return send(
+      res,
+      200,
+      w.count <= args.p_max ? 0 : Math.ceil((w.resetAt - now) / 1000),
+    );
+  }
   if (fn === "email_for_username") {
     if (!who.service)
       return send(res, 401, {
@@ -397,6 +455,11 @@ const handleAuth = async (req, res, url, rest) => {
   if (admin && req.method === "DELETE") {
     if (!caller(req).service) return send(res, 403, { msg: "forbidden" });
     users.delete(admin[1]);
+    // Mirrors the on-delete-cascade foreign keys to auth.users.
+    for (const table of TABLES)
+      db[table] = db[table].filter((r) =>
+        table === "profiles" ? r.id !== admin[1] : r.user_id !== admin[1],
+      );
     return send(res, 200, {});
   }
   return send(res, 404, { msg: `unknown auth route ${rest}` });
@@ -408,9 +471,11 @@ const handleStorage = async (req, res, url, rest) => {
   if (list) {
     const body = JSON.parse((await readBody(req)).toString() || "{}");
     const prefix = `${list[1]}/${body.prefix ? `${body.prefix}/` : ""}`;
+    const offset = Number(body.offset || 0);
     const names = [...objects.keys()]
       .filter((k) => k.startsWith(prefix))
-      .map((k) => ({ name: k.slice(prefix.length), id: k }));
+      .map((k) => ({ name: k.slice(prefix.length), id: k }))
+      .slice(offset, offset + Number(body.limit || 100));
     return send(res, 200, names);
   }
   const pub = rest.match(/^object\/public\/(.+)$/);

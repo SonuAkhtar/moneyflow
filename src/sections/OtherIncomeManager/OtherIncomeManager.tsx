@@ -44,6 +44,7 @@ export const OtherIncomeManager = () => {
         open={open}
         onToggle={setOpen}
         icon={<HandCoins size={18} />}
+        iconTone="blue"
         title="Other income"
         caption="Bonuses, refunds, freelance & more"
         trailing={

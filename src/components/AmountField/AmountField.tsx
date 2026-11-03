@@ -10,8 +10,13 @@ interface AmountFieldProps {
   placeholder?: string;
   autoFocus?: boolean;
   tone?: "success" | "danger";
+  id?: string;
+  "aria-label"?: string;
+  "aria-invalid"?: boolean;
+  "aria-describedby"?: string;
 }
 
+// Commas are thousands separators ("1,00,000"); the first "." is the decimal.
 const sanitizeAmount = (raw: string): string => {
   const cleaned = raw.replace(/[^0-9.]/g, "");
   const dot = cleaned.indexOf(".");
@@ -31,13 +36,20 @@ export const AmountField = ({
   placeholder = "0",
   autoFocus = false,
   tone,
+  id,
+  "aria-label": ariaLabel = "Amount",
+  "aria-invalid": ariaInvalid,
+  "aria-describedby": ariaDescribedBy,
 }: AmountFieldProps) => (
   <div className={cn(styles.amount, tone && styles[`amount--${tone}`])}>
     <span className={styles.amount_symbol}>{symbol}</span>
     <input
+      id={id}
       className={styles.amount_input}
       inputMode="decimal"
-      aria-label="Amount"
+      aria-label={ariaLabel}
+      aria-invalid={ariaInvalid || undefined}
+      aria-describedby={ariaDescribedBy}
       placeholder={placeholder}
       value={value}
       onChange={(e) => onChange(sanitizeAmount(e.target.value))}

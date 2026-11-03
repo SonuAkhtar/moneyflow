@@ -6,7 +6,6 @@ import {
   profileRepo,
   transactionRepo,
   type AccountMetaPatch,
-  type BalanceAttempt,
 } from "@/services/repositories";
 import type {
   Account,
@@ -16,6 +15,7 @@ import type {
   Emi,
   EmiPayment,
   Profile,
+  SpendBudget,
   Transaction,
 } from "@/types";
 
@@ -32,7 +32,8 @@ export type Op =
       k: "account.adjust";
       id: string;
       delta: number;
-      attempt?: BalanceAttempt;
+      /** Idempotency key for the server; assigned once and persisted. */
+      opId?: string;
     }
   | { k: "txn.save"; txn: Transaction }
   | { k: "txn.remove"; id: string }
@@ -50,7 +51,8 @@ export type Op =
       payment: BorrowingPayment;
     }
   | { k: "borrowing.removePayment"; id: string }
-  | { k: "budgets.save"; budgets: Partial<Record<CategoryId, number>> };
+  | { k: "budgets.save"; budgets: Partial<Record<CategoryId, number>> }
+  | { k: "spendBudget.save"; budget: SpendBudget | null };
 
 export const runOp = async (
   uid: string,
@@ -65,13 +67,11 @@ export const runOp = async (
     case "account.remove":
       return accountRepo.remove(op.id, uid);
     case "account.adjust":
-      await accountRepo.adjustBalance(op.id, uid, op.delta, {
-        lastAttempt: op.attempt,
-        onAttempt: (attempt) => {
-          op.attempt = attempt;
-          persist();
-        },
-      });
+      if (!op.opId) {
+        op.opId = crypto.randomUUID();
+        persist();
+      }
+      await accountRepo.adjustBalance(op.id, op.delta, op.opId);
       return;
     case "txn.save":
       return transactionRepo.save(op.txn);
@@ -99,5 +99,7 @@ export const runOp = async (
       return borrowingRepo.removePayment(op.id, uid);
     case "budgets.save":
       return budgetRepo.save(op.budgets);
+    case "spendBudget.save":
+      return budgetRepo.saveSpend(op.budget);
   }
 };

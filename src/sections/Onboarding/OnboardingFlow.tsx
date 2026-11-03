@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, m } from "framer-motion";
 import {
@@ -44,6 +44,12 @@ export const OnboardingFlow = () => {
     ),
   );
   const symbol = getCurrencySymbol(currency);
+  const [transitioning, setTransitioning] = useState(false);
+  const moved = useRef(false);
+  // Move focus to each new step's heading, but not on first load.
+  const focusHeading = useCallback((el: HTMLHeadingElement | null) => {
+    if (el && moved.current) el.focus();
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -106,7 +112,14 @@ export const OnboardingFlow = () => {
     }
   };
 
-  const next = () => (isLast ? void finish() : setStep((s) => s + 1));
+  const goTo = (target: number) => {
+    if (transitioning) return;
+    moved.current = true;
+    setTransitioning(true);
+    setStep(target);
+  };
+
+  const next = () => (isLast ? void finish() : goTo(step + 1));
 
   return (
     <div className={styles.flow}>
@@ -128,7 +141,10 @@ export const OnboardingFlow = () => {
         ))}
       </div>
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence
+        mode="wait"
+        onExitComplete={() => setTransitioning(false)}
+      >
         <m.div
           key={current.key}
           className={styles.flow_step}
@@ -143,7 +159,9 @@ export const OnboardingFlow = () => {
             {step === 2 && <PiggyBank size={26} />}
             {step === 3 && <Wallet size={26} />}
           </span>
-          <h1 className={styles.flow_title}>{current.title}</h1>
+          <h1 ref={focusHeading} tabIndex={-1} className={styles.flow_title}>
+            {current.title}
+          </h1>
           <p className={styles.flow_subtitle}>{current.subtitle}</p>
 
           <div className={styles.flow_body}>
@@ -215,7 +233,7 @@ export const OnboardingFlow = () => {
             variant="ghost"
             fullWidth
             icon={ArrowLeft}
-            onClick={() => setStep((s) => s - 1)}
+            onClick={() => goTo(step - 1)}
             disabled={saving}
           >
             Back

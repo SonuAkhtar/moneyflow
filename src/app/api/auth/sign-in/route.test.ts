@@ -1,7 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
-const rpc = vi.fn();
+const lookup = vi.fn();
+const rateLimit = vi.fn();
+const rpc = (fn: string, args: unknown) =>
+  fn === "hit_rate_limit" ? rateLimit(args) : lookup(fn, args);
 const signInWithPassword = vi.fn();
 
 vi.mock("@/config", () => ({
@@ -25,15 +28,22 @@ const call = (body: unknown, ip = "1.1.1.1") =>
   );
 
 beforeEach(() => {
-  rpc.mockReset();
+  lookup.mockReset();
   signInWithPassword.mockReset();
-  signInIpLimiter.reset();
-  signInUsernameLimiter.reset();
+  // Shared limiter unreachable by default, so the in-memory fallback applies.
+  rateLimit.mockReset();
+  rateLimit.mockResolvedValue({ data: null, error: { code: "PGRST" } });
+  signInIpLimiter.local.reset();
+  signInUsernameLimiter.local.reset();
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "service";
+});
+afterEach(() => {
+  delete process.env.SUPABASE_SERVICE_ROLE_KEY;
 });
 
 describe("POST /api/auth/sign-in", () => {
   it("returns a session and never the email", async () => {
-    rpc.mockResolvedValue({ data: "alice@example.com", error: null });
+    lookup.mockResolvedValue({ data: "alice@example.com", error: null });
     signInWithPassword.mockResolvedValue({
       data: { session: { access_token: "a", refresh_token: "r" } },
       error: null,
@@ -46,16 +56,18 @@ describe("POST /api/auth/sign-in", () => {
       session: { access_token: "a", refresh_token: "r" },
     });
     expect(JSON.stringify(body)).not.toContain("alice@example.com");
-    expect(rpc).toHaveBeenCalledWith("email_for_username", { uname: "alice" });
+    expect(lookup).toHaveBeenCalledWith("email_for_username", {
+      uname: "alice",
+    });
   });
 
   it("gives unknown usernames the same error as a wrong password", async () => {
-    rpc.mockResolvedValue({ data: null, error: null });
+    lookup.mockResolvedValue({ data: null, error: null });
     const unknown = await call({ username: "nobody", password: "pw" });
-    rpc.mockResolvedValue({ data: "a@b.c", error: null });
+    lookup.mockResolvedValue({ data: "a@b.c", error: null });
     signInWithPassword.mockResolvedValue({
       data: { session: null },
-      error: { code: "invalid_credentials" },
+      error: { code: "invalid_credentials", status: 400 },
     });
     const wrong = await call({ username: "alice", password: "bad" });
     expect(unknown.status).toBe(401);
@@ -69,14 +81,14 @@ describe("POST /api/auth/sign-in", () => {
   });
 
   it("returns 502 when the lookup fails", async () => {
-    rpc.mockResolvedValue({ data: null, error: { message: "boom" } });
+    lookup.mockResolvedValue({ data: null, error: { message: "boom" } });
     expect((await call({ username: "alice", password: "pw" })).status).toBe(
       502,
     );
   });
 
   it("limits attempts per username", async () => {
-    rpc.mockResolvedValue({ data: null, error: null });
+    lookup.mockResolvedValue({ data: null, error: null });
     const codes: number[] = [];
     for (let i = 0; i < 6; i += 1)
       codes.push(
@@ -87,12 +99,47 @@ describe("POST /api/auth/sign-in", () => {
   });
 
   it("limits attempts per IP and sends Retry-After", async () => {
-    rpc.mockResolvedValue({ data: null, error: null });
+    lookup.mockResolvedValue({ data: null, error: null });
     let last: Response | undefined;
     for (let i = 0; i < 11; i += 1)
       last = await call({ username: `user${i}`, password: "x" }, "5.5.5.5");
     expect(last!.status).toBe(429);
     expect(Number(last!.headers.get("Retry-After"))).toBeGreaterThan(0);
-    expect(rpc).toHaveBeenCalledTimes(10);
+    expect(lookup).toHaveBeenCalledTimes(10);
+  });
+
+  it("uses the shared limiter when it is reachable", async () => {
+    rateLimit.mockResolvedValue({ data: 30, error: null });
+    const res = await call({ username: "alice", password: "x" });
+    expect(res.status).toBe(429);
+    expect(res.headers.get("Retry-After")).toBe("30");
+    expect(rateLimit).toHaveBeenCalledWith({
+      p_key: "sign-in-ip:1.1.1.1",
+      p_max: 10,
+      p_window_seconds: 60,
+    });
+    expect(lookup).not.toHaveBeenCalled();
+  });
+
+  it("is unavailable without a service role key", async () => {
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    expect((await call({ username: "alice", password: "pw" })).status).toBe(
+      503,
+    );
+    expect(lookup).not.toHaveBeenCalled();
+  });
+
+  it("maps auth outages and throttling instead of blaming the password", async () => {
+    lookup.mockResolvedValue({ data: "a@b.c", error: null });
+    const respond = async (error: object) => {
+      signInWithPassword.mockResolvedValueOnce({
+        data: { session: null },
+        error,
+      });
+      return (await call({ username: "alice", password: "pw" })).status;
+    };
+    expect(await respond({ status: 429 })).toBe(429);
+    expect(await respond({ status: 503 })).toBe(502);
+    expect(await respond({ status: 0 })).toBe(502);
   });
 });

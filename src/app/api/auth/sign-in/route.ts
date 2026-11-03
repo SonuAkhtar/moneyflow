@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { env, isSupabaseConfigured } from "@/config";
-import { clientIp } from "@/lib/rateLimit";
+import { clientIp, hitRateLimit } from "@/lib/rateLimit";
 import { signInIpLimiter, signInUsernameLimiter } from "@/lib/authLimits";
 
 const INVALID = "Invalid username or password";
@@ -12,20 +12,32 @@ const tooMany = (retryAfter: number) =>
     { status: 429, headers: { "Retry-After": String(retryAfter) } },
   );
 
+const unavailable = () =>
+  NextResponse.json(
+    { ok: false, message: "Sign-in is unavailable, please try again." },
+    { status: 502 },
+  );
+
 const serverClient = (key: string) =>
   createClient(env.supabaseUrl, key, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
 export async function POST(request: NextRequest) {
-  if (!isSupabaseConfigured) {
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!isSupabaseConfigured || !serviceKey) {
     return NextResponse.json(
-      { ok: false, message: "Supabase isn't configured." },
-      { status: 500 },
+      { ok: false, message: "Username sign-in isn't configured." },
+      { status: 503 },
     );
   }
+  const admin = serverClient(serviceKey);
 
-  const byIp = signInIpLimiter.check(clientIp(request.headers));
+  const byIp = await hitRateLimit(
+    admin,
+    signInIpLimiter,
+    clientIp(request.headers),
+  );
   if (!byIp.ok) return tooMany(byIp.retryAfter);
 
   let username = "";
@@ -47,22 +59,14 @@ export async function POST(request: NextRequest) {
   if (!username || !password) {
     return NextResponse.json({ ok: false, message: INVALID }, { status: 401 });
   }
-  const byUser = signInUsernameLimiter.check(username);
+  const byUser = await hitRateLimit(admin, signInUsernameLimiter, username);
   if (!byUser.ok) return tooMany(byUser.retryAfter);
 
-  const lookup = serverClient(
-    process.env.SUPABASE_SERVICE_ROLE_KEY || env.supabaseAnonKey,
-  );
-  const { data: email, error: lookupError } = await lookup.rpc(
+  const { data: email, error: lookupError } = await admin.rpc(
     "email_for_username",
     { uname: username },
   );
-  if (lookupError) {
-    return NextResponse.json(
-      { ok: false, message: "Sign-in is unavailable, please try again." },
-      { status: 502 },
-    );
-  }
+  if (lookupError) return unavailable();
   if (typeof email !== "string" || !email) {
     return NextResponse.json({ ok: false, message: INVALID }, { status: 401 });
   }
@@ -70,8 +74,11 @@ export async function POST(request: NextRequest) {
   const { data, error } = await serverClient(
     env.supabaseAnonKey,
   ).auth.signInWithPassword({ email, password });
-  if (error || !data.session) {
-    const unconfirmed = error?.code === "email_not_confirmed";
+  if (error) {
+    if (error.status === 429) return tooMany(60);
+    // No status means the request never got a response.
+    if (!error.status || error.status >= 500) return unavailable();
+    const unconfirmed = error.code === "email_not_confirmed";
     return NextResponse.json(
       {
         ok: false,
@@ -81,6 +88,9 @@ export async function POST(request: NextRequest) {
       },
       { status: 401 },
     );
+  }
+  if (!data.session) {
+    return NextResponse.json({ ok: false, message: INVALID }, { status: 401 });
   }
 
   return NextResponse.json({

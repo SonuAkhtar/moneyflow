@@ -53,5 +53,16 @@
     &:focus-visible {
       border-color: var(--border-focus);
     }
+
+    &--error,
+    &--error:focus-visible {
+      border-color: var(--color-danger);
+    }
+  }
+
+  &_error {
+    font-size: var(--font-xs);
+    color: var(--color-danger);
+    padding-left: var(--space-1);
   }
 }

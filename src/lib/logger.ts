@@ -15,15 +15,24 @@ const emit = (
   else console[level](prefix);
 };
 
+// Errors carrying a `code` (Supabase/PostgREST) embed raw server text that can
+// include the user's values, so Sentry gets only the code.
+const reportable = (context: string, detail: unknown): Error => {
+  const code = (detail as { code?: unknown } | null)?.code;
+  if (typeof code === "string")
+    return new Error(`${context}: failed (${code})`);
+  return detail instanceof Error
+    ? detail
+    : new Error(`${context}: ${String(detail)}`);
+};
+
 export const logger = {
   error: (context: string, detail?: unknown, meta?: Meta) => {
     emit("error", context, detail, meta);
-    Sentry.captureException(
-      detail instanceof Error
-        ? detail
-        : new Error(`${context}: ${String(detail)}`),
-      { tags: { context }, extra: meta },
-    );
+    Sentry.captureException(reportable(context, detail), {
+      tags: { context },
+      extra: meta,
+    });
   },
   warn: (context: string, detail?: unknown, meta?: Meta) =>
     emit("warn", context, detail, meta),

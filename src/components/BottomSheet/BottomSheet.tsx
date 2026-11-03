@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, m } from "framer-motion";
 import { X } from "lucide-react";
 import { Portal } from "@/components/Portal/Portal";
@@ -20,16 +20,42 @@ interface BottomSheetProps {
 
 let scrollLockCount = 0;
 let savedOverflow = "";
-const lockScroll = () => {
+export const lockScroll = () => {
   if (scrollLockCount === 0) {
     savedOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
   }
   scrollLockCount += 1;
 };
-const unlockScroll = () => {
+export const unlockScroll = () => {
   scrollLockCount = Math.max(0, scrollLockCount - 1);
   if (scrollLockCount === 0) document.body.style.overflow = savedOverflow;
+};
+
+let keyboardProxy: HTMLInputElement | null = null;
+let primedFrom: HTMLElement | null = null;
+
+// iOS only shows the keyboard for focus() inside the tap itself, but the
+// sheet's autoFocus field mounts after it. Call this from the tap that opens
+// a sheet: a throwaway input takes focus now, and the keyboard stays up when
+// the real field takes over.
+export const primeKeyboard = () => {
+  if (!window.matchMedia("(pointer: coarse)").matches) return;
+  keyboardProxy?.remove();
+  primedFrom = document.activeElement as HTMLElement | null;
+  const input = document.createElement("input");
+  input.setAttribute("aria-hidden", "true");
+  input.tabIndex = -1;
+  // 16px stops iOS zooming in on focus.
+  input.style.cssText =
+    "position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px;";
+  document.body.appendChild(input);
+  input.focus({ preventScroll: true });
+  keyboardProxy = input;
+  window.setTimeout(() => {
+    input.remove();
+    if (keyboardProxy === input) keyboardProxy = null;
+  }, 1000);
 };
 
 const escapeStack: Array<() => void> = [];
@@ -56,7 +82,18 @@ export const BottomSheet = ({
   const descId = useId();
   const onCloseRef = useRef(onClose);
   const panelRef = useRef<HTMLDivElement>(null);
-  const restoreFocusRef = useRef<HTMLElement | null>(null);
+
+  // Record the opener while rendering the open transition: by the time any
+  // effect runs, an autoFocus child inside the sheet already has focus.
+  const [wasOpen, setWasOpen] = useState(false);
+  const [opener, setOpener] = useState<HTMLElement | null>(null);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open && typeof document !== "undefined") {
+      const active = document.activeElement as HTMLElement | null;
+      setOpener(active && active === keyboardProxy ? primedFrom : active);
+    }
+  }
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -65,7 +102,6 @@ export const BottomSheet = ({
   useEffect(() => {
     if (!open) return;
     lockScroll();
-    restoreFocusRef.current = document.activeElement as HTMLElement | null;
 
     const close = () => onCloseRef.current();
     escapeStack.push(close);
@@ -112,69 +148,80 @@ export const BottomSheet = ({
       const idx = escapeStack.lastIndexOf(close);
       if (idx !== -1) escapeStack.splice(idx, 1);
       unlockScroll();
-      restoreFocusRef.current?.focus?.();
+      if (opener?.isConnected) opener.focus();
     };
-  }, [open]);
+  }, [open, opener]);
 
   return (
     <Portal>
-      <AnimatePresence>
-        {open && (
-          <div key="sheet" className={styles.sheet}>
-            <m.div
-              className={styles.sheet_backdrop}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={onClose}
-            />
-            <m.div
-              className={styles.sheet_slide}
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ duration: 0.36, ease: [0.32, 0.72, 0, 1] }}
-            >
+      {/* inert keeps the sheet from taking taps while it animates out. */}
+      <div inert={!open}>
+        <AnimatePresence>
+          {open && (
+            <div key="sheet" className={styles.sheet}>
               <m.div
-                ref={panelRef}
-                tabIndex={-1}
-                className={cn(styles.sheet_panel, className)}
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby={title ? titleId : undefined}
-                aria-describedby={description ? descId : undefined}
+                className={styles.sheet_backdrop}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={onClose}
+              />
+              <m.div
+                className={styles.sheet_slide}
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ duration: 0.36, ease: [0.32, 0.72, 0, 1] }}
               >
-                {showHandle && <span className={styles.sheet_handle} />}
-                {(title || description) && (
-                  <header className={styles.sheet_header}>
-                    <div>
-                      {title && (
-                        <h3 id={titleId} className={styles.sheet_title}>
-                          {title}
-                        </h3>
-                      )}
-                      {description && (
-                        <p id={descId} className={styles.sheet_desc}>
-                          {description}
-                        </p>
-                      )}
-                    </div>
-                    <button
-                      className={styles.sheet_close}
-                      onClick={onClose}
-                      aria-label="Close"
-                    >
-                      <X size={18} />
-                    </button>
-                  </header>
-                )}
-                <div className={styles.sheet_body}>{children}</div>
-                {footer && <div className={styles.sheet_footer}>{footer}</div>}
+                <m.div
+                  ref={panelRef}
+                  tabIndex={-1}
+                  className={cn(styles.sheet_panel, className)}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby={title ? titleId : undefined}
+                  aria-describedby={description ? descId : undefined}
+                  onFocus={(e) => {
+                    // Keep the focused field visible above the on-screen keyboard.
+                    if (e.target.matches("input, textarea, select")) {
+                      e.target.scrollIntoView({ block: "nearest" });
+                    }
+                  }}
+                >
+                  {showHandle && <span className={styles.sheet_handle} />}
+                  {(title || description) && (
+                    <header className={styles.sheet_header}>
+                      <div>
+                        {title && (
+                          <h3 id={titleId} className={styles.sheet_title}>
+                            {title}
+                          </h3>
+                        )}
+                        {description && (
+                          <p id={descId} className={styles.sheet_desc}>
+                            {description}
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        className={styles.sheet_close}
+                        onClick={onClose}
+                        aria-label="Close"
+                      >
+                        <X size={18} />
+                      </button>
+                    </header>
+                  )}
+                  <div className={styles.sheet_body}>{children}</div>
+                  {footer && (
+                    <div className={styles.sheet_footer}>{footer}</div>
+                  )}
+                </m.div>
               </m.div>
-            </m.div>
-          </div>
-        )}
-      </AnimatePresence>
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
     </Portal>
   );
 };

@@ -18,6 +18,8 @@ import { AddEmiPaymentSheet } from "@/sections/AddEmiPaymentSheet/AddEmiPaymentS
 import { useFinanceStore } from "@/store/financeStore";
 import {
   currentMonthKey,
+  emiAmountFor,
+  emiEndMonth,
   emiKind,
   emiPaidAmount,
   emiPaidMonths,
@@ -67,6 +69,10 @@ export const EmiList = ({ kind }: EmiListProps) => {
   const [editing, setEditing] = useState<Emi | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [childTarget, setChildTarget] = useState<ChildTarget | null>(null);
+  const [childOpen, setChildOpen] = useState(false);
+  // Bumped on every open: the sheet remounts with fresh form state, but keeps
+  // its content (and exit animation) while closing.
+  const [openCount, setOpenCount] = useState(0);
   const [showClosed, setShowClosed] = useState(false);
 
   const meta = SECTION[kind];
@@ -85,11 +91,19 @@ export const EmiList = ({ kind }: EmiListProps) => {
   const openAdd = () => {
     setEditing(null);
     setSheetOpen(true);
+    setOpenCount((n) => n + 1);
   };
 
   const openEdit = (emi: Emi) => {
     setEditing(emi);
     setSheetOpen(true);
+    setOpenCount((n) => n + 1);
+  };
+
+  const openChild = (target: ChildTarget) => {
+    setChildTarget(target);
+    setChildOpen(true);
+    setOpenCount((n) => n + 1);
   };
 
   const renderCard = (emi: Emi, isClosed: boolean) => {
@@ -104,6 +118,22 @@ export const EmiList = ({ kind }: EmiListProps) => {
       b.month.localeCompare(a.month),
     );
     const isOpen = expanded === emi.id;
+    const shortMonth = (month: string) =>
+      format(parseISO(`${month}-01`), "MMM yyyy");
+    const nextChange = (emi.amountChanges ?? [])
+      .filter((c) => c.from > thisMonth)
+      .sort((a, b) => a.from.localeCompare(b.from))[0];
+    const loanSub = [
+      hasSchedule
+        ? `${shortMonth(emiStartMonth(emi))} - ${shortMonth(emiEndMonth(emi))}`
+        : `Started ${shortMonth(emiStartMonth(emi))}`,
+      emi.principal > 0 && formatCurrency(emi.principal, currency),
+      emi.interestRate > 0 && `${emi.interestRate}% p.a.`,
+      nextChange &&
+        `${formatCurrency(nextChange.amount, currency)} from ${shortMonth(nextChange.from)}`,
+    ]
+      .filter(Boolean)
+      .join(" · ");
     return (
       <Card
         key={emi.id}
@@ -131,13 +161,13 @@ export const EmiList = ({ kind }: EmiListProps) => {
                       parseISO(`${emiStartMonth(emi)}-01`),
                       "MMM yyyy",
                     )}`
-                  : `Started · ${monthLabel(emiStartMonth(emi))}`}
+                  : loanSub}
               </span>
             </span>
           </button>
           {kind === "loan" && (
             <span className={styles.item_amount}>
-              {formatCurrency(emi.monthlyAmount, currency)}
+              {formatCurrency(emiAmountFor(emi, thisMonth), currency)}
               <span className={styles.item_per}>/mo</span>
             </span>
           )}
@@ -222,7 +252,7 @@ export const EmiList = ({ kind }: EmiListProps) => {
                       type="button"
                       className={styles.child}
                       onClick={() =>
-                        setChildTarget({
+                        openChild({
                           emiId: emi.id,
                           payment: p ?? null,
                           month,
@@ -265,9 +295,7 @@ export const EmiList = ({ kind }: EmiListProps) => {
                         key={p.id}
                         type="button"
                         className={styles.child}
-                        onClick={() =>
-                          setChildTarget({ emiId: emi.id, payment: p })
-                        }
+                        onClick={() => openChild({ emiId: emi.id, payment: p })}
                       >
                         <span className={styles.child_month}>
                           {monthLabel(p.month)}
@@ -295,7 +323,7 @@ export const EmiList = ({ kind }: EmiListProps) => {
                       className={styles.childAdd}
                       aria-label={meta.addChild}
                       onClick={() =>
-                        setChildTarget({ emiId: emi.id, payment: null })
+                        openChild({ emiId: emi.id, payment: null })
                       }
                     >
                       <Plus size={15} />
@@ -362,7 +390,7 @@ export const EmiList = ({ kind }: EmiListProps) => {
       )}
 
       <AddEmiSheet
-        key={editing?.id ?? "new"}
+        key={`sheet-${openCount}`}
         open={sheetOpen}
         kind={kind}
         emi={editing}
@@ -370,16 +398,13 @@ export const EmiList = ({ kind }: EmiListProps) => {
       />
 
       <AddEmiPaymentSheet
-        key={
-          childTarget?.payment?.id ??
-          `${childTarget?.emiId ?? "none"}-${childTarget?.month ?? "new"}`
-        }
-        open={childTarget !== null}
+        key={`child-${openCount}`}
+        open={childOpen}
         kind={kind}
         emiId={childTarget?.emiId ?? null}
         payment={childTarget?.payment ?? null}
         defaultMonth={childTarget?.month ?? null}
-        onClose={() => setChildTarget(null)}
+        onClose={() => setChildOpen(false)}
       />
     </section>
   );

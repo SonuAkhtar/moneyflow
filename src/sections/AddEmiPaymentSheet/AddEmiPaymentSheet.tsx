@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
 import { Input } from "@/components/Input/Input";
 import { Select } from "@/components/Select/Select";
@@ -14,8 +14,9 @@ import {
   accountLabel,
   currentDateKey,
   currentMonthKey,
+  emiAmountFor,
   formatCurrency,
-  monthKey,
+  lastNMonthKeys,
   monthLabel,
 } from "@/utils";
 import type { EmiKind, EmiPayment } from "@/types";
@@ -42,6 +43,8 @@ export const AddEmiPaymentSheet = ({
   const updateEmiPayment = useFinanceStore((s) => s.updateEmiPayment);
   const deleteEmiPayment = useFinanceStore((s) => s.deleteEmiPayment);
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
+  const emi = useFinanceStore((s) => s.emis.find((e) => e.id === emiId));
+  const payments = emi?.payments;
   const { banks, defaultBankId, resolve } = useSpendAccounts(
     payment?.accountId,
   );
@@ -49,24 +52,51 @@ export const AddEmiPaymentSheet = ({
   const isEdit = Boolean(payment);
   const noun = kind === "sip" ? "SIP" : "EMI";
 
-  const [amount, setAmount] = useState(payment ? String(payment.amount) : "");
+  const [month, setMonth] = useState(
+    payment?.month ?? defaultMonth ?? currentMonthKey(),
+  );
+  const defaultAmount = (m: string) =>
+    !payment && emi && kind === "loan" ? String(emiAmountFor(emi, m)) : "";
+  const [amount, setAmount] = useState(
+    payment ? String(payment.amount) : defaultAmount(month),
+  );
   const [paidOn, setPaidOn] = useState(
     payment?.paidOn?.slice(0, 10) ??
       (defaultMonth && defaultMonth !== currentMonthKey()
         ? `${defaultMonth}-01`
         : currentDateKey()),
   );
-  const [bankId, setBankId] = useState(defaultBankId);
+  // Editing a payment that wasn't paid from a bank must not start debiting one.
+  const [bankId, setBankId] = useState(
+    payment && !payment.accountId ? "" : defaultBankId,
+  );
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const submitted = useRef(false);
 
+  const monthOptions = lastNMonthKeys(12).reverse();
+  if (!monthOptions.includes(month)) monthOptions.push(month);
+  const bankOptions = banks.map((a) => ({
+    label: accountLabel(a, currency),
+    value: a.id,
+  }));
+  if (isEdit) bankOptions.unshift({ label: "No bank", value: "" });
+
+  // One payment per instalment month (enforced by the database too).
+  const monthTaken = (payments ?? []).some(
+    (p) => p.month === month && p.id !== payment?.id,
+  );
   const value = Number(amount) || 0;
   const canSave =
-    value > 0 && Boolean(paidOn) && Boolean(emiId) && Boolean(resolve(bankId));
+    value > 0 &&
+    !monthTaken &&
+    Boolean(paidOn) &&
+    Boolean(emiId) &&
+    (Boolean(resolve(bankId)) || (isEdit && bankId === ""));
 
   const save = () => {
-    if (!canSave || !emiId) return;
+    if (!canSave || !emiId || submitted.current) return;
+    submitted.current = true;
     const account = resolve(bankId);
-    const month = monthKey(paidOn);
     if (payment) {
       updateEmiPayment(emiId, payment.id, {
         amount: value,
@@ -114,6 +144,25 @@ export const AddEmiPaymentSheet = ({
     >
       <div className={styles.body}>
         <AmountField value={amount} onChange={setAmount} />
+        <Select
+          label={`${noun} for`}
+          value={month}
+          onChange={(e) => {
+            // Keep the prefilled amount in step unless the user changed it.
+            if (amount === defaultAmount(month))
+              setAmount(defaultAmount(e.target.value));
+            setMonth(e.target.value);
+          }}
+          options={monthOptions.map((m) => ({
+            label: monthLabel(m),
+            value: m,
+          }))}
+          error={
+            monthTaken
+              ? `${monthLabel(month)} already has a payment - edit that one instead.`
+              : undefined
+          }
+        />
         <Input
           label="Payment date"
           type="date"
@@ -125,10 +174,7 @@ export const AddEmiPaymentSheet = ({
           label="Pay from bank"
           value={bankId}
           onChange={(e) => setBankId(e.target.value)}
-          options={banks.map((a) => ({
-            label: accountLabel(a, currency),
-            value: a.id,
-          }))}
+          options={bankOptions}
         />
       </div>
 

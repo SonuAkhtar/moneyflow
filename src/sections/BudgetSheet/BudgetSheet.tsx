@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
 import { NumberInput } from "@/components/NumberInput/NumberInput";
 import { Button } from "@/components/Button/Button";
@@ -36,8 +36,11 @@ const Form = ({ onClose }: { onClose: () => void }) => {
       ]),
     ),
   );
+  const submitted = useRef(false);
 
   const save = () => {
+    if (submitted.current) return;
+    submitted.current = true;
     const next: Partial<Record<CategoryId, number>> = {};
     for (const id of EXPENSE_CATEGORIES) {
       const amount = Number(draft[id]) || 0;

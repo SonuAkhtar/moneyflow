@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { parseISO } from "date-fns";
 import { useFinanceStore } from "@/store/financeStore";
 import { transactionDelta } from "@/utils";
 import type { Account, Emi, Transaction } from "@/types";
@@ -30,7 +31,7 @@ const buildTrail = (
   for (const emi of emis) {
     for (const p of emi.payments ?? []) {
       if (!p.accountId) continue;
-      const at = +new Date(p.paidOn);
+      const at = +parseISO(p.paidOn);
       const list = emiEventsByAccount.get(p.accountId) ?? [];
       list.push({ id: null, at, seq: at, delta: -p.amount });
       emiEventsByAccount.set(p.accountId, list);

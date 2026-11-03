@@ -67,6 +67,7 @@ const SpendBarChart = dynamic(
 type View = "overview" | "categories" | "daily";
 
 const HISTORY_MONTH_OPTIONS = 36;
+const TREND_MONTHS = 6;
 
 export default function AnalyticsPage() {
   const router = useRouter();
@@ -83,9 +84,11 @@ export default function AnalyticsPage() {
   const historyFrom = useFinanceStore((s) => s.historyFrom);
   const historyLoading = useFinanceStore((s) => s.historyLoading);
   const loadHistory = useFinanceStore((s) => s.loadHistory);
+  // The 6-month trend (which includes the previous month) reaches furthest back.
+  const earliestMonth = lastNMonthKeys(TREND_MONTHS, month)[0]!;
   useEffect(() => {
-    void loadHistory(month);
-  }, [month, historyFrom, loadHistory]);
+    void loadHistory(earliestMonth);
+  }, [earliestMonth, historyFrom, loadHistory]);
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
   const [view, setView] = useState<View>("overview");
   const [editing, setEditing] = useState<Transaction | null>(null);

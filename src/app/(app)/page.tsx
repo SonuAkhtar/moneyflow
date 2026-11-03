@@ -30,6 +30,14 @@ export default function HomePage() {
         </m.div>
 
         <m.div variants={listItem}>
+          <MajorSpends />
+        </m.div>
+
+        <m.div variants={listItem}>
+          <DailySpends />
+        </m.div>
+
+        <m.div variants={listItem}>
           <SpendPulse />
         </m.div>
 
@@ -39,14 +47,6 @@ export default function HomePage() {
 
         <m.div variants={listItem}>
           <SavingsAccordion />
-        </m.div>
-
-        <m.div variants={listItem}>
-          <MajorSpends />
-        </m.div>
-
-        <m.div variants={listItem}>
-          <DailySpends />
         </m.div>
       </m.div>
     </BalanceTrailProvider>

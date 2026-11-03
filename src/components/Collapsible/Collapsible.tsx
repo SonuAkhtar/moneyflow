@@ -15,6 +15,7 @@ interface CollapsibleProps {
   title: string;
   caption?: ReactNode;
   icon?: ReactNode;
+  iconTone?: "accent" | "blue" | "amber";
   trailing?: ReactNode;
   children: ReactNode;
   className?: string;
@@ -26,6 +27,7 @@ export const Collapsible = ({
   title,
   caption,
   icon,
+  iconTone = "accent",
   trailing,
   children,
   className,
@@ -37,7 +39,11 @@ export const Collapsible = ({
       onClick={() => onToggle(!open)}
       aria-expanded={open}
     >
-      {icon && <span className={styles.icon}>{icon}</span>}
+      {icon && (
+        <span className={cn(styles.icon, styles[`icon--${iconTone}`])}>
+          {icon}
+        </span>
+      )}
       <span className={styles.titles}>
         <span className={styles.title}>{title}</span>
         {caption != null && <span className={styles.caption}>{caption}</span>}

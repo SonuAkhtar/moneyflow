@@ -4,6 +4,7 @@ import { useEffect, useId, useRef } from "react";
 import { AnimatePresence, m } from "framer-motion";
 import { Portal } from "@/components/Portal/Portal";
 import { Button } from "@/components/Button/Button";
+import { lockScroll, unlockScroll } from "@/components/BottomSheet/BottomSheet";
 import type { Variant } from "@/types";
 import styles from "./ConfirmDialog.module.scss";
 
@@ -32,16 +33,16 @@ export const ConfirmDialog = ({
   const messageId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const onCancelRef = useRef(onCancel);
+  const confirmedRef = useRef(false);
   useEffect(() => {
     onCancelRef.current = onCancel;
   });
 
   useEffect(() => {
     if (!open) return;
+    confirmedRef.current = false;
     const previouslyFocused = document.activeElement as HTMLElement | null;
-    const { body } = document;
-    const prevOverflow = body.style.overflow;
-    body.style.overflow = "hidden";
+    lockScroll();
 
     const focusables = () =>
       panelRef.current?.querySelectorAll<HTMLElement>(
@@ -76,53 +77,66 @@ export const ConfirmDialog = ({
     return () => {
       document.removeEventListener("keydown", onKeyDown);
       window.clearTimeout(focusTimer);
-      body.style.overflow = prevOverflow;
-      previouslyFocused?.focus?.();
+      unlockScroll();
+      // The opener may be gone (e.g. an item in a menu that has closed).
+      if (previouslyFocused?.isConnected) previouslyFocused.focus();
     };
   }, [open]);
 
+  const handleConfirm = () => {
+    if (confirmedRef.current) return;
+    confirmedRef.current = true;
+    onConfirm();
+  };
+
   return (
     <Portal>
-      <AnimatePresence>
-        {open && (
-          <div key="dialog" className={styles.dialog}>
-            <m.div
-              className={styles.dialog_backdrop}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={onCancel}
-            />
-            <m.div
-              ref={panelRef}
-              className={styles.dialog_panel}
-              initial={{ opacity: 0, scale: 0.94, y: 12 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 8 }}
-              transition={{ type: "spring", stiffness: 360, damping: 30 }}
-              role="alertdialog"
-              aria-modal="true"
-              aria-labelledby={titleId}
-              aria-describedby={messageId}
-            >
-              <h3 id={titleId} className={styles.dialog_title}>
-                {title}
-              </h3>
-              <p id={messageId} className={styles.dialog_message}>
-                {message}
-              </p>
-              <div className={styles.dialog_actions}>
-                <Button variant="secondary" fullWidth onClick={onCancel}>
-                  {cancelLabel}
-                </Button>
-                <Button variant={confirmVariant} fullWidth onClick={onConfirm}>
-                  {confirmLabel}
-                </Button>
-              </div>
-            </m.div>
-          </div>
-        )}
-      </AnimatePresence>
+      <div inert={!open}>
+        <AnimatePresence>
+          {open && (
+            <div key="dialog" className={styles.dialog}>
+              <m.div
+                className={styles.dialog_backdrop}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={onCancel}
+              />
+              <m.div
+                ref={panelRef}
+                className={styles.dialog_panel}
+                initial={{ opacity: 0, scale: 0.94, y: 12 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.96, y: 8 }}
+                transition={{ type: "spring", stiffness: 360, damping: 30 }}
+                role="alertdialog"
+                aria-modal="true"
+                aria-labelledby={titleId}
+                aria-describedby={messageId}
+              >
+                <h3 id={titleId} className={styles.dialog_title}>
+                  {title}
+                </h3>
+                <p id={messageId} className={styles.dialog_message}>
+                  {message}
+                </p>
+                <div className={styles.dialog_actions}>
+                  <Button variant="secondary" fullWidth onClick={onCancel}>
+                    {cancelLabel}
+                  </Button>
+                  <Button
+                    variant={confirmVariant}
+                    fullWidth
+                    onClick={handleConfirm}
+                  >
+                    {confirmLabel}
+                  </Button>
+                </div>
+              </m.div>
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
     </Portal>
   );
 };

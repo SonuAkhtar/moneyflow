@@ -2,11 +2,13 @@
 
 import { useFinanceStore } from "@/store/financeStore";
 import { useFinanceMetrics } from "@/hooks/useFinanceMetrics";
-import { formatCurrency, currentMonthKey, monthLabel } from "@/utils";
+import { useUiStore } from "@/store/uiStore";
+import { formatAmount, currentMonthKey, monthLabel } from "@/utils";
 import styles from "./MonthOverview.module.scss";
 
 export const MonthOverview = () => {
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
+  const hidden = useUiStore((s) => s.amountsHidden);
   const { monthIncome, monthExpenses, monthSaved, savingsRate } =
     useFinanceMetrics();
 
@@ -34,9 +36,9 @@ export const MonthOverview = () => {
             <span className={styles.stat_label}>{stat.label}</span>
             <span
               className={`${styles.stat_value} ${styles[`stat_value--${stat.tone}`]}`}
-              title={formatCurrency(stat.value, currency)}
+              title={formatAmount(stat.value, currency, hidden)}
             >
-              {formatCurrency(stat.value, currency)}
+              {formatAmount(stat.value, currency, hidden)}
             </span>
           </div>
         ))}

@@ -8,9 +8,11 @@ import { BorrowingsList } from "@/sections/BorrowingsList/BorrowingsList";
 import { useFinanceStore } from "@/store/financeStore";
 import { useFinanceMetrics } from "@/hooks/useFinanceMetrics";
 import {
+  currentMonthKey,
+  emiAmountFor,
   emiKind,
   emiPaidAmount,
-  emiPaidMonths,
+  emiScheduledAmount,
   formatCurrency,
   sumBy,
 } from "@/utils";
@@ -25,17 +27,17 @@ export default function EmiPage() {
   const loans = emis.filter(
     (e) => e.status === "active" && emiKind(e) === "loan",
   );
-  const loanMonthly = sumBy(loans, (e) => e.monthlyAmount);
+  const thisMonth = currentMonthKey();
+  const loanMonthly = sumBy(loans, (e) => emiAmountFor(e, thisMonth));
   const burdenShare =
     monthIncome > 0 ? Math.round((loanMonthly / monthIncome) * 100) : 0;
   const paidSoFar = sumBy(loans, emiPaidAmount);
 
   const scheduled = loans.filter((e) => e.totalMonths > 0);
-  const loanTotal = sumBy(scheduled, (e) => e.totalMonths * e.monthlyAmount);
-  const loanPaid = sumBy(
-    scheduled,
-    (e) => Math.min(emiPaidMonths(e), e.totalMonths) * e.monthlyAmount,
+  const loanTotal = sumBy(scheduled, (e) =>
+    emiScheduledAmount(e, e.totalMonths),
   );
+  const loanPaid = sumBy(scheduled, emiPaidAmount);
   const loanRemaining = Math.max(0, loanTotal - loanPaid);
   const repaidPct = loanTotal > 0 ? (loanPaid / loanTotal) * 100 : 0;
 

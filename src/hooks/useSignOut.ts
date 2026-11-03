@@ -25,7 +25,8 @@ export const useSignOut = () => {
     ) {
       return;
     }
-    discardPendingSync();
+    discardPendingSync(useAuthStore.getState().user?.id);
+    navigator.serviceWorker?.controller?.postMessage({ type: "CLEAR_CACHES" });
     try {
       await authService.signOut();
     } finally {

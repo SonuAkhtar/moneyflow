@@ -4,7 +4,6 @@ import { startOfMonth, subMonths } from "date-fns";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireBrowserSupabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/logger";
-import { runWithRetry } from "@/lib/retry";
 import { INITIAL_HISTORY_MONTHS } from "@/constants";
 import {
   accountToRow,
@@ -31,14 +30,46 @@ import type {
   Emi,
   EmiPayment,
   Profile,
+  SpendBudget,
   Transaction,
 } from "@/types";
 
 const sb = (): SupabaseClient =>
   requireBrowserSupabase() as unknown as SupabaseClient;
 
-const fail = (context: string, message?: string): never => {
-  throw new Error(`${context}: ${message ?? "unknown error"}`);
+interface ApiError {
+  message: string;
+  code?: string;
+}
+
+// `code` lets the logger report the failure without the raw server text.
+const repoError = (context: string, error: ApiError | null) =>
+  Object.assign(new Error(`${context}: ${error?.message ?? "unknown error"}`), {
+    code: error?.code || "unknown",
+  });
+
+const fail = (context: string, error: ApiError | null): never => {
+  throw repoError(context, error);
+};
+
+// Must not exceed the PostgREST max-rows setting (Supabase default 1000), or
+// a capped page would look like the last one.
+const PAGE_SIZE = 1000;
+
+const fetchAll = async <R>(
+  context: string,
+  page: (
+    from: number,
+    to: number,
+  ) => PromiseLike<{ data: R[] | null; error: ApiError | null }>,
+): Promise<R[]> => {
+  const rows: R[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await page(from, from + PAGE_SIZE - 1);
+    if (error) fail(context, error);
+    rows.push(...(data ?? []));
+    if ((data?.length ?? 0) < PAGE_SIZE) return rows;
+  }
 };
 
 export const profileRepo = {
@@ -48,7 +79,7 @@ export const profileRepo = {
       .select("*")
       .eq("id", userId)
       .maybeSingle();
-    if (error) fail("profileRepo.get", error.message);
+    if (error) fail("profileRepo.get", error);
     return data ? rowToProfile(data) : null;
   },
   async update(
@@ -58,11 +89,10 @@ export const profileRepo = {
       dailyAccountId?: string | null;
     },
   ): Promise<void> {
-    const { error } = await sb()
-      .from("profiles")
-      .update(profileToUpdate(patch))
-      .eq("id", userId);
-    if (error) fail("profileRepo.update", error.message);
+    const row = profileToUpdate(patch);
+    if (Object.keys(row).length === 0) return;
+    const { error } = await sb().from("profiles").update(row).eq("id", userId);
+    if (error) fail("profileRepo.update", error);
   },
 };
 
@@ -71,24 +101,27 @@ function makeRepo<T extends { id: string }>(
   table: string,
   toRow: (entity: T) => any,
   fromRow: (row: any) => T,
-  orderBy?: { column: string; ascending: boolean },
+  orderBy: { column: string; ascending: boolean },
 ) {
   return {
     async list(
       userId: string,
       opts?: { since?: { column: string; value: string } },
     ): Promise<T[]> {
-      let query = sb().from(table).select("*").eq("user_id", userId);
-      if (opts?.since) query = query.gte(opts.since.column, opts.since.value);
-      if (orderBy)
-        query = query.order(orderBy.column, { ascending: orderBy.ascending });
-      const { data, error } = await query;
-      if (error) fail(`${table}.list`, error.message);
-      return ((data ?? []) as any[]).map(fromRow);
+      const rows = await fetchAll<any>(`${table}.list`, (from, to) => {
+        let query = sb().from(table).select("*").eq("user_id", userId);
+        if (opts?.since) query = query.gte(opts.since.column, opts.since.value);
+        // id breaks ties so pages never overlap or skip rows.
+        return query
+          .order(orderBy.column, { ascending: orderBy.ascending })
+          .order("id")
+          .range(from, to);
+      });
+      return rows.map(fromRow);
     },
     async save(entity: T): Promise<void> {
       const { error } = await sb().from(table).upsert(toRow(entity));
-      if (error) fail(`${table}.save`, error.message);
+      if (error) fail(`${table}.save`, error);
     },
     async remove(id: string, userId: string): Promise<void> {
       const { error } = await sb()
@@ -96,7 +129,7 @@ function makeRepo<T extends { id: string }>(
         .delete()
         .eq("id", id)
         .eq("user_id", userId);
-      if (error) fail(`${table}.remove`, error.message);
+      if (error) fail(`${table}.remove`, error);
     },
   };
 }
@@ -106,14 +139,8 @@ const baseAccountRepo = makeRepo<Account>(
   "accounts",
   accountToRow,
   rowToAccount,
+  { column: "created_at", ascending: true },
 );
-
-const MAX_BALANCE_ATTEMPTS = 5;
-
-export interface BalanceAttempt {
-  before: number;
-  next: number;
-}
 
 export type AccountMetaPatch = Partial<
   Pick<Account, "name" | "type" | "institution" | "colorTag" | "isPrimary">
@@ -122,7 +149,17 @@ export type AccountMetaPatch = Partial<
 export const accountRepo = {
   list: baseAccountRepo.list,
   remove: baseAccountRepo.remove,
-  insert: baseAccountRepo.save,
+  // Never overwrites: a replayed insert must not reset a balance that later
+  // adjustments already changed on the server.
+  async insert(account: Account): Promise<void> {
+    const { error } = await sb()
+      .from("accounts")
+      .upsert(accountToRow(account), {
+        onConflict: "id",
+        ignoreDuplicates: true,
+      });
+    if (error) fail("accounts.insert", error);
+  },
   async updateMeta(
     id: string,
     userId: string,
@@ -140,52 +177,22 @@ export const accountRepo = {
       .update(row)
       .eq("id", id)
       .eq("user_id", userId);
-    if (error) fail("accounts.updateMeta", error.message);
+    if (error) fail("accounts.updateMeta", error);
   },
+  /** Applies `delta` once per `opId`, so replays are safe. */
   async adjustBalance(
     id: string,
-    userId: string,
     delta: number,
-    opts: {
-      lastAttempt?: BalanceAttempt;
-      onAttempt?: (attempt: BalanceAttempt) => void;
-    } = {},
+    opId: string,
   ): Promise<number | null> {
     if (!delta) return null;
-    const read = () =>
-      runWithRetry(async () => {
-        const { data, error } = await sb()
-          .from("accounts")
-          .select("balance")
-          .eq("id", id)
-          .eq("user_id", userId)
-          .maybeSingle();
-        if (error) fail("accounts.adjustBalance", error.message);
-        return data as { balance: number | string } | null;
-      });
-    for (let attempt = 0; attempt < MAX_BALANCE_ATTEMPTS; attempt += 1) {
-      const current = await read();
-      if (!current) return null;
-      const balance = Number(current.balance);
-      if (attempt === 0 && opts.lastAttempt) {
-        if (balance === opts.lastAttempt.next) return balance;
-      }
-      const next = Math.round((balance + delta) * 100) / 100;
-      opts.onAttempt?.({ before: balance, next });
-      const { data, error } = await sb()
-        .from("accounts")
-        .update({ balance: next })
-        .eq("id", id)
-        .eq("user_id", userId)
-        .eq("balance", current.balance)
-        .select("id");
-      if (error) fail("accounts.adjustBalance", error.message);
-      if (data && data.length > 0) return next;
-    }
-    return fail(
-      "accounts.adjustBalance",
-      "balance changed concurrently, please refresh",
-    );
+    const { data, error } = await sb().rpc("adjust_balance", {
+      p_account_id: id,
+      p_delta: delta,
+      p_op_id: opId,
+    });
+    if (error) fail("accounts.adjustBalance", error);
+    return data == null ? null : Number(data);
   },
 };
 
@@ -203,17 +210,20 @@ export const transactionRepo = {
     fromIso: string,
     toIso: string,
   ): Promise<Transaction[]> {
-    const { data, error } = await sb()
-      .from("transactions")
-      .select("*")
-      .eq("user_id", userId)
-      .gte("occurred_at", fromIso)
-      .lt("occurred_at", toIso)
-      .order("occurred_at", { ascending: false });
-    if (error) fail("transactions.listRange", error.message);
-    return ((data ?? []) as Parameters<typeof rowToTransaction>[0][]).map(
-      rowToTransaction,
+    const rows = await fetchAll<Parameters<typeof rowToTransaction>[0]>(
+      "transactions.listRange",
+      (from, to) =>
+        sb()
+          .from("transactions")
+          .select("*")
+          .eq("user_id", userId)
+          .gte("occurred_at", fromIso)
+          .lt("occurred_at", toIso)
+          .order("occurred_at", { ascending: false })
+          .order("id")
+          .range(from, to),
     );
+    return rows.map(rowToTransaction);
   },
   async removeByAccount(accountId: string, userId: string): Promise<void> {
     const { error } = await sb()
@@ -221,14 +231,14 @@ export const transactionRepo = {
       .delete()
       .eq("account_id", accountId)
       .eq("user_id", userId);
-    if (error) fail("transactions.removeByAccount", error.message);
+    if (error) fail("transactions.removeByAccount", error);
   },
 };
 
 export const emiRepo = {
   async save(emi: Emi): Promise<void> {
     const { error } = await sb().from("emis").upsert(emiToRow(emi));
-    if (error) fail("emiRepo.save", error.message);
+    if (error) fail("emiRepo.save", error);
   },
   async remove(id: string, userId: string): Promise<void> {
     const { error } = await sb()
@@ -236,7 +246,7 @@ export const emiRepo = {
       .delete()
       .eq("id", id)
       .eq("user_id", userId);
-    if (error) fail("emiRepo.remove", error.message);
+    if (error) fail("emiRepo.remove", error);
   },
   async savePayment(
     payment: EmiPayment,
@@ -246,7 +256,7 @@ export const emiRepo = {
     const { error } = await sb()
       .from("emi_payments")
       .upsert(emiPaymentToRow(payment, emiId, userId));
-    if (error) fail("emiRepo.savePayment", error.message);
+    if (error) fail("emiRepo.savePayment", error);
   },
   async removePayment(paymentId: string, userId: string): Promise<void> {
     const { error } = await sb()
@@ -254,7 +264,7 @@ export const emiRepo = {
       .delete()
       .eq("id", paymentId)
       .eq("user_id", userId);
-    if (error) fail("emiRepo.removePayment", error.message);
+    if (error) fail("emiRepo.removePayment", error);
   },
 };
 
@@ -263,7 +273,7 @@ export const borrowingRepo = {
     const { error } = await sb()
       .from("borrowings")
       .upsert(borrowingToRow(borrowing));
-    if (error) fail("borrowingRepo.save", error.message);
+    if (error) fail("borrowingRepo.save", error);
   },
   async remove(id: string, userId: string): Promise<void> {
     const { error } = await sb()
@@ -271,7 +281,7 @@ export const borrowingRepo = {
       .delete()
       .eq("id", id)
       .eq("user_id", userId);
-    if (error) fail("borrowingRepo.remove", error.message);
+    if (error) fail("borrowingRepo.remove", error);
   },
   async savePayment(
     payment: BorrowingPayment,
@@ -281,7 +291,7 @@ export const borrowingRepo = {
     const { error } = await sb()
       .from("borrowing_payments")
       .upsert(borrowingPaymentToRow(payment, borrowingId, userId));
-    if (error) fail("borrowingRepo.savePayment", error.message);
+    if (error) fail("borrowingRepo.savePayment", error);
   },
   async removePayment(paymentId: string, userId: string): Promise<void> {
     const { error } = await sb()
@@ -289,7 +299,7 @@ export const borrowingRepo = {
       .delete()
       .eq("id", paymentId)
       .eq("user_id", userId);
-    if (error) fail("borrowingRepo.removePayment", error.message);
+    if (error) fail("borrowingRepo.removePayment", error);
   },
 };
 
@@ -302,6 +312,7 @@ export interface FinanceSnapshot {
   emis: Emi[];
   borrowings: Borrowing[];
   budgets: Partial<Record<CategoryId, number>> | null;
+  spendBudget: SpendBudget | null;
   authEmail: string | null;
   historyFrom: string | null;
 }
@@ -314,6 +325,16 @@ export async function fetchSnapshot(
   const since = opts.fullHistory
     ? null
     : startOfMonth(subMonths(new Date(), INITIAL_HISTORY_MONTHS)).toISOString();
+  const all = (table: string) =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    fetchAll<any>(`fetchSnapshot.${table}`, (from, to) =>
+      client
+        .from(table)
+        .select("*")
+        .eq("user_id", userId)
+        .order("id")
+        .range(from, to),
+    );
   const [
     bundle,
     accounts,
@@ -330,46 +351,31 @@ export async function fetchSnapshot(
       userId,
       since ? { since: { column: "occurred_at", value: since } } : undefined,
     ),
-    client.from("emis").select("*").eq("user_id", userId),
-    client.from("emi_payments").select("*").eq("user_id", userId),
-    client.from("borrowings").select("*").eq("user_id", userId),
-    client.from("borrowing_payments").select("*").eq("user_id", userId),
+    all("emis"),
+    all("emi_payments"),
+    all("borrowings"),
+    all("borrowing_payments"),
     client.auth.getUser(),
   ]);
-
-  if (emiRows.error) fail("fetchSnapshot.emis", emiRows.error.message);
-  if (emiPaymentRows.error)
-    fail("fetchSnapshot.emi_payments", emiPaymentRows.error.message);
+  if (authUser.error) fail("fetchSnapshot.user", authUser.error);
 
   const paymentsByEmi = new Map<string, EmiPayment[]>();
-  for (const row of emiPaymentRows.data ?? []) {
+  for (const row of emiPaymentRows) {
     const list = paymentsByEmi.get(row.emi_id) ?? [];
     list.push(rowToEmiPayment(row));
     paymentsByEmi.set(row.emi_id, list);
   }
-  const emis = (emiRows.data ?? []).map((r) =>
-    rowToEmi(r, paymentsByEmi.get(r.id) ?? []),
-  );
+  const emis = emiRows.map((r) => rowToEmi(r, paymentsByEmi.get(r.id) ?? []));
 
-  let borrowings: Borrowing[] = [];
-  if (borrowingRows.error)
-    logger.error("fetchSnapshot.borrowings", borrowingRows.error.message);
-  if (borrowingPaymentRows.error)
-    logger.error(
-      "fetchSnapshot.borrowing_payments",
-      borrowingPaymentRows.error.message,
-    );
-  if (!borrowingRows.error && !borrowingPaymentRows.error) {
-    const paymentsByBorrowing = new Map<string, BorrowingPayment[]>();
-    for (const row of borrowingPaymentRows.data ?? []) {
-      const list = paymentsByBorrowing.get(row.borrowing_id) ?? [];
-      list.push(rowToBorrowingPayment(row));
-      paymentsByBorrowing.set(row.borrowing_id, list);
-    }
-    borrowings = (borrowingRows.data ?? []).map((r) =>
-      rowToBorrowing(r, paymentsByBorrowing.get(r.id) ?? []),
-    );
+  const paymentsByBorrowing = new Map<string, BorrowingPayment[]>();
+  for (const row of borrowingPaymentRows) {
+    const list = paymentsByBorrowing.get(row.borrowing_id) ?? [];
+    list.push(rowToBorrowingPayment(row));
+    paymentsByBorrowing.set(row.borrowing_id, list);
   }
+  const borrowings = borrowingRows.map((r) =>
+    rowToBorrowing(r, paymentsByBorrowing.get(r.id) ?? []),
+  );
 
   return {
     profile: bundle?.profile ?? null,
@@ -380,6 +386,9 @@ export async function fetchSnapshot(
     emis,
     borrowings,
     budgets: parseBudgets(authUser.data.user?.user_metadata?.budgets),
+    spendBudget: parseSpendBudget(
+      authUser.data.user?.user_metadata?.spend_budget,
+    ),
     authEmail: authUser.data.user?.email ?? null,
     historyFrom: since,
   };
@@ -397,6 +406,19 @@ const parseBudgets = (
   return out;
 };
 
+const parseSpendBudget = (raw: unknown): SpendBudget | null => {
+  if (!raw || typeof raw !== "object") return null;
+  const { daily, major, dailySince } = raw as Record<string, unknown>;
+  const amount = (v: unknown) =>
+    Number.isFinite(Number(v)) ? Math.max(0, Number(v)) : 0;
+  const budget = {
+    daily: amount(daily),
+    major: amount(major),
+    dailySince: typeof dailySince === "string" ? dailySince : null,
+  };
+  return budget.daily > 0 || budget.major > 0 ? budget : null;
+};
+
 export const avatarRepo = {
   async upload(userId: string, image: Blob): Promise<string> {
     const bucket = sb().storage.from("avatars");
@@ -405,12 +427,22 @@ export const avatarRepo = {
       contentType: "image/jpeg",
       upsert: true,
     });
-    if (error) fail("avatars.upload", error.message);
-    const { data: listed } = await bucket.list(userId);
+    if (error) fail("avatars.upload", error);
+    // The new avatar is saved; failing to clean up old ones is only logged.
+    const { data: listed, error: listError } = await bucket.list(userId);
+    if (listError)
+      logger.error("avatars.list", repoError("avatars.list", listError));
     const stale = (listed ?? [])
       .map((f) => `${userId}/${f.name}`)
       .filter((p) => p !== path);
-    if (stale.length) await bucket.remove(stale);
+    if (stale.length) {
+      const { error: removeError } = await bucket.remove(stale);
+      if (removeError)
+        logger.error(
+          "avatars.remove",
+          repoError("avatars.remove", removeError),
+        );
+    }
     return bucket.getPublicUrl(path).data.publicUrl;
   },
 };
@@ -418,6 +450,12 @@ export const avatarRepo = {
 export const budgetRepo = {
   async save(budgets: Partial<Record<CategoryId, number>>): Promise<void> {
     const { error } = await sb().auth.updateUser({ data: { budgets } });
-    if (error) fail("budgets.save", error.message);
+    if (error) fail("budgets.save", error);
+  },
+  async saveSpend(budget: SpendBudget | null): Promise<void> {
+    const { error } = await sb().auth.updateUser({
+      data: { spend_budget: budget },
+    });
+    if (error) fail("spendBudget.save", error);
   },
 };

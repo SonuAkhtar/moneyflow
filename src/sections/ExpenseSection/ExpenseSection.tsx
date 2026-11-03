@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { m } from "framer-motion";
 import {
-  Building2,
   CalendarDays,
   ChevronDown,
   ChevronRight,
@@ -14,7 +13,7 @@ import {
   TrendingUp,
   type LucideIcon,
 } from "lucide-react";
-import { Card } from "@/components/Card/Card";
+import { primeKeyboard } from "@/components/BottomSheet/BottomSheet";
 import { EmptyState } from "@/components/EmptyState/EmptyState";
 import { ExpenseRow } from "@/components/ExpenseRow/ExpenseRow";
 import { AddExpenseSheet } from "@/sections/AddExpenseSheet/AddExpenseSheet";
@@ -24,6 +23,7 @@ import { useFinanceStore } from "@/store/financeStore";
 import { useBalanceTrail } from "@/hooks/useBalanceTrail";
 import { cn, currentMonthKey, formatCurrency, monthKey, sumBy } from "@/utils";
 import { ROUTES } from "@/constants";
+import { computeBudgetStatus } from "@/utils/spendPace";
 import type { CategoryId, Transaction } from "@/types";
 import styles from "./ExpenseSection.module.scss";
 
@@ -52,6 +52,7 @@ export const ExpenseSection = ({ variant }: ExpenseSectionProps) => {
   const setMajorAccount = useFinanceStore((s) => s.setMajorAccount);
   const setDailyAccount = useFinanceStore((s) => s.setDailyAccount);
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
+  const spendBudget = useFinanceStore((s) => s.spendBudget);
   const trail = useBalanceTrail();
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -89,6 +90,16 @@ export const ExpenseSection = ({ variant }: ExpenseSectionProps) => {
   }, [transactions, isMajor, sortBy]);
 
   const total = sumBy(items, (t) => t.amount);
+  const budgetStatus = useMemo(
+    () => (spendBudget ? computeBudgetStatus(spendBudget, transactions) : null),
+    [spendBudget, transactions],
+  );
+  const budgetLeft =
+    budgetStatus && (isMajor ? spendBudget?.major : spendBudget?.daily)
+      ? isMajor
+        ? budgetStatus.majorLeft
+        : budgetStatus.todayLeft
+      : null;
 
   const title = isMajor ? "Major expenses" : "Daily expenses";
   const emptyIcon = isMajor ? TrendingUp : Receipt;
@@ -107,118 +118,135 @@ export const ExpenseSection = ({ variant }: ExpenseSectionProps) => {
 
   return (
     <section data-surface="wallet">
-      <div className={styles.head}>
-        <div className={styles.head_top}>
-          <h3 className={styles.head_title}>{title}</h3>
-          <span className={styles.head_total}>
-            {total > 0
-              ? `-${formatCurrency(total, currency)}`
-              : formatCurrency(0, currency)}
-          </span>
+      {isMajor && items.length > 1 && (
+        <div
+          className={styles.sort}
+          role="group"
+          aria-label="Sort major expenses"
+        >
+          {SORT_OPTIONS.map((option) => {
+            const active = sortBy === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                className={cn(
+                  styles.sort_item,
+                  active && styles["sort_item--active"],
+                )}
+                aria-pressed={active}
+                aria-label={option.label}
+                title={option.label}
+                onClick={() => setSortBy(option.value)}
+              >
+                {active && (
+                  <m.span
+                    layoutId={`sort-pill-${variant}`}
+                    className={styles.sort_pill}
+                    transition={{
+                      type: "spring",
+                      stiffness: 520,
+                      damping: 36,
+                    }}
+                  />
+                )}
+                <option.icon size={15} className={styles.sort_icon} />
+              </button>
+            );
+          })}
         </div>
-        <div className={styles.head_meta}>
+      )}
+
+      <div className={styles.card}>
+        <div className={styles.card_top}>
+          <h3 className={styles.card_kind}>
+            {isMajor ? "Major" : "Daily"}
+            <span className="sr-only"> expenses</span>
+          </h3>
           <button
             type="button"
-            className={styles.bankchip}
-            onClick={openPicker}
+            className={styles.card_add}
+            onClick={() => {
+              primeKeyboard();
+              setSheetOpen(true);
+            }}
+            aria-label={`Add ${isMajor ? "major" : "daily"} expense`}
           >
-            <Building2 size={13} />
-            <span className={styles.bankchip_name}>
-              {bank?.name ?? "Choose bank"}
-            </span>
-            <ChevronDown size={13} />
+            <Plus size={20} strokeWidth={2.4} />
           </button>
-          <div className={styles.head_aside}>
-            <span className={styles.head_count}>{items.length} this month</span>
-            {isMajor && items.length > 1 && (
-              <div
-                className={styles.sort}
-                role="group"
-                aria-label="Sort major expenses"
-              >
-                {SORT_OPTIONS.map((option) => {
-                  const active = sortBy === option.value;
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      className={cn(
-                        styles.sort_item,
-                        active && styles["sort_item--active"],
-                      )}
-                      aria-pressed={active}
-                      aria-label={option.label}
-                      title={option.label}
-                      onClick={() => setSortBy(option.value)}
-                    >
-                      {active && (
-                        <m.span
-                          layoutId={`sort-pill-${variant}`}
-                          className={styles.sort_pill}
-                          transition={{
-                            type: "spring",
-                            stiffness: 520,
-                            damping: 36,
-                          }}
-                        />
-                      )}
-                      <option.icon size={15} className={styles.sort_icon} />
-                    </button>
-                  );
-                })}
+        </div>
+        <div className={styles.card_body}>
+          <span className={styles.card_total}>
+            {formatCurrency(total, currency)}
+          </span>
+          <span className={styles.card_caption}>
+            Spent this month · {items.length}{" "}
+            {items.length === 1 ? "entry" : "entries"}
+          </span>
+          <div className={styles.card_meta}>
+            <button
+              type="button"
+              className={styles.card_field}
+              onClick={openPicker}
+            >
+              <span className={styles.card_label}>Bank</span>
+              <span className={styles.card_value}>
+                <span className={styles.card_bank}>
+                  {bank?.name ?? "Choose bank"}
+                </span>
+                <ChevronDown size={14} />
+              </span>
+            </button>
+            {budgetLeft !== null && (
+              <div className={cn(styles.card_field, styles["card_field--end"])}>
+                <span className={styles.card_label}>
+                  {isMajor ? "Left this month" : "Left today"}
+                </span>
+                <span className={styles.card_value}>
+                  {formatCurrency(Math.abs(budgetLeft), currency)}
+                  {budgetLeft < 0 && " over"}
+                </span>
+              </div>
+            )}
+          </div>
+          <div className={styles.card_list}>
+            {items.length === 0 ? (
+              <EmptyState
+                icon={emptyIcon}
+                title={isMajor ? "No major spends yet" : "Nothing logged yet"}
+                description={
+                  isMajor
+                    ? "Log a big purchase to keep an eye on it."
+                    : "Track everyday spends to stay in control."
+                }
+              />
+            ) : (
+              <div className={styles.rows}>
+                {items.map((transaction) => (
+                  <ExpenseRow
+                    key={transaction.id}
+                    transaction={transaction}
+                    currency={currency}
+                    balance={trail.get(transaction.id)}
+                    onClick={setEditing}
+                  />
+                ))}
+              </div>
+            )}
+            {items.length > PREVIEW_COUNT && (
+              <div className={styles.foot}>
+                <Link
+                  href={`${ROUTES.transactions}?kind=${variant}`}
+                  className={styles.seeAll}
+                >
+                  See all {items.length}
+                  <ChevronRight size={15} />
+                </Link>
               </div>
             )}
           </div>
         </div>
       </div>
-
-      <Card surface="solid" padded={false} className={styles.list}>
-        {items.length === 0 ? (
-          <EmptyState
-            icon={emptyIcon}
-            title={isMajor ? "No major spends yet" : "Nothing logged yet"}
-            description={
-              isMajor
-                ? "Log a big purchase to keep an eye on it."
-                : "Track everyday spends to stay in control."
-            }
-          />
-        ) : (
-          <div className={styles.rows}>
-            {items.slice(0, PREVIEW_COUNT).map((transaction) => (
-              <ExpenseRow
-                key={transaction.id}
-                transaction={transaction}
-                currency={currency}
-                balance={trail.get(transaction.id)}
-                onClick={setEditing}
-              />
-            ))}
-          </div>
-        )}
-        <div className={styles.foot}>
-          {items.length > PREVIEW_COUNT ? (
-            <Link
-              href={`${ROUTES.transactions}?kind=${variant}`}
-              className={styles.seeAll}
-            >
-              See all {items.length}
-              <ChevronRight size={15} />
-            </Link>
-          ) : (
-            <span />
-          )}
-          <button
-            type="button"
-            className={styles.fab}
-            onClick={() => setSheetOpen(true)}
-            aria-label={`Add ${isMajor ? "major" : "daily"} expense`}
-          >
-            <Plus size={15} />
-            Add
-          </button>
-        </div>
-      </Card>
 
       <AddExpenseSheet
         open={sheetOpen}

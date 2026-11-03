@@ -1,5 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque } from "next/font/google";
+import {
+  Bricolage_Grotesque,
+  Fraunces,
+  Plus_Jakarta_Sans,
+  Sora,
+  Space_Grotesk,
+} from "next/font/google";
 import { Providers } from "./providers";
 import { env, siteConfig } from "@/config";
 import "@/styles/globals.scss";
@@ -7,10 +13,38 @@ import "@/styles/globals.scss";
 const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-app",
+  variable: "--font-bricolage",
 });
+// The other choices only download when the user picks one.
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  display: "swap",
+  preload: false,
+  variable: "--font-jakarta",
+});
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  display: "swap",
+  preload: false,
+  variable: "--font-space",
+});
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  display: "swap",
+  preload: false,
+  variable: "--font-fraunces",
+});
+const sora = Sora({
+  subsets: ["latin"],
+  display: "swap",
+  preload: false,
+  variable: "--font-sora",
+});
+const fontVariables = [bricolage, jakarta, spaceGrotesk, fraunces, sora]
+  .map((font) => font.variable)
+  .join(" ");
 
-const themeScript = `(function(){var d=document.documentElement;try{var t=localStorage.getItem('mf-theme');if(t==='light'||t==='dark'){d.setAttribute('data-theme',t);return;}var q=window.matchMedia('(prefers-color-scheme: dark)');var apply=function(){if(!localStorage.getItem('mf-theme')){d.setAttribute('data-theme',q.matches?'dark':'light');}};apply();q.addEventListener('change',apply);}catch(e){d.setAttribute('data-theme','light');}})();`;
+const themeScript = `(function(){var d=document.documentElement;try{var f=localStorage.getItem('mf-font');if(f)d.setAttribute('data-font',f);}catch(e){}try{var t=localStorage.getItem('mf-theme');if(t==='light'||t==='dark'){d.setAttribute('data-theme',t);return;}var q=window.matchMedia('(prefers-color-scheme: dark)');var apply=function(){if(!localStorage.getItem('mf-theme')){d.setAttribute('data-theme',q.matches?'dark':'light');}};apply();q.addEventListener('change',apply);}catch(e){d.setAttribute('data-theme','light');}})();`;
 
 const supabaseOrigin = (() => {
   try {
@@ -62,6 +96,7 @@ export const metadata: Metadata = {
   },
 };
 
+// Keep in sync with THEME_COLORS in src/store/themeStore.ts.
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f5f1e8" },
@@ -70,6 +105,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({
@@ -78,7 +114,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={bricolage.variable} suppressHydrationWarning>
+    <html lang="en" className={fontVariables} suppressHydrationWarning>
       <head>
         <link
           rel="preload"

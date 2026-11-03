@@ -79,6 +79,7 @@ describe("entity to row mappers", () => {
       interestRate: 9.2,
       dueDay: 12,
       status: "active",
+      amountChanges: [{ from: "2027-01", amount: 17500 }],
       payments: [],
       createdAt: "2026-01-01T00:00:00.000Z",
     };
@@ -97,6 +98,7 @@ describe("entity to row mappers", () => {
       interest_rate: 9.2,
       due_day: 12,
       status: "active",
+      amount_changes: [{ from: "2027-01", amount: 17500 }],
     });
   });
 

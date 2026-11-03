@@ -3,6 +3,7 @@
 import { useId, useMemo, useState } from "react";
 import { AnimatePresence, m } from "framer-motion";
 import Link from "next/link";
+import { getDaysInMonth } from "date-fns";
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -54,7 +55,7 @@ export const SpendPulse = () => {
   );
   const fmt = (n: number) => formatCurrency(n, currency);
 
-  const days = Math.max(pace.lastMonth.length, 28);
+  const days = Math.max(pace.lastMonth.length, getDaysInMonth(new Date()));
   const max = Math.max(
     pace.lastMonth[pace.lastMonth.length - 1] ?? 0,
     pace.spentSoFar,

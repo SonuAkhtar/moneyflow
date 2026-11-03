@@ -1,3 +1,6 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { logger } from "./logger";
+
 interface Window {
   count: number;
   resetAt: number;
@@ -39,7 +42,47 @@ export const createRateLimiter = (
   };
 };
 
+export interface RateRule {
+  name: string;
+  limit: number;
+  windowMs: number;
+  /** Per-instance fallback for when the shared limiter is unreachable. */
+  local: RateLimiter;
+}
+
+export const rateRule = (
+  name: string,
+  limit: number,
+  windowMs: number,
+): RateRule => ({
+  name,
+  limit,
+  windowMs,
+  local: createRateLimiter(limit, windowMs),
+});
+
+/** Counts a hit in Postgres so the limit holds across serverless instances. */
+export const hitRateLimit = async (
+  serviceClient: SupabaseClient,
+  rule: RateRule,
+  key: string,
+): Promise<{ ok: boolean; retryAfter: number }> => {
+  const { data, error } = await serviceClient.rpc("hit_rate_limit", {
+    p_key: `${rule.name}:${key}`,
+    p_max: rule.limit,
+    p_window_seconds: Math.ceil(rule.windowMs / 1000),
+  });
+  if (error || typeof data !== "number") {
+    logger.warn("rateLimit", error?.code ?? "unexpected response");
+    return rule.local.check(key);
+  }
+  return { ok: data === 0, retryAfter: data };
+};
+
+// Platform-set headers first; a client can prepend fake x-forwarded-for
+// entries, but the last one is added by the proxy in front of us.
 export const clientIp = (headers: Headers): string =>
-  headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-  headers.get("x-real-ip") ||
+  headers.get("x-vercel-forwarded-for")?.trim() ||
+  headers.get("x-real-ip")?.trim() ||
+  headers.get("x-forwarded-for")?.split(",").pop()?.trim() ||
   "unknown";

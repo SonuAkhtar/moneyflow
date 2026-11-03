@@ -10,7 +10,9 @@ import {
   cn,
   currentMonthKey,
   dayShort,
+  emiAmountFor,
   emiKind,
+  emiStartMonth,
   formatCurrency,
 } from "@/utils";
 import styles from "./ComingUp.module.scss";
@@ -55,22 +57,23 @@ export const ComingUp = () => {
 
   const thisMonth = currentMonthKey();
 
-  const items = useMemo<DueItem[]>(() => {
+  const { items, dueTotal } = useMemo(() => {
     const out: DueItem[] = [];
     for (const e of emis) {
-      if (e.status !== "active") continue;
+      if (e.status !== "active" || emiStartMonth(e) > thisMonth) continue;
       out.push({
         id: e.id,
         label: e.name,
-        amount: e.monthlyAmount,
+        amount: emiAmountFor(e, thisMonth),
         date: dueDateThisMonth(e.dueDay),
         type: emiKind(e),
         paid: (e.payments ?? []).some((p) => p.month === thisMonth),
       });
     }
+    // Includes dues from earlier months that are still unpaid (overdue).
     for (const b of borrowings) {
       if (!b.dueDate || borrowingSettled(b)) continue;
-      if (b.dueDate.slice(0, 7) !== thisMonth) continue;
+      if (b.dueDate.slice(0, 7) > thisMonth) continue;
       out.push({
         id: b.id,
         label: b.lender,
@@ -80,14 +83,18 @@ export const ComingUp = () => {
         paid: false,
       });
     }
-    return out.sort((x, y) => x.date.getTime() - y.date.getTime()).slice(0, 4);
+    const unpaid = out.filter((i) => !i.paid);
+    const byDate = (x: DueItem, y: DueItem) =>
+      x.date.getTime() - y.date.getTime();
+    return {
+      items: [...unpaid.sort(byDate), ...out.filter((i) => i.paid).sort(byDate)]
+        .slice(0, 4)
+        .sort(byDate),
+      dueTotal: unpaid.reduce((acc, i) => acc + i.amount, 0),
+    };
   }, [emis, borrowings, thisMonth]);
 
   if (items.length === 0) return null;
-
-  const dueTotal = items
-    .filter((i) => !i.paid)
-    .reduce((acc, i) => acc + i.amount, 0);
 
   return (
     <section className={styles.section} aria-labelledby="coming-up-title">

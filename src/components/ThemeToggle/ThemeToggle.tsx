@@ -22,7 +22,8 @@ export const ThemeToggle = () => {
     >
       <m.span
         className={styles.toggle_knob}
-        animate={{ x: isDark ? 28 : 0 }}
+        // Track 58px - 2px border - 6px padding - 26px knob = 24px travel.
+        animate={{ x: isDark ? 24 : 0 }}
         transition={{ type: "spring", stiffness: 520, damping: 34 }}
       >
         <AnimatePresence mode="wait" initial={false}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
 import { Input } from "@/components/Input/Input";
@@ -83,13 +83,15 @@ const Form = ({ transaction, onClose }: FormProps) => {
     transaction ? dateKey(transaction.occurredAt) : today(),
   );
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const submitted = useRef(false);
 
   const canSave = Number(amount) > 0 && Boolean(resolve(bankId));
 
   const save = () => {
     const value = Number(amount);
     const account = resolve(bankId);
-    if (!value || !account) return;
+    if (!value || !account || submitted.current) return;
+    submitted.current = true;
     const input = {
       accountId: account.id,
       type: "income" as const,
@@ -167,7 +169,7 @@ const Form = ({ transaction, onClose }: FormProps) => {
         }))}
       />
 
-      <DateField value={date} onChange={setDate} />
+      <DateField value={date} onChange={setDate} max={today()} />
 
       {transaction ? (
         <div className={styles.actions}>

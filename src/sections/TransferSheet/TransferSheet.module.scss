@@ -5,72 +5,19 @@
   padding-bottom: var(--space-4);
 }
 
-.banks {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.swap {
-  align-self: center;
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 999px;
-  border: 1px solid var(--border-subtle);
-  background: var(--surface-input);
-  color: var(--text-secondary);
-  cursor: pointer;
-
-  &:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-}
-
-.route {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
-  background: var(--surface-input);
-  border: 1px solid var(--border-subtle);
-
-  &_bank {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-width: 0;
-    font-weight: var(--weight-semibold);
-    @include truncate(1);
-  }
-
-  &_arrow {
-    flex-shrink: 0;
-    color: var(--text-tertiary);
-  }
-}
-
-.available {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  margin-top: calc(var(--space-2) * -1);
-  font-size: var(--font-xs);
-  color: var(--text-secondary);
-}
-
 .max {
-  border: none;
-  background: none;
-  padding: 0;
+  align-self: center;
+  margin-top: calc(var(--space-2) * -1);
+  padding: var(--space-1) var(--space-3);
+  min-height: 32px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  background: var(--surface-input);
   font: inherit;
+  font-size: var(--font-xs);
   font-weight: var(--weight-semibold);
   color: var(--accent-text);
+  font-variant-numeric: tabular-nums;
   cursor: pointer;
 
   &:disabled {
@@ -83,21 +30,44 @@
   margin: calc(var(--space-2) * -1) 0 0;
   font-size: var(--font-xs);
   color: var(--color-danger);
+  text-align: center;
 }
 
-.preview {
+.route {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.leg {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-3);
-  border-radius: var(--radius-md);
-  background: var(--surface-input);
-  font-size: var(--font-sm);
 
-  &_row {
-    display: flex;
-    justify-content: space-between;
+  &_label {
+    font-size: var(--font-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--text-secondary);
+  }
+
+  &_bank {
+    display: inline-flex;
+    align-items: center;
     gap: var(--space-2);
+    min-width: 0;
+    font-weight: var(--weight-semibold);
+    @include truncate(1);
+  }
+
+  &_balance {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    margin: 0;
+    padding-left: var(--space-1);
+    font-size: var(--font-xs);
     color: var(--text-secondary);
     font-variant-numeric: tabular-nums;
 
@@ -106,10 +76,57 @@
     }
 
     svg {
-      margin: 0 var(--space-1);
-      vertical-align: -1px;
+      flex-shrink: 0;
+      color: var(--text-tertiary);
     }
   }
+}
+
+.divider {
+  position: relative;
+  display: flex;
+  justify-content: center;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+}
+
+.swap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-card-solid);
+  color: var(--accent-text);
+  box-shadow: var(--shadow-float);
+  cursor: pointer;
+  @include focus-ring;
+
+  // Keep a 44px tap area around the 36px button.
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -4px;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+span.swap {
+  cursor: default;
+  color: var(--text-tertiary);
 }
 
 .neg {

@@ -1,21 +1,31 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { env, isSupabaseConfigured } from "@/config";
-import { clientIp } from "@/lib/rateLimit";
+import { clientIp, hitRateLimit } from "@/lib/rateLimit";
 import { deleteAccountLimiter } from "@/lib/authLimits";
+import { logger } from "@/lib/logger";
 
-const USER_TABLES = [
-  "borrowing_payments",
-  "borrowings",
-  "emi_payments",
-  "emis",
-  "transactions",
-  "profiles",
-  "accounts",
-] as const;
+const AVATAR_PAGE = 100;
 
 const json = (body: unknown, status = 200) =>
   NextResponse.json(body, { status });
+
+// Lists from offset 0 each time because removed files shift later pages.
+const removeAvatars = async (admin: SupabaseClient, userId: string) => {
+  const avatars = admin.storage.from("avatars");
+  for (;;) {
+    const { data: files, error } = await avatars.list(userId, {
+      limit: AVATAR_PAGE,
+    });
+    if (error) throw error;
+    if (!files.length) return;
+    const { error: removeError } = await avatars.remove(
+      files.map((f) => `${userId}/${f.name}`),
+    );
+    if (removeError) throw removeError;
+    if (files.length < AVATAR_PAGE) return;
+  }
+};
 
 export async function POST(request: NextRequest) {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -26,7 +36,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const limit = deleteAccountLimiter.check(clientIp(request.headers));
+  const admin = createClient(env.supabaseUrl, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  const limit = await hitRateLimit(
+    admin,
+    deleteAccountLimiter,
+    clientIp(request.headers),
+  );
   if (!limit.ok) {
     return json(
       { ok: false, message: "Too many attempts. Try again later." },
@@ -39,37 +57,25 @@ export async function POST(request: NextRequest) {
     ?.replace(/^Bearer\s+/i, "");
   if (!token) return json({ ok: false, message: "Not signed in" }, 401);
 
-  const admin = createClient(env.supabaseUrl, serviceKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
   const { data: auth, error: authError } = await admin.auth.getUser(token);
   const user = auth?.user;
   if (authError || !user)
     return json({ ok: false, message: "Not signed in" }, 401);
 
-  const avatars = admin.storage.from("avatars");
-  const { data: files } = await avatars.list(user.id);
-  if (files?.length) {
-    await avatars.remove(files.map((f) => `${user.id}/${f.name}`));
-  }
-
-  for (const table of USER_TABLES) {
-    const column = table === "profiles" ? "id" : "user_id";
-    const { error } = await admin.from(table).delete().eq(column, user.id);
-    if (error) {
-      return json(
-        { ok: false, message: "Couldn't delete your data. Please try again." },
-        500,
-      );
-    }
-  }
-
+  // Every app table cascades from auth.users, so this removes all rows at once.
   const { error: deleteError } = await admin.auth.admin.deleteUser(user.id);
   if (deleteError) {
     return json(
       { ok: false, message: "Couldn't delete your account. Please try again." },
       500,
     );
+  }
+
+  try {
+    await removeAvatars(admin, user.id);
+  } catch (err) {
+    // The account is gone either way; leftover files are cleaned up manually.
+    logger.error("account.delete.avatars", err, { userId: user.id });
   }
   return json({ ok: true });
 }

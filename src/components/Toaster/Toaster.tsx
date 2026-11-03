@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, m } from "framer-motion";
 import { AlertTriangle, CheckCircle2, Info, X, XCircle } from "lucide-react";
 import { useUiStore } from "@/store/uiStore";
@@ -18,12 +18,18 @@ const ICONS = {
 const ToastItem = ({ toast }: { toast: ToastMessage }) => {
   const dismiss = useUiStore((s) => s.dismissToast);
   const Icon = ICONS[toast.variant];
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const paused = hovered || focused;
 
+  // Hover or keyboard focus pauses auto-dismiss; the full duration restarts
+  // once the toast is left.
   useEffect(() => {
-    const duration = toast.duration ?? (toast.action ? 6000 : 3600);
+    if (paused) return;
+    const duration = toast.duration ?? (toast.action ? 10000 : 3600);
     const timer = setTimeout(() => dismiss(toast.id), duration);
     return () => clearTimeout(timer);
-  }, [toast.id, toast.duration, toast.action, dismiss]);
+  }, [paused, toast.id, toast.duration, toast.action, dismiss]);
 
   return (
     <m.div
@@ -33,7 +39,10 @@ const ToastItem = ({ toast }: { toast: ToastMessage }) => {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -12, scale: 0.96 }}
       transition={{ type: "spring", stiffness: 380, damping: 30 }}
-      role={toast.variant === "error" ? "alert" : "status"}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
     >
       <span className={styles.toast_icon}>
         <Icon size={18} />
@@ -73,12 +82,7 @@ export const Toaster = () => {
 
   return (
     <Portal>
-      <div
-        className={styles.toaster}
-        role="region"
-        aria-label="Notifications"
-        aria-live="polite"
-      >
+      <div className={styles.toaster} role="status" aria-label="Notifications">
         <AnimatePresence>
           {toasts.map((toast) => (
             <ToastItem key={toast.id} toast={toast} />

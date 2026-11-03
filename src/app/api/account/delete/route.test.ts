@@ -3,8 +3,12 @@ import { NextRequest } from "next/server";
 
 const log: string[] = [];
 const getUser = vi.fn();
-const deleteUser = vi.fn();
-let failTable: string | null = null;
+const deleteUser = vi.fn(async (id: string) => {
+  log.push(`deleteUser:${id}`);
+  return deleteResult;
+});
+let deleteResult: { error: unknown } = { error: null };
+let files: { name: string }[] = [];
 
 vi.mock("@/config", () => ({
   env: { supabaseUrl: "http://sb.test", supabaseAnonKey: "anon", appUrl: "" },
@@ -13,23 +17,17 @@ vi.mock("@/config", () => ({
 vi.mock("@supabase/supabase-js", () => ({
   createClient: () => ({
     auth: { getUser, admin: { deleteUser } },
+    rpc: async () => ({ data: null, error: { code: "PGRST" } }),
     storage: {
       from: () => ({
-        list: async () => ({ data: [{ name: "a.jpg" }] }),
+        list: async () => ({ data: files, error: null }),
         remove: async (paths: string[]) => {
           log.push(`storage.remove:${paths.join(",")}`);
+          files = [];
           return { error: null };
         },
       }),
     },
-    from: (table: string) => ({
-      delete: () => ({
-        eq: async (column: string, value: string) => {
-          log.push(`delete:${table}:${column}=${value}`);
-          return { error: table === failTable ? { message: "x" } : null };
-        },
-      }),
-    }),
   }),
 }));
 
@@ -49,10 +47,11 @@ const call = (token?: string, ip = "1.1.1.1") =>
 
 beforeEach(() => {
   log.length = 0;
-  failTable = null;
+  files = [{ name: "a.jpg" }];
+  deleteResult = { error: null };
   getUser.mockReset();
-  deleteUser.mockReset();
-  deleteAccountLimiter.reset();
+  deleteUser.mockClear();
+  deleteAccountLimiter.local.reset();
   process.env.SUPABASE_SERVICE_ROLE_KEY = "service";
 });
 afterEach(() => {
@@ -75,30 +74,19 @@ describe("POST /api/account/delete", () => {
     expect(log).toEqual([]);
   });
 
-  it("deletes the user's files, rows, then the auth user", async () => {
+  it("deletes the auth user (rows cascade), then their files", async () => {
     getUser.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
-    deleteUser.mockResolvedValue({ error: null });
     const res = await call("good");
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true });
-    expect(log).toEqual([
-      "storage.remove:u1/a.jpg",
-      "delete:borrowing_payments:user_id=u1",
-      "delete:borrowings:user_id=u1",
-      "delete:emi_payments:user_id=u1",
-      "delete:emis:user_id=u1",
-      "delete:transactions:user_id=u1",
-      "delete:profiles:id=u1",
-      "delete:accounts:user_id=u1",
-    ]);
-    expect(deleteUser).toHaveBeenCalledWith("u1");
+    expect(log).toEqual(["deleteUser:u1", "storage.remove:u1/a.jpg"]);
   });
 
-  it("stops before deleting the login if a data delete fails", async () => {
+  it("keeps the files if the auth user can't be deleted", async () => {
     getUser.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
-    failTable = "emis";
+    deleteResult = { error: { message: "x" } };
     expect((await call("good")).status).toBe(500);
-    expect(deleteUser).not.toHaveBeenCalled();
+    expect(log).toEqual(["deleteUser:u1"]);
   });
 
   it("rate limits repeated attempts", async () => {

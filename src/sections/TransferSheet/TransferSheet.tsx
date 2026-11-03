@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { ArrowDownUp, ArrowRight, Landmark } from "lucide-react";
+import { useId, useMemo, useRef, useState } from "react";
+import { ArrowDown, ArrowDownUp, ArrowRight, Landmark } from "lucide-react";
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
-import { Input } from "@/components/Input/Input";
+import { DateField } from "@/components/DateField/DateField";
 import { Select } from "@/components/Select/Select";
 import { AmountField } from "@/components/AmountField/AmountField";
 import { SheetActions } from "@/components/SheetActions/SheetActions";
@@ -82,6 +82,8 @@ const Form = ({ transfer, onClose }: FormProps) => {
     transfer ? dateKey(transfer.occurredAt) : currentDateKey(),
   );
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const submitted = useRef(false);
+  const overdrawnId = useId();
 
   const from: Account | undefined = accounts.find((a) => a.id === fromId);
   const to: Account | undefined = accounts.find((a) => a.id === toId);
@@ -127,7 +129,8 @@ const Form = ({ transfer, onClose }: FormProps) => {
   };
 
   const save = () => {
-    if (!canSave) return;
+    if (!canSave || submitted.current) return;
+    submitted.current = true;
     if (transfer) {
       updateBankTransfer(transfer.id, { amount: value, date });
       toast({ title: "Transfer updated", variant: "success" });
@@ -158,100 +161,103 @@ const Form = ({ transfer, onClose }: FormProps) => {
   const fromName = from?.name ?? legs?.inn?.merchant?.replace(/^From /, "");
   const toName = to?.name ?? legs?.out?.merchant?.replace(/^To /, "");
 
+  const balanceLine = (before: number, after: number) => (
+    <p className={styles.leg_balance}>
+      {formatCurrency(before, currency)}
+      <ArrowRight size={12} aria-label="becomes" />
+      <strong className={cn(after < 0 && styles.neg)}>
+        {formatCurrency(after, currency)}
+      </strong>
+    </p>
+  );
+  const showBalances = value > 0;
+
   return (
     <div className={styles.form}>
-      {transfer ? (
-        <div className={styles.route}>
-          <span className={styles.route_bank}>
-            <Landmark size={16} />
-            {fromName ?? "Deleted bank"}
-          </span>
-          <ArrowRight size={16} className={styles.route_arrow} />
-          <span className={styles.route_bank}>
-            <Landmark size={16} />
-            {toName ?? "Deleted bank"}
-          </span>
-        </div>
-      ) : (
-        <div className={styles.banks}>
-          <Select
-            label="From"
-            value={fromId}
-            onChange={(e) => changeFrom(e.target.value)}
-            options={fromOptions}
-          />
-          <button
-            type="button"
-            className={styles.swap}
-            onClick={swap}
-            aria-label="Swap banks"
-            disabled={!fromId || !toId}
-          >
-            <ArrowDownUp size={16} />
-          </button>
-          <Select
-            label="To"
-            value={toId}
-            onChange={(e) => setToId(e.target.value)}
-            options={toOptions}
-          />
-        </div>
-      )}
-
-      <AmountField value={amount} onChange={setAmount} />
+      <AmountField
+        value={amount}
+        onChange={setAmount}
+        aria-label="Transfer amount"
+        aria-invalid={overdrawn || undefined}
+        aria-describedby={overdrawn ? overdrawnId : undefined}
+      />
       {from && !fromIsCard && (
-        <div className={styles.available}>
-          <span>Available in {from.name}</span>
-          <button
-            type="button"
-            className={styles.max}
-            onClick={() => setAmount(String(Math.max(0, available)))}
-            disabled={available <= 0}
-          >
-            {formatCurrency(available, currency)} · Use max
-          </button>
-        </div>
+        <button
+          type="button"
+          className={styles.max}
+          onClick={() => setAmount(String(Math.max(0, available)))}
+          disabled={available <= 0}
+        >
+          {formatCurrency(available, currency)} available · Use max
+        </button>
       )}
       {overdrawn && (
-        <p className={styles.error} role="alert">
+        <p id={overdrawnId} className={styles.error} role="alert">
           Amount is more than the available balance in {from?.name}.
         </p>
       )}
 
-      <Input
-        label="Date"
-        type="date"
-        max={currentDateKey()}
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-      />
-
-      {value > 0 && (from || to) && (
-        <div className={styles.preview}>
-          {from && (
-            <div className={styles.preview_row}>
-              <span>{from.name}</span>
-              <span>
-                {formatCurrency(available, currency)}
-                <ArrowRight size={12} aria-label="becomes" />
-                <strong className={cn(fromAfter < 0 && styles.neg)}>
-                  {formatCurrency(fromAfter, currency)}
-                </strong>
+      <div className={styles.route}>
+        <div className={styles.leg}>
+          {transfer ? (
+            <>
+              <span className={styles.leg_label}>From</span>
+              <span className={styles.leg_bank}>
+                <Landmark size={16} />
+                {fromName ?? "Deleted bank"}
               </span>
-            </div>
+            </>
+          ) : (
+            <Select
+              label="From"
+              value={fromId}
+              onChange={(e) => changeFrom(e.target.value)}
+              options={fromOptions}
+            />
           )}
-          {to && (
-            <div className={styles.preview_row}>
-              <span>{to.name}</span>
-              <span>
-                {formatCurrency(round2(toAfter - value), currency)}
-                <ArrowRight size={12} aria-label="becomes" />
-                <strong>{formatCurrency(toAfter, currency)}</strong>
-              </span>
-            </div>
+          {showBalances && from && balanceLine(available, fromAfter)}
+        </div>
+
+        <div className={styles.divider}>
+          {transfer ? (
+            <span className={styles.swap} aria-hidden="true">
+              <ArrowDown size={16} />
+            </span>
+          ) : (
+            <button
+              type="button"
+              className={styles.swap}
+              onClick={swap}
+              aria-label="Swap banks"
+              disabled={!fromId || !toId}
+            >
+              <ArrowDownUp size={16} />
+            </button>
           )}
         </div>
-      )}
+
+        <div className={styles.leg}>
+          {transfer ? (
+            <>
+              <span className={styles.leg_label}>To</span>
+              <span className={styles.leg_bank}>
+                <Landmark size={16} />
+                {toName ?? "Deleted bank"}
+              </span>
+            </>
+          ) : (
+            <Select
+              label="To"
+              value={toId}
+              onChange={(e) => setToId(e.target.value)}
+              options={toOptions}
+            />
+          )}
+          {showBalances && to && balanceLine(round2(toAfter - value), toAfter)}
+        </div>
+      </div>
+
+      <DateField value={date} onChange={setDate} max={currentDateKey()} />
 
       <SheetActions
         onSave={save}

@@ -6,7 +6,6 @@ import type { User } from "@supabase/supabase-js";
 import { AppHeader } from "@/components/AppHeader/AppHeader";
 import { BottomNav } from "@/components/BottomNav/BottomNav";
 import { PullToRefresh } from "@/components/PullToRefresh/PullToRefresh";
-import { QuickAdd } from "@/components/QuickAdd/QuickAdd";
 import { SplashScreen } from "@/components/SplashScreen/SplashScreen";
 import { Button } from "@/components/Button/Button";
 import { getBrowserSupabase } from "@/lib/supabase/client";
@@ -205,7 +204,6 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
           </main>
         </PullToRefresh>
       </div>
-      {routeKey !== "profile" && <QuickAdd />}
       <BottomNav />
     </div>
   );

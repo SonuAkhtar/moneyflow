@@ -37,6 +37,7 @@ const emi = (over: Partial<Emi>): Emi => ({
   interestRate: 0,
   dueDay: 5,
   status: "active",
+  amountChanges: [],
   payments: [],
   createdAt: "",
   ...over,

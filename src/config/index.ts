@@ -15,11 +15,5 @@ export const siteConfig = {
   description: APP.description,
   themeColor: "#0a0b0d",
   accentColor: "#16c784",
-  keywords: [
-    "finance",
-    "expense tracker",
-    "savings",
-    "fintech",
-    "AI finance assistant",
-  ],
+  keywords: ["finance", "expense tracker", "savings", "fintech"],
 } as const;

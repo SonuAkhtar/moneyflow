@@ -20,6 +20,16 @@
   background: var(--accent-bg);
   color: var(--accent-text);
   flex-shrink: 0;
+
+  &--blue {
+    background: var(--tint-bank-bg);
+    color: var(--tint-bank-fg);
+  }
+
+  &--amber {
+    background: var(--color-warning-bg);
+    color: var(--color-warning-text);
+  }
 }
 
 .titles {

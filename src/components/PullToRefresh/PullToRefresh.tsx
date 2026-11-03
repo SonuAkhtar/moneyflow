@@ -30,7 +30,15 @@ export const PullToRefresh = ({ onRefresh, children }: PullToRefreshProps) => {
   useEffect(() => {
     const begin = (e: TouchEvent) => {
       if (refreshingRef.current) return;
-      if (window.scrollY > 0) {
+      // Ignore gestures inside open sheets/dialogs or while scroll is locked.
+      const target = e.target instanceof Element ? e.target : null;
+      if (
+        window.scrollY > 0 ||
+        document.body.style.overflow === "hidden" ||
+        target?.closest(
+          '[role="dialog"], [role="alertdialog"], [aria-modal="true"]',
+        )
+      ) {
         startY.current = null;
         return;
       }

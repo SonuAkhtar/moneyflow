@@ -123,7 +123,9 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
   setSalary: (month, amount, accountId) => {
     const s = get();
     const uid = ownerId();
-    const existing = s.transactions.find(
+    // The editor shows the month's total, so the first salary row takes the
+    // new amount and any extra rows for that month are removed.
+    const [existing, ...extras] = s.transactions.filter(
       (t) =>
         t.type === "income" &&
         t.category === "salary" &&
@@ -138,6 +140,7 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
       const deltas: [string, number][] = [
         [existing.accountId, -existing.amount],
         [targetId, amount],
+        ...extras.map((t): [string, number] => [t.accountId, -t.amount]),
       ];
       let accounts = s.accounts;
       for (const [aid, delta] of deltas)
@@ -147,14 +150,16 @@ export const createTransactionsSlice: SliceCreator<TransactionsSlice> = (
         amount,
         accountId: targetId,
       };
+      const extraIds = new Set(extras.map((t) => t.id));
       set({
-        transactions: s.transactions.map((t) =>
-          t.id === existing.id ? updatedTxn : t,
-        ),
+        transactions: s.transactions
+          .filter((t) => !extraIds.has(t.id))
+          .map((t) => (t.id === existing.id ? updatedTxn : t)),
         accounts,
       });
       sync([
         step.saveTransaction(updatedTxn, existing),
+        ...extras.map((t) => step.removeTransaction(t)),
         ...balanceSteps(deltas),
       ]);
       return;

@@ -4,11 +4,15 @@ import {
   bankMonthFlow,
   computeHealthScore,
   currentStreak,
+  emiAmountFor,
   emiPaidAmount,
+  emiScheduledAmount,
+  formatCurrency,
   getCurrencySymbol,
   monthKey,
   setActiveCurrency,
   sumBy,
+  suggestedEmi,
   SAVINGS_DEPOSIT_NOTE,
   SAVINGS_WITHDRAWAL_NOTE,
 } from "@/utils";
@@ -44,6 +48,22 @@ describe("computeHealthScore", () => {
     });
     expect(score).toBeGreaterThanOrEqual(0);
     expect(score).toBeLessThanOrEqual(100);
+  });
+
+  it("doesn't penalise EMIs when there is no income and no EMI", () => {
+    expect(computeHealthScore({ income: 0, savings: 0, emiBurden: 0 })).toBe(
+      40,
+    );
+    expect(computeHealthScore({ income: 0, savings: 0, emiBurden: 500 })).toBe(
+      0,
+    );
+  });
+});
+
+describe("formatCurrency", () => {
+  it("shows both decimals for fractional amounts", () => {
+    expect(formatCurrency(12.5, "USD")).toBe("$12.50");
+    expect(formatCurrency(12, "USD")).toBe("$12");
   });
 });
 
@@ -152,6 +172,7 @@ describe("emiPaidAmount", () => {
     interestRate: 0,
     dueDay: 5,
     status: "active",
+    amountChanges: [],
     payments: [],
     createdAt: "",
     ...over,
@@ -174,6 +195,71 @@ describe("emiPaidAmount", () => {
       totalMonths: 12,
     });
     expect(emiPaidAmount(loan)).toBe(6000);
+  });
+
+  it("for a loan, sums each paid month's EMI across amount changes", () => {
+    const loan = emi({
+      kind: "loan",
+      monthlyAmount: 2000,
+      paidMonths: 4,
+      totalMonths: 12,
+      amountChanges: [{ from: "2026-03", amount: 2500 }],
+    });
+    expect(emiPaidAmount(loan)).toBe(2000 + 2000 + 2500 + 2500);
+    expect(emiScheduledAmount(loan, 12)).toBe(2 * 2000 + 10 * 2500);
+  });
+});
+
+describe("emiAmountFor", () => {
+  const base: Emi = {
+    id: "e1",
+    userId: "u",
+    accountId: null,
+    name: "Home Loan",
+    kind: "loan",
+    startMonth: "2026-01",
+    principal: 0,
+    monthlyAmount: 1000,
+    remainingMonths: 12,
+    totalMonths: 12,
+    paidMonths: 0,
+    interestRate: 0,
+    dueDay: 5,
+    status: "active",
+    amountChanges: [],
+    payments: [],
+    createdAt: "",
+  };
+
+  it("uses the monthly amount when there are no changes", () => {
+    expect(emiAmountFor(base, "2026-06")).toBe(1000);
+  });
+
+  it("uses the latest change on or before the month, in any order", () => {
+    const loan: Emi = {
+      ...base,
+      amountChanges: [
+        { from: "2026-09", amount: 1300 },
+        { from: "2026-04", amount: 1200 },
+      ],
+    };
+    expect(emiAmountFor(loan, "2026-03")).toBe(1000);
+    expect(emiAmountFor(loan, "2026-04")).toBe(1200);
+    expect(emiAmountFor(loan, "2026-08")).toBe(1200);
+    expect(emiAmountFor(loan, "2026-12")).toBe(1300);
+  });
+});
+
+describe("suggestedEmi", () => {
+  it("applies the amortisation formula", () => {
+    expect(suggestedEmi(100000, 12, 12)).toBe(8885);
+    expect(suggestedEmi(500000, 8.5, 60)).toBe(10258);
+  });
+
+  it("splits evenly at 0% and returns 0 for missing inputs", () => {
+    expect(suggestedEmi(120000, 0, 12)).toBe(10000);
+    expect(suggestedEmi(0, 10, 12)).toBe(0);
+    expect(suggestedEmi(100000, 10, 0)).toBe(0);
   });
 });
 

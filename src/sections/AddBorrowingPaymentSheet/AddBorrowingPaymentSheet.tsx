@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
 import { Input } from "@/components/Input/Input";
 import { AmountField } from "@/components/AmountField/AmountField";
@@ -47,6 +47,7 @@ export const AddBorrowingPaymentSheet = ({
   );
   const [note, setNote] = useState(payment?.note ?? "");
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const submitted = useRef(false);
 
   const value = Number(amount) || 0;
   const overpaying = !isEdit && value > outstanding + 0.001;
@@ -54,7 +55,8 @@ export const AddBorrowingPaymentSheet = ({
     value > 0 && Boolean(paidOn) && Boolean(borrowingId) && !overpaying;
 
   const save = () => {
-    if (!canSave || !borrowingId) return;
+    if (!canSave || !borrowingId || submitted.current) return;
+    submitted.current = true;
     if (payment) {
       updateBorrowingPayment(borrowingId, payment.id, {
         amount: value,

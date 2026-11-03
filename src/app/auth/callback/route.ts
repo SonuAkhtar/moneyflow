@@ -2,11 +2,21 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { getServerSupabase } from "@/lib/supabase/server";
 
+const OTP_TYPES: EmailOtpType[] = [
+  "signup",
+  "recovery",
+  "magiclink",
+  "email_change",
+  "email",
+  "invite",
+];
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const code = searchParams.get("code");
   const tokenHash = searchParams.get("token_hash");
-  const type = searchParams.get("type") as EmailOtpType | null;
+  const rawType = searchParams.get("type") as EmailOtpType | null;
+  const type = rawType && OTP_TYPES.includes(rawType) ? rawType : null;
   const providerError = searchParams.get("error");
   const errorCode = searchParams.get("error_code");
   const nextParam = searchParams.get("next") ?? "/";

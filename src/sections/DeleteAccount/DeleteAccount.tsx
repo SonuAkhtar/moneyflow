@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
-import { Card } from "@/components/Card/Card";
 import { Button } from "@/components/Button/Button";
 import { Input } from "@/components/Input/Input";
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
@@ -16,19 +14,23 @@ import styles from "./DeleteAccount.module.scss";
 
 const CONFIRM_WORD = "DELETE";
 
-export const DeleteAccount = () => {
+interface DeleteAccountProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export const DeleteAccount = ({ open, onClose }: DeleteAccountProps) => {
   const router = useRouter();
   const toast = useToast();
   const resetAll = useFinanceStore((s) => s.resetAll);
   const discardPendingSync = useFinanceStore((s) => s.discardPendingSync);
   const clearAuth = useAuthStore((s) => s.clear);
-  const [open, setOpen] = useState(false);
   const [typed, setTyped] = useState("");
   const [busy, setBusy] = useState(false);
 
   const close = () => {
     if (busy) return;
-    setOpen(false);
+    onClose();
     setTyped("");
   };
 
@@ -53,50 +55,31 @@ export const DeleteAccount = () => {
   };
 
   return (
-    <section>
-      <Card surface="solid" className={styles.card}>
-        <div className={styles.text}>
-          <span className={styles.title}>Delete account</span>
-          <span className={styles.sub}>
-            Permanently remove your account and all of your data.
-          </span>
-        </div>
+    <BottomSheet open={open} onClose={close} title="Delete your account?">
+      <div className={styles.sheet}>
+        <p className={styles.warning}>
+          This permanently deletes your profile, banks, transactions, EMIs,
+          borrowings and budgets. It can&apos;t be undone. Download a backup
+          first if you want to keep a copy.
+        </p>
+        <Input
+          label={`Type ${CONFIRM_WORD} to confirm`}
+          value={typed}
+          autoCapitalize="characters"
+          autoComplete="off"
+          onChange={(e) => setTyped(e.target.value.trim())}
+        />
         <Button
           variant="danger"
-          size="sm"
-          icon={Trash2}
-          onClick={() => setOpen(true)}
+          size="lg"
+          fullWidth
+          loading={busy}
+          disabled={typed !== CONFIRM_WORD}
+          onClick={() => void confirm()}
         >
-          Delete
+          Delete my account
         </Button>
-      </Card>
-
-      <BottomSheet open={open} onClose={close} title="Delete your account?">
-        <div className={styles.sheet}>
-          <p className={styles.warning}>
-            This permanently deletes your profile, banks, transactions, EMIs,
-            borrowings and budgets. It can&apos;t be undone. Download a backup
-            first if you want to keep a copy.
-          </p>
-          <Input
-            label={`Type ${CONFIRM_WORD} to confirm`}
-            value={typed}
-            autoCapitalize="characters"
-            autoComplete="off"
-            onChange={(e) => setTyped(e.target.value.trim())}
-          />
-          <Button
-            variant="danger"
-            size="lg"
-            fullWidth
-            loading={busy}
-            disabled={typed !== CONFIRM_WORD}
-            onClick={() => void confirm()}
-          >
-            Delete my account
-          </Button>
-        </div>
-      </BottomSheet>
-    </section>
+      </div>
+    </BottomSheet>
   );
 };

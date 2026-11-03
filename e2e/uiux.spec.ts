@@ -7,6 +7,7 @@ import {
   seedUser,
   serverBalance,
   serverState,
+  showAmounts,
   signIn,
   signInSeeded,
 } from "./helpers";
@@ -29,28 +30,20 @@ const localDateKey = (offsetDays = 0) => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
 
-test("quick add is reachable without scrolling and logs a major expense @mobile", async ({
+test("the major expense sheet logs a major expense @mobile", async ({
   page,
 }) => {
   await signInSeeded(page);
-  const fab = page.getByRole("button", { name: "Add expense", exact: true });
-  await expect(fab).toBeInViewport();
-
-  await fab.click();
+  await page.getByRole("button", { name: "Add major expense" }).click();
   const sheet = page.getByRole("dialog");
-  await expect(sheet.getByLabel("Amount")).toBeFocused();
+  await expect(sheet.getByLabel("Expense amount")).toBeFocused();
   await expect(
     sheet.getByRole("button", { name: "Add expense" }),
   ).toBeDisabled();
   await expect(sheet.getByRole("status")).toHaveCount(0);
 
   expect(await seriousViolations(page)).toEqual([]);
-  await sheet.getByLabel("Amount").focus();
   await page.keyboard.type("12000");
-  await expect(sheet.getByRole("button", { name: "Major" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
   await sheet.getByLabel("Merchant (optional)").fill("Croma");
   await sheet.getByRole("button", { name: "Yesterday" }).click();
   await expect(sheet.locator('input[type="date"]')).toHaveValue(
@@ -71,11 +64,81 @@ test("quick add is reachable without scrolling and logs a major expense @mobile"
   await expect.poll(() => serverBalance(HDFC)).toBe(38000);
 });
 
-test("quick add explains why it cannot save without a bank", async ({
+test("budgets are set on the profile and shown on home and in the add sheet", async ({
+  page,
+}) => {
+  await signInSeeded(page);
+  await expect(page.getByText("Left today")).toHaveCount(0);
+
+  await page.goto("/profile");
+  await page.getByRole("button", { name: /Spending budget/ }).click();
+  await page.getByLabel("Daily spends per month").fill("15000");
+  await page.getByLabel("Major spends per month").fill("20000");
+  await page.getByRole("button", { name: "Save budget" }).click();
+  await expect
+    .poll(
+      async () => (await serverState()).users[0]?.user_metadata.spend_budget,
+    )
+    .toMatchObject({ daily: 15000, major: 20000 });
+
+  await page.goto("/");
+  await showAmounts(page);
+  await expect(page.getByText("Left today")).toBeVisible();
+  const majorLeft = page
+    .getByText("Left this month")
+    .locator("..")
+    .getByText(/₹/);
+  await expect(majorLeft).toHaveText("₹20,000");
+
+  await page.getByRole("button", { name: "Add major expense" }).click();
+  const sheet = page.getByRole("dialog");
+  await sheet.getByLabel("Expense amount").fill("200");
+  await expect(sheet.getByText("This month")).toBeVisible();
+  await expect(
+    sheet.locator("strong", { hasText: "₹19,800 left" }),
+  ).toBeVisible();
+  await sheet.getByRole("button", { name: "Add expense" }).click();
+
+  await expect(sheet).toBeHidden();
+  await expect(majorLeft).toHaveText("₹19,800");
+});
+
+test("the font picked on the profile applies to the whole app", async ({
+  page,
+}) => {
+  await signInSeeded(page);
+  await page.goto("/profile");
+  await page.getByRole("button", { name: /Font/ }).click();
+  await page.getByRole("radio", { name: /Space Grotesk/ }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-font", "space");
+  await expect
+    .poll(() => page.evaluate(() => getComputedStyle(document.body).fontFamily))
+    .toContain("Space Grotesk");
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-font", "space");
+});
+
+test("monthly amounts start hidden and the eye shows them", async ({
+  page,
+}) => {
+  await signInSeeded(page, { transactions: SAMPLE_TXNS });
+  const statement = page.getByRole("region", { name: "Monthly statement" });
+  await expect(statement).toContainText("₹85,000");
+  await page.getByRole("button", { name: "Hide monthly amounts" }).click();
+  await expect(statement).not.toContainText("₹85,000");
+  await expect(statement).toContainText("₹*****");
+  await expect(page.getByText("₹46,500")).toBeVisible();
+  await page.reload();
+  await expect(
+    page.getByRole("button", { name: "Show monthly amounts" }),
+  ).toBeVisible();
+});
+
+test("the add sheet explains why it cannot save without a bank", async ({
   page,
 }) => {
   await signInSeeded(page, { accounts: [] });
-  await page.getByRole("button", { name: "Add expense", exact: true }).click();
+  await page.getByRole("button", { name: "Add daily expense" }).click();
   const sheet = page.getByRole("dialog");
   await expect(sheet.getByRole("status")).toHaveText(
     "Add a bank on the Savings tab first.",
@@ -184,7 +247,7 @@ test("toasts announce their message and have a separate dismiss button", async (
   page,
 }) => {
   await signInSeeded(page);
-  await page.getByRole("button", { name: "Add expense", exact: true }).click();
+  await page.getByRole("button", { name: "Add daily expense" }).click();
   await page.keyboard.type("80");
   await page
     .getByRole("dialog")
@@ -226,6 +289,8 @@ test("home shows spending pace, budget use and health score @mobile", async ({
 test("major expenses sort by amount by default and can sort by date", async ({
   page,
 }) => {
+  // Seed dates are clamped to the 1st, so early in a month they collide.
+  test.skip(new Date().getDate() <= 3, "needs 3 earlier days this month");
   await signInSeeded(page, { transactions: SAMPLE_TXNS });
   const major = page.locator("section", {
     has: page.getByRole("heading", { name: "Major expenses" }),
@@ -315,6 +380,7 @@ test("onboarding asks for a currency, can go back, and saves it", async ({
   await expect
     .poll(async () => (await serverState()).db.profiles![0]!.currency)
     .toBe("USD");
+  await showAmounts(page);
   await expect(page.getByText("$0").first()).toBeVisible();
 });
 
@@ -334,6 +400,7 @@ test("upcoming payments stay in the current month with overdue and paid states @
   page,
 }) => {
   const today = new Date();
+  test.skip(today.getDate() <= 5, "needs 5 earlier days this month");
   const day = (offset: number) =>
     Math.min(
       Math.max(1, today.getDate() + offset),
@@ -373,16 +440,4 @@ test("upcoming payments stay in the current month with overdue and paid states @
   );
   await expect(page.getByText("₹29,000")).toBeVisible();
   expect(await seriousViolations(page)).toEqual([]);
-});
-
-test("quick add hides while scrolling down and returns on scroll up @mobile", async ({
-  page,
-}) => {
-  await signInSeeded(page, { transactions: SAMPLE_TXNS });
-  const fab = page.getByRole("button", { name: "Add expense", exact: true });
-  await expect(fab).toBeVisible();
-  await page.evaluate(() => window.scrollBy(0, 600));
-  await expect(fab).toHaveCSS("opacity", "0");
-  await page.evaluate(() => window.scrollBy(0, -300));
-  await expect(fab).toHaveCSS("opacity", "1");
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronDown, Search } from "lucide-react";
 import { Avatar } from "@/components/Avatar/Avatar";
@@ -14,6 +14,8 @@ import styles from "./AppHeader.module.scss";
 export const AppHeader = () => {
   const profile = useFinanceStore((s) => s.profile);
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuId = useId();
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -54,6 +56,7 @@ export const AppHeader = () => {
         </Link>
         <div className={styles.header_avatar}>
           <button
+            ref={triggerRef}
             type="button"
             className={cn(
               styles.header_profile,
@@ -62,6 +65,7 @@ export const AppHeader = () => {
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Account menu"
             aria-expanded={menuOpen}
+            aria-controls={menuOpen ? menuId : undefined}
           >
             <span className={styles.header_avatarRing}>
               <Avatar
@@ -75,7 +79,12 @@ export const AppHeader = () => {
             )}
             <ChevronDown size={15} className={styles.header_chevron} />
           </button>
-          <ProfileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+          <ProfileMenu
+            id={menuId}
+            open={menuOpen}
+            onClose={() => setMenuOpen(false)}
+            triggerRef={triggerRef}
+          />
         </div>
       </div>
     </header>

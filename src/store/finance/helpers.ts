@@ -1,10 +1,12 @@
 import { useUiStore } from "@/store/uiStore";
+import { useAuthStore } from "@/store/authStore";
 import { logger } from "@/lib/logger";
+import { getBrowserSupabase } from "@/lib/supabase/client";
 import { isAuthError, isTransientError, runWithRetry } from "@/lib/retry";
 import { transactionDelta } from "@/utils";
 import type { Account, Transaction } from "@/types";
 import { runOp } from "./ops";
-import { loadOutbox, saveOutbox, type OutboxGroup } from "./outbox";
+import { loadOutbox, OUTBOX_KEY, saveOutbox, type OutboxGroup } from "./outbox";
 import type {
   FinanceGet,
   FinanceSet,
@@ -36,7 +38,7 @@ const RETRY_DELAYS = [5_000, 15_000, 30_000, 60_000];
 const isOffline = () =>
   typeof navigator !== "undefined" && navigator.onLine === false;
 
-type GroupResult = "done" | "blocked" | { failed: unknown };
+type GroupResult = "done" | "blocked";
 
 export const createMutationHelpers = (
   set: FinanceSet,
@@ -48,10 +50,31 @@ export const createMutationHelpers = (
   let needsResync = false;
   let retryTimer: ReturnType<typeof setTimeout> | null = null;
   let retryIndex = 0;
+  // Groups queued by this tab. If one vanishes from storage, another tab
+  // synced or dropped it, so this tab's optimistic state needs a resync.
+  const created = new Set<string>();
 
-  const currentUid = () => get().profile?.id ?? null;
+  const currentUid = () =>
+    get().profile?.id ?? useAuthStore.getState().user?.id ?? null;
   const mine = () => groups.filter((g) => g.uid === currentUid());
-  const persist = () => saveOutbox(groups);
+
+  // The outbox is shared by every open tab, so each change is applied to the
+  // stored list instead of overwriting it with this tab's copy.
+  const commit = (update: (stored: OutboxGroup[]) => OutboxGroup[]) => {
+    groups = update(loadOutbox());
+    saveOutbox(groups);
+  };
+  const save = (group: OutboxGroup) =>
+    commit((stored) => stored.map((g) => (g.id === group.id ? group : g)));
+
+  const refresh = () => {
+    groups = loadOutbox();
+    for (const id of created) {
+      if (groups.some((g) => g.id === id)) continue;
+      created.delete(id);
+      needsResync = true;
+    }
+  };
 
   const publish = () => {
     const pending = mine().length;
@@ -62,7 +85,7 @@ export const createMutationHelpers = (
   };
 
   const ownerId = () => {
-    const id = currentUid();
+    const id = get().profile?.id;
     if (!id) {
       throw new Error(
         "Cannot mutate finance data before the profile is loaded.",
@@ -78,33 +101,72 @@ export const createMutationHelpers = (
       variant: "error",
     });
 
-  const undoGroup = async (group: OutboxGroup) => {
-    for (let i = group.cursor - 1; i >= 0; i -= 1) {
-      for (const op of group.steps[i]?.undo ?? []) {
-        try {
-          await runOp(group.uid, op);
-        } catch (err) {
-          logger.error("finance.sync.undo", err);
-        }
-      }
+  const isNetworkError = (err: unknown) => isOffline() || isTransientError(err);
+
+  const refreshSession = async () => {
+    try {
+      const res = await getBrowserSupabase()?.auth.refreshSession();
+      return Boolean(res && !res.error);
+    } catch (err) {
+      logger.error("finance.sync.refreshSession", err);
+      return false;
     }
   };
 
+  // Rolls back the steps before the cursor. Stops (keeping the group) when
+  // blocked, so the rollback resumes on the next run instead of re-running it.
+  const undoGroup = async (group: OutboxGroup): Promise<GroupResult> => {
+    while (group.cursor > 0) {
+      for (const op of group.steps[group.cursor - 1]?.undo ?? []) {
+        try {
+          await runOp(group.uid, op, () => save(group));
+        } catch (err) {
+          if (
+            isNetworkError(err) ||
+            (isAuthError(err) && !(await refreshSession()))
+          )
+            return "blocked";
+          logger.error("finance.sync.undo", err);
+        }
+      }
+      group.cursor -= 1;
+      save(group);
+    }
+    return "done";
+  };
+
   const runGroup = async (group: OutboxGroup): Promise<GroupResult> => {
+    if (group.undoing) return undoGroup(group);
+    let authRetried = false;
     while (group.cursor < group.steps.length) {
       if (isOffline()) return "blocked";
       const current = group.steps[group.cursor]!;
-      const exec = () => runOp(group.uid, current.op, persist);
+      const exec = () => runOp(group.uid, current.op, () => save(group));
       try {
-        if (current.retry === false) await exec();
-        else await runWithRetry(exec);
+        await runWithRetry(exec);
       } catch (err) {
-        if (isOffline() || isTransientError(err)) return "blocked";
-        await undoGroup(group);
-        return { failed: err };
+        if (isNetworkError(err)) return "blocked";
+        // A session error is retried once after a refresh. If the refresh
+        // fails the user is signed out, and the change waits for sign-in.
+        if (isAuthError(err)) {
+          if (!(await refreshSession())) return "blocked";
+          if (!authRetried) {
+            authRetried = true;
+            continue;
+          }
+        }
+        logger.error("finance.sync", err);
+        needsResync = true;
+        toastError(
+          `${err instanceof Error ? err.message : "Sync failed"}. That change was reverted.`,
+        );
+        group.undoing = true;
+        save(group);
+        return undoGroup(group);
       }
       group.cursor += 1;
-      persist();
+      authRetried = false;
+      save(group);
     }
     return "done";
   };
@@ -129,34 +191,38 @@ export const createMutationHelpers = (
     }
   };
 
+  const resyncIfIdle = () => {
+    if (running || blocked || mine().length > 0 || !needsResync) return;
+    needsResync = false;
+    void resync();
+  };
+
   const processQueue = async () => {
     blocked = false;
-    publish();
     for (;;) {
+      // Another tab may have added, advanced or finished groups meanwhile.
+      refresh();
+      publish();
       const group = mine()[0];
       if (!group) break;
+      if (!created.has(group.id)) needsResync = true;
       const result = await runGroup(group);
       if (result === "blocked") {
         blocked = true;
         scheduleRetry();
         break;
       }
-      groups = groups.filter((g) => g !== group);
-      persist();
+      created.delete(group.id);
+      commit((stored) => stored.filter((g) => g.id !== group.id));
       retryIndex = 0;
-      if (result !== "done") {
-        const err = result.failed;
-        logger.error("finance.sync", err);
-        needsResync = true;
-        toastError(
-          isAuthError(err)
-            ? "Your session expired - please sign in again."
-            : `${err instanceof Error ? err.message : "Sync failed"}. That change was reverted.`,
-        );
-      }
-      publish();
     }
     publish();
+  };
+
+  const runExclusive = async (): Promise<void> => {
+    if (typeof navigator !== "undefined" && navigator.locks)
+      await navigator.locks.request(OUTBOX_KEY, processQueue);
+    else await processQueue();
   };
 
   const kick = (): Promise<void> => {
@@ -165,12 +231,9 @@ export const createMutationHelpers = (
       retryTimer = null;
     }
     if (!running) {
-      running = processQueue().finally(() => {
+      running = runExclusive().finally(() => {
         running = null;
-        if (!blocked && mine().length === 0 && needsResync) {
-          needsResync = false;
-          void resync();
-        }
+        resyncIfIdle();
       });
     }
     return running;
@@ -178,12 +241,24 @@ export const createMutationHelpers = (
 
   if (typeof window !== "undefined") {
     window.addEventListener("online", () => void kick());
+    window.addEventListener("storage", (e) => {
+      if (e.key !== OUTBOX_KEY && e.key !== null) return;
+      refresh();
+      publish();
+      resyncIfIdle();
+    });
   }
 
   const sync = (steps: SyncStep[]) => {
     if (steps.length === 0) return;
-    groups.push({ id: newId(), uid: ownerId(), steps, cursor: 0 });
-    persist();
+    const group: OutboxGroup = {
+      id: newId(),
+      uid: ownerId(),
+      steps,
+      cursor: 0,
+    };
+    created.add(group.id);
+    commit((stored) => [...stored, group]);
     publish();
     void kick();
   };
@@ -198,10 +273,11 @@ export const createMutationHelpers = (
     deferResync: () => {
       needsResync = true;
     },
-    discardPending: () => {
-      const uid = currentUid();
-      groups = groups.filter((g) => g.uid !== uid);
-      persist();
+    discardPending: (uid = currentUid() ?? undefined) => {
+      if (!uid) return;
+      commit((stored) => stored.filter((g) => g.uid !== uid));
+      for (const id of created)
+        if (!groups.some((g) => g.id === id)) created.delete(id);
       publish();
     },
   };

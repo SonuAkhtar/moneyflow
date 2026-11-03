@@ -1,5 +1,5 @@
 import { getDate, getDaysInMonth, parseISO, subMonths } from "date-fns";
-import type { CategoryId, Transaction } from "@/types";
+import type { CategoryId, SpendBudget, Transaction } from "@/types";
 import { monthKey } from "./index";
 
 export interface SpendPace {
@@ -66,5 +66,53 @@ export const computeSpendPace = (
     budgetSpent: thisExpenses
       .filter((t) => budgetCats.has(t.category))
       .reduce((acc, t) => acc + t.amount, 0),
+  };
+};
+
+// Fixed commitments, like EMIs, never count against a spending budget.
+export const FIXED_COSTS: CategoryId[] = ["rent", "bills"];
+
+export type BudgetExpense = Pick<
+  Transaction,
+  "type" | "amount" | "category" | "isBigExpense" | "occurredAt"
+>;
+
+export interface BudgetStatus {
+  dailyShare: number;
+  /** Today's budget: unspent days carry forward, overspending goes negative. */
+  todayLeft: number;
+  majorLeft: number;
+}
+
+export const computeBudgetStatus = (
+  budget: SpendBudget,
+  transactions: BudgetExpense[],
+  today: Date = new Date(),
+): BudgetStatus => {
+  const thisKey = monthKey(today);
+  const day = getDate(today);
+  const days = getDaysInMonth(today);
+  // A limit set mid-month counts from that day, so it doesn't start in the red.
+  const startDay =
+    budget.dailySince && monthKey(budget.dailySince) === thisKey
+      ? getDate(parseISO(budget.dailySince))
+      : 1;
+
+  let dailySpent = 0;
+  let majorSpent = 0;
+  for (const t of transactions) {
+    if (t.type !== "expense" || FIXED_COSTS.includes(t.category)) continue;
+    if (monthKey(t.occurredAt) !== thisKey) continue;
+    if (t.isBigExpense) majorSpent += t.amount;
+    else if (getDate(parseISO(t.occurredAt)) >= startDay)
+      dailySpent += t.amount;
+  }
+
+  // Budgets are shown in whole currency units.
+  const dailyShare = budget.daily / (days - startDay + 1);
+  return {
+    dailyShare: Math.round(dailyShare),
+    todayLeft: Math.round(dailyShare * (day - startDay + 1) - dailySpent),
+    majorLeft: Math.round(budget.major - majorSpent),
   };
 };

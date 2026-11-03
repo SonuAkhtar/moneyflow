@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useState } from "react";
 import { cn, currentDateKey, dateKey } from "@/utils";
 import styles from "./DateField.module.scss";
 
@@ -9,6 +9,7 @@ interface DateFieldProps {
   onChange: (value: string) => void;
   label?: string;
   max?: string;
+  min?: string;
 }
 
 const yesterdayKey = () => {
@@ -22,9 +23,27 @@ export const DateField = ({
   onChange,
   label = "Date",
   max = currentDateKey(),
+  min,
 }: DateFieldProps) => {
   const labelId = useId();
   const inputId = useId();
+  const errorId = useId();
+  const [error, setError] = useState<string | null>(null);
+
+  // Typed dates bypass the picker's min/max, so reject them here.
+  const handleInput = (next: string) => {
+    if (!next) return;
+    if (next > max || (min && next < min)) {
+      setError(
+        next > max
+          ? `Date can't be later than ${max}`
+          : `Date can't be earlier than ${min}`,
+      );
+      return;
+    }
+    setError(null);
+    onChange(next);
+  };
   const quick = [
     { label: "Today", value: currentDateKey() },
     { label: "Yesterday", value: yesterdayKey() },
@@ -45,7 +64,10 @@ export const DateField = ({
               value === option.value && styles["date_chip--active"],
             )}
             aria-pressed={value === option.value}
-            onClick={() => onChange(option.value)}
+            onClick={() => {
+              setError(null);
+              onChange(option.value);
+            }}
           >
             {option.label}
           </button>
@@ -53,12 +75,23 @@ export const DateField = ({
         <input
           id={inputId}
           type="date"
-          className={styles.date_input}
+          className={cn(
+            styles.date_input,
+            error && styles["date_input--error"],
+          )}
           max={max}
+          min={min}
           value={value}
-          onChange={(e) => e.target.value && onChange(e.target.value)}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
+          onChange={(e) => handleInput(e.target.value)}
         />
       </div>
+      {error && (
+        <span id={errorId} role="alert" className={styles.date_error}>
+          {error}
+        </span>
+      )}
     </div>
   );
 };

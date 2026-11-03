@@ -7,7 +7,9 @@ import { loanEmiPaidInMonth } from "@/store/finance/selectors";
 import {
   computeHealthScore,
   currentMonthKey,
+  emiAmountFor,
   emiKind,
+  emiStartMonth,
   healthBand,
   sumBy,
 } from "@/utils";
@@ -43,8 +45,13 @@ export const useFinanceMetrics = (
   return useMemo(() => {
     const { income, expenses } = monthTxns.totals;
     const emiBurden = sumBy(
-      emis.filter((e) => e.status === "active" && emiKind(e) === "loan"),
-      (e) => e.monthlyAmount,
+      emis.filter(
+        (e) =>
+          e.status === "active" &&
+          emiKind(e) === "loan" &&
+          emiStartMonth(e) <= month,
+      ),
+      (e) => emiAmountFor(e, month),
     );
     const totalBalance = sumBy(accounts, (a) => a.balance);
     const emiPaid = loanEmiPaidInMonth(emis, month);

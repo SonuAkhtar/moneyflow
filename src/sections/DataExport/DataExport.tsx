@@ -75,7 +75,7 @@ export const DataExport = () => {
   return (
     <section>
       <SectionHeader title="Your data" caption="Export or back up anytime" />
-      <Card surface="solid" className={styles.card}>
+      <Card surface="solid" padded={false} className={styles.card}>
         <button
           type="button"
           className={styles.row}

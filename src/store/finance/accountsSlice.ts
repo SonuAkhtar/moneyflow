@@ -1,4 +1,9 @@
-import { isoNow, SAVINGS_DEPOSIT_NOTE, SAVINGS_WITHDRAWAL_NOTE } from "@/utils";
+import {
+  isoNow,
+  round2,
+  SAVINGS_DEPOSIT_NOTE,
+  SAVINGS_WITHDRAWAL_NOTE,
+} from "@/utils";
 import type { Account, Emi, EmiPayment, Transaction } from "@/types";
 import { applyBalance, newId } from "./helpers";
 import { balanceSteps, step } from "./steps";
@@ -35,6 +40,25 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (
   get,
   { ownerId, sync },
 ) => {
+  const savingTxn = (
+    uid: string,
+    accountId: string,
+    amount: number,
+    note: typeof SAVINGS_DEPOSIT_NOTE | typeof SAVINGS_WITHDRAWAL_NOTE,
+  ): Transaction => ({
+    id: newId(),
+    userId: uid,
+    accountId,
+    type: "transfer",
+    amount,
+    category: "transfer",
+    note,
+    merchant: null,
+    isBigExpense: false,
+    occurredAt: isoNow(),
+    createdAt: isoNow(),
+  });
+
   const savingTransfer = (
     accountId: string,
     amount: number,
@@ -43,20 +67,7 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (
     const s = get();
     const account = s.accounts.find((a) => a.id === accountId);
     if (!account || amount <= 0) return;
-    const uid = ownerId();
-    const txn: Transaction = {
-      id: newId(),
-      userId: uid,
-      accountId,
-      type: "transfer",
-      amount,
-      category: "transfer",
-      note,
-      merchant: null,
-      isBigExpense: false,
-      occurredAt: isoNow(),
-      createdAt: isoNow(),
-    };
+    const txn = savingTxn(ownerId(), accountId, amount, note);
     const delta = note === SAVINGS_DEPOSIT_NOTE ? amount : -amount;
     set({
       transactions: [txn, ...s.transactions],
@@ -116,15 +127,27 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (
       ]);
     },
 
-    updateAccount: (id, patch) => {
+    updateAccount: (id, patch, savingAdjustment = 0) => {
       const s = get();
       const current = s.accounts.find((a) => a.id === id);
       if (!current) return;
-      ownerId();
+      const uid = ownerId();
+      const adjustment = round2(savingAdjustment);
+      // The savings entry is part of the balance change, which `patch.balance`
+      // (when given) already sets in full.
       const delta =
         patch.balance !== undefined
-          ? Math.round((patch.balance - current.balance) * 100) / 100
-          : 0;
+          ? round2(patch.balance - current.balance)
+          : adjustment;
+      const savingEntry =
+        adjustment !== 0
+          ? savingTxn(
+              uid,
+              id,
+              Math.abs(adjustment),
+              adjustment > 0 ? SAVINGS_DEPOSIT_NOTE : SAVINGS_WITHDRAWAL_NOTE,
+            )
+          : null;
       const meta = pickMeta(patch);
       const previousMeta = pickMeta(
         Object.fromEntries(
@@ -144,8 +167,11 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (
             };
           return meta.isPrimary ? { ...a, isPrimary: false } : a;
         }),
+        ...(savingEntry && { transactions: [savingEntry, ...s.transactions] }),
       });
-      const steps: SyncStep[] = [];
+      const steps: SyncStep[] = savingEntry
+        ? [step.saveTransaction(savingEntry)]
+        : [];
       if (Object.keys(meta).length > 0)
         steps.push(step.updateAccountMeta(id, meta, previousMeta));
       for (const a of demote)

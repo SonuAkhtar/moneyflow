@@ -145,6 +145,22 @@ describe("loadHistory", () => {
     expect(s.historyLoading).toBe(false);
   });
 
+  it("loads the remaining history and stops once a range comes back empty", async () => {
+    useFinanceStore.setState({ historyFrom: "2025-10-01T00:00:00.000Z" });
+    listRange
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([txn("ancient", "2020-01-10T12:00:00.000Z")]);
+    await useFinanceStore.getState().loadHistory("2024-10");
+    expect(listRange).toHaveBeenLastCalledWith(
+      "u1",
+      new Date(0).toISOString(),
+      new Date(2024, 9, 1).toISOString(),
+    );
+    const s = useFinanceStore.getState();
+    expect(s.transactions.map((t) => t.id)).toContain("ancient");
+    expect(s.historyFrom).toBeNull();
+  });
+
   it("does nothing for months already loaded", async () => {
     useFinanceStore.setState({ historyFrom: "2025-10-01T00:00:00.000Z" });
     await useFinanceStore.getState().loadHistory("2025-12");

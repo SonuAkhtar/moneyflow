@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
 import { Camera } from "lucide-react";
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
 import { Input } from "@/components/Input/Input";
@@ -106,6 +106,7 @@ const ProfileForm = ({ profile, onClose }: ProfileFormProps) => {
     ? undefined
     : "Enter a valid email";
   const [saving, setSaving] = useState(false);
+  const submitted = useRef(false);
   const canSave = !nameError && !emailError && !saving;
 
   const onPickAvatar = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -131,7 +132,8 @@ const ProfileForm = ({ profile, onClose }: ProfileFormProps) => {
   };
 
   const save = async () => {
-    if (!canSave) return;
+    if (!canSave || submitted.current) return;
+    submitted.current = true;
     const nextEmail = email.trim();
     const emailChanged =
       nextEmail.toLowerCase() !== profile.email.trim().toLowerCase();
@@ -140,6 +142,7 @@ const ProfileForm = ({ profile, onClose }: ProfileFormProps) => {
       const result = await authService.updateEmail(nextEmail);
       setSaving(false);
       if (!result.ok) {
+        submitted.current = false;
         toast({
           title: "Couldn't change email",
           description: result.message,
@@ -189,6 +192,7 @@ const ProfileForm = ({ profile, onClose }: ProfileFormProps) => {
         <input
           type="file"
           accept="image/*"
+          aria-label="Change profile photo"
           className={styles.avatar_input}
           onChange={onPickAvatar}
         />

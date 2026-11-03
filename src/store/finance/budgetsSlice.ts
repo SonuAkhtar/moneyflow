@@ -1,8 +1,9 @@
+import { currentDateKey, round2 } from "@/utils";
 import type { CategoryId } from "@/types";
 import { step } from "./steps";
 import type { FinanceState, SliceCreator } from "./types";
 
-type BudgetsSlice = Pick<FinanceState, "setBudgets">;
+type BudgetsSlice = Pick<FinanceState, "setBudgets" | "setSpendBudget">;
 
 type Budgets = Partial<Record<CategoryId, number>>;
 
@@ -15,7 +16,7 @@ const clean = (budgets: Budgets): Budgets => {
 
 export const createBudgetsSlice: SliceCreator<BudgetsSlice> = (
   set,
-  _get,
+  get,
   { sync },
 ) => {
   return {
@@ -23,6 +24,26 @@ export const createBudgetsSlice: SliceCreator<BudgetsSlice> = (
       const budgets = clean(next);
       set({ budgets });
       sync([step.saveBudgets(budgets)]);
+    },
+
+    setSpendBudget: ({ daily, major }) => {
+      const prev = get().spendBudget;
+      const spendBudget =
+        daily > 0 || major > 0
+          ? {
+              daily: round2(Math.max(0, daily)),
+              major: round2(Math.max(0, major)),
+              // Keeps the start day when only the amount changes.
+              dailySince:
+                daily > 0
+                  ? prev?.daily
+                    ? prev.dailySince
+                    : currentDateKey()
+                  : null,
+            }
+          : null;
+      set({ spendBudget });
+      sync([step.saveSpendBudget(spendBudget)]);
     },
   };
 };

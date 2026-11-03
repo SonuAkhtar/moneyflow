@@ -6,6 +6,9 @@ import type { ToastMessage } from "@/types";
 
 interface UiState {
   toasts: ToastMessage[];
+  /** The monthly statement's amounts start hidden on every app load. */
+  amountsHidden: boolean;
+  toggleAmounts: () => void;
   pushToast: (toast: Omit<ToastMessage, "id">) => void;
   dismissToast: (id: string) => void;
 }
@@ -14,6 +17,8 @@ const MAX_TOASTS = 4;
 
 export const useUiStore = create<UiState>((set) => ({
   toasts: [],
+  amountsHidden: true,
+  toggleAmounts: () => set((s) => ({ amountsHidden: !s.amountsHidden })),
   pushToast: (toast) =>
     set((s) => {
       const duplicate = s.toasts.some(

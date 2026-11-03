@@ -86,6 +86,7 @@ export const useFinanceStore = create<FinanceState>()(
         emis: s.emis,
         borrowings: s.borrowings,
         budgets: s.budgets,
+        spendBudget: s.spendBudget,
       }),
       onRehydrateStorage: () => (state) => {
         if (state?.profile) setActiveCurrency(state.profile.currency);

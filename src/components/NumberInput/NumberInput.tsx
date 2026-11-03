@@ -11,7 +11,10 @@ export const sanitizeNumber = (raw: string, decimal: boolean): string => {
   const dot = cleaned.indexOf(".");
   return dot === -1
     ? cleaned
-    : `${cleaned.slice(0, dot + 1)}${cleaned.slice(dot + 1).replace(/\./g, "")}`;
+    : `${cleaned.slice(0, dot + 1)}${cleaned
+        .slice(dot + 1)
+        .replace(/\./g, "")
+        .slice(0, 2)}`;
 };
 
 // Avoids type="number", which accepts "e" and changes value on wheel scroll.
@@ -33,8 +36,19 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       inputMode={inputMode}
       autoComplete="off"
       onChange={(e) => {
-        const next = sanitizeNumber(e.target.value, inputMode !== "numeric");
-        if (next !== e.target.value) e.target.value = next;
+        const input = e.target;
+        const decimal = inputMode !== "numeric";
+        const next = sanitizeNumber(input.value, decimal);
+        if (next !== input.value) {
+          // Keep the caret where it was, minus any characters removed before it.
+          const caret = input.selectionStart ?? input.value.length;
+          const pos = Math.min(
+            next.length,
+            sanitizeNumber(input.value.slice(0, caret), decimal).length,
+          );
+          input.value = next;
+          input.setSelectionRange(pos, pos);
+        }
         onChange?.(e);
       }}
       {...rest}

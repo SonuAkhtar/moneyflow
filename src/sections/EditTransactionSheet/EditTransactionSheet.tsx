@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useRef, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
 import { Input } from "@/components/Input/Input";
@@ -17,8 +17,14 @@ import {
   dateKey,
   formatCurrency,
   getCurrencySymbol,
+  SAVINGS_WITHDRAWAL_NOTE,
+  transactionDelta,
 } from "@/utils";
-import { QUICK_EXPENSE_CATEGORIES } from "@/constants";
+import { BudgetImpact } from "@/sections/BudgetImpact/BudgetImpact";
+import {
+  DAILY_EXPENSE_CATEGORIES,
+  MAJOR_EXPENSE_CATEGORIES,
+} from "@/constants";
 import type { CategoryId, Transaction } from "@/types";
 import styles from "./EditTransactionSheet.module.scss";
 
@@ -28,25 +34,44 @@ interface EditTransactionSheetProps {
   onClose: () => void;
 }
 
+const nounOf = (t: Transaction | null) => {
+  if (t?.type === "income") return "Income";
+  if (t?.type === "transfer")
+    return t.note === SAVINGS_WITHDRAWAL_NOTE
+      ? "Savings withdrawal"
+      : "Savings deposit";
+  return "Expense";
+};
+
 export const EditTransactionSheet = ({
   transaction,
   open,
   onClose,
-}: EditTransactionSheetProps) => (
-  <BottomSheet
-    open={open}
-    onClose={onClose}
-    title={transaction?.type === "income" ? "Edit income" : "Edit expense"}
-  >
-    {transaction && (
-      <EditForm
-        key={transaction.id}
-        transaction={transaction}
-        onClose={onClose}
-      />
-    )}
-  </BottomSheet>
-);
+}: EditTransactionSheetProps) => {
+  // The parent clears `transaction` on close: keep showing the last one while
+  // the sheet animates out, and start a fresh form on every open.
+  const [shown, setShown] = useState(transaction);
+  const [wasOpen, setWasOpen] = useState(false);
+  const [session, setSession] = useState(0);
+  if (transaction && transaction !== shown) setShown(transaction);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setSession((n) => n + 1);
+  }
+  const current = transaction ?? shown;
+
+  return (
+    <BottomSheet
+      open={open}
+      onClose={onClose}
+      title={`Edit ${nounOf(current).toLowerCase()}`}
+    >
+      {current && (
+        <EditForm key={session} transaction={current} onClose={onClose} />
+      )}
+    </BottomSheet>
+  );
+};
 
 const dateValue = (iso: string) => dateKey(iso);
 
@@ -62,21 +87,27 @@ const EditForm = ({ transaction, onClose }: EditFormProps) => {
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
   const toast = useToast();
   const symbol = getCurrencySymbol();
-  const isIncome = transaction.type === "income";
-  const noun = isIncome ? "Income" : "Expense";
+  const noun = nounOf(transaction);
   const today = currentDateKey();
+  const categoryLabelId = useId();
 
   const [amount, setAmount] = useState(String(transaction.amount));
   const [category, setCategory] = useState<CategoryId>(transaction.category);
   const [merchant, setMerchant] = useState(transaction.merchant ?? "");
   const [date, setDate] = useState(dateValue(transaction.occurredAt));
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const submitted = useRef(false);
 
   const value = Number(amount);
   const canSave = value > 0;
+  const occurredAt =
+    date === dateValue(transaction.occurredAt)
+      ? transaction.occurredAt
+      : dateInputToIso(date);
 
   const save = () => {
-    if (!canSave) return;
+    if (!canSave || submitted.current) return;
+    submitted.current = true;
     updateTransaction(transaction.id, {
       accountId: transaction.accountId,
       type: transaction.type,
@@ -84,7 +115,7 @@ const EditForm = ({ transaction, onClose }: EditFormProps) => {
       category,
       merchant: merchant || undefined,
       isBigExpense: transaction.isBigExpense,
-      occurredAt: dateInputToIso(date),
+      occurredAt,
     });
     toast({
       title: `${noun} updated`,
@@ -109,22 +140,46 @@ const EditForm = ({ transaction, onClose }: EditFormProps) => {
     onClose();
   };
 
+  const kindCategories = transaction.isBigExpense
+    ? MAJOR_EXPENSE_CATEGORIES
+    : DAILY_EXPENSE_CATEGORIES;
+  // Older entries can use a category outside today's short list.
+  const categories = kindCategories.includes(transaction.category)
+    ? kindCategories
+    : [transaction.category, ...kindCategories];
+
   return (
     <div className={styles.form}>
       <AmountField value={amount} onChange={setAmount} symbol={symbol} />
 
       {transaction.type === "expense" && (
+        <BudgetImpact
+          replaceId={transaction.id}
+          draft={{
+            type: "expense",
+            amount: value || 0,
+            category,
+            isBigExpense: transaction.isBigExpense,
+            occurredAt,
+          }}
+        />
+      )}
+
+      {transaction.type === "expense" && (
         <div className={styles.field}>
-          <span className={styles.label}>Category</span>
+          <span id={categoryLabelId} className={styles.label}>
+            Category
+          </span>
           <CategoryPicker
-            categories={QUICK_EXPENSE_CATEGORIES}
+            labelledBy={categoryLabelId}
+            categories={categories}
             value={category}
             onChange={setCategory}
           />
         </div>
       )}
 
-      {transaction.type === "expense" && (
+      {transaction.type === "expense" && transaction.isBigExpense && (
         <Input
           label="Merchant (optional)"
           placeholder="Where did you spend?"
@@ -141,7 +196,7 @@ const EditForm = ({ transaction, onClose }: EditFormProps) => {
           type="button"
           className={styles.delete}
           onClick={() => setConfirmOpen(true)}
-          aria-label={`Delete ${isIncome ? "income" : "expense"}`}
+          aria-label={`Delete ${noun.toLowerCase()}`}
         >
           <Trash2 size={18} />
         </button>
@@ -157,9 +212,9 @@ const EditForm = ({ transaction, onClose }: EditFormProps) => {
 
       <ConfirmDialog
         open={confirmOpen}
-        title={`Delete this ${isIncome ? "income" : "expense"}?`}
+        title={`Delete this ${noun.toLowerCase()}?`}
         message={
-          isIncome
+          transactionDelta(transaction) > 0
             ? "This will remove the entry and subtract the amount from your account balance."
             : "This will remove the entry and add the amount back to your account balance."
         }

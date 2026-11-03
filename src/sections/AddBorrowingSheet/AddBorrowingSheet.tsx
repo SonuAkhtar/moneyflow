@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
 import { Input } from "@/components/Input/Input";
 import { NumberInput } from "@/components/NumberInput/NumberInput";
@@ -45,12 +45,14 @@ export const AddBorrowingSheet = ({
   const [purpose, setPurpose] = useState(borrowing?.purpose ?? "");
   const [note, setNote] = useState(borrowing?.note ?? "");
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const submitted = useRef(false);
 
   const value = Number(amount) || 0;
   const canSave = value > 0 && Boolean(lender.trim());
 
   const submit = () => {
-    if (!canSave) return;
+    if (!canSave || submitted.current) return;
+    submitted.current = true;
     const lenderName = lender.trim();
     const on = borrowedOn || todayKey();
     if (borrowing) {

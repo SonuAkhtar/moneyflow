@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useRef, useState } from "react";
+import { differenceInCalendarMonths, getDaysInMonth, parseISO } from "date-fns";
+import { Plus, X } from "lucide-react";
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
+import { Button } from "@/components/Button/Button";
 import { Input } from "@/components/Input/Input";
 import { NumberInput } from "@/components/NumberInput/NumberInput";
 import { Select } from "@/components/Select/Select";
@@ -18,14 +21,20 @@ import {
   emiStartMonth,
   formatCurrency,
   getCurrencySymbol,
+  monthLabel,
+  shiftMonth,
+  suggestedEmi,
 } from "@/utils";
 import type { Emi, EmiKind } from "@/types";
 import styles from "./AddEmiSheet.module.scss";
 
-const clampDay = (day: number) => Math.min(31, Math.max(1, day));
+const clampDay = (day: number, month: string) =>
+  Math.min(getDaysInMonth(parseISO(`${month}-01`)), Math.max(1, day));
 
-const startDateOf = (emi: Emi): string =>
-  `${emiStartMonth(emi)}-${String(clampDay(emi.dueDay || 1)).padStart(2, "0")}`;
+const startDateOf = (emi: Emi): string => {
+  const month = emiStartMonth(emi);
+  return `${month}-${String(clampDay(emi.dueDay || 1, month)).padStart(2, "0")}`;
+};
 
 interface AddEmiSheetProps {
   open: boolean;
@@ -45,6 +54,20 @@ const COPY: Record<EmiKind, { add: string; edit: string }> = {
 };
 
 const intStr = (n: number) => (n > 0 ? String(n) : "");
+
+const MONTH_RE = /^\d{4}-\d{2}$/;
+
+const endMonthOf = (start: string, tenure: string): string => {
+  const months = Math.floor(Number(tenure) || 0);
+  return months > 0 ? shiftMonth(start, months - 1) : "";
+};
+
+const monthOfDate = (date: string) => date.slice(0, 7) || currentMonthKey();
+
+interface ChangeRow {
+  from: string;
+  amount: string;
+}
 
 type PaidMode = "months" | "amount";
 const PAID_MODES: { label: string; value: PaidMode }[] = [
@@ -75,6 +98,22 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
     emi ? startDateOf(emi) : currentDateKey(),
   );
   const [tenure, setTenure] = useState(emi ? intStr(emi.totalMonths) : "");
+  // Kept as typed so browsers without a month picker can enter it as text.
+  const [endInput, setEndInput] = useState(() =>
+    emi ? endMonthOf(emiStartMonth(emi), intStr(emi.totalMonths)) : "",
+  );
+  const [principal, setPrincipal] = useState(
+    emi && isLoan ? intStr(emi.principal) : "",
+  );
+  const [rate, setRate] = useState(
+    emi && isLoan ? intStr(emi.interestRate) : "",
+  );
+  const [changes, setChanges] = useState<ChangeRow[]>(
+    (emi?.amountChanges ?? []).map((c) => ({
+      from: c.from,
+      amount: String(c.amount),
+    })),
+  );
   const loggedCount = emi?.payments?.length ?? 0;
   const editingSip = Boolean(emi) && !isLoan;
   const [paidMode, setPaidMode] = useState<PaidMode>(
@@ -88,6 +127,8 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
       : "",
   );
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const submitted = useRef(false);
+  const paidLabelId = useId();
 
   const refund = (emi?.payments ?? [])
     .filter((p) => p.accountId)
@@ -102,7 +143,76 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
       : "");
 
   const resolvedName = type === "Other" ? customName.trim() : type;
-  const canSave = Number(amount) > 0 && Boolean(resolvedName);
+
+  // Tenure is the stored source of truth; the end month follows it.
+  const startMonth = monthOfDate(startDate);
+  const tenureNum = Math.max(0, Math.floor(Number(tenure) || 0));
+  const endMonth = endMonthOf(startMonth, tenure);
+  const changeTenure = (value: string) => {
+    setTenure(value);
+    setEndInput(endMonthOf(startMonth, value));
+  };
+  const changeStartDate = (value: string) => {
+    setStartDate(value);
+    setEndInput(endMonthOf(monthOfDate(value), tenure));
+  };
+  const changeEndMonth = (value: string) => {
+    setEndInput(value);
+    if (!value) return setTenure("");
+    if (!MONTH_RE.test(value)) return;
+    const months =
+      differenceInCalendarMonths(
+        parseISO(`${value}-01`),
+        parseISO(`${startMonth}-01`),
+      ) + 1;
+    if (months > 0) setTenure(String(months));
+  };
+
+  const endError =
+    endInput !== endMonth
+      ? `Pick a month from ${monthLabel(startMonth)}`
+      : undefined;
+
+  const rateNum = Number(rate) || 0;
+  const rateError = rateNum > 100 ? "Enter a rate up to 100%" : undefined;
+  const suggestion = suggestedEmi(Number(principal) || 0, rateNum, tenureNum);
+
+  const changeError = (c: ChangeRow, i: number): string | undefined => {
+    if (!MONTH_RE.test(c.from)) return "Pick a month";
+    if (c.from < startMonth || (endMonth && c.from > endMonth))
+      return endMonth
+        ? `Pick a month between ${monthLabel(startMonth)} and ${monthLabel(endMonth)}`
+        : `Pick a month from ${monthLabel(startMonth)}`;
+    if (changes.some((o, j) => j < i && o.from === c.from))
+      return "This month already has a change";
+    if (c.amount !== "" && !(Number(c.amount) > 0)) return "Enter an amount";
+    return undefined;
+  };
+  const changesValid =
+    !isLoan ||
+    changes.every((c, i) => !changeError(c, i) && Number(c.amount) > 0);
+
+  const canSave =
+    Number(amount) > 0 &&
+    Boolean(resolvedName) &&
+    !(isLoan && (rateError || endError)) &&
+    changesValid;
+
+  const updateChange = (i: number, patch: Partial<ChangeRow>) =>
+    setChanges((rows) =>
+      rows.map((r, j) => (j === i ? { ...r, ...patch } : r)),
+    );
+  const addChange = () => {
+    const last = changes.at(-1)?.from;
+    const next = last && MONTH_RE.test(last) ? shiftMonth(last, 12) : "";
+    const thisMonth = currentMonthKey();
+    const from =
+      next ||
+      (thisMonth > startMonth && (!endMonth || thisMonth <= endMonth)
+        ? thisMonth
+        : startMonth);
+    setChanges((rows) => [...rows, { from, amount: "" }]);
+  };
 
   const switchPaidMode = (mode: PaidMode) => {
     if (mode === paidMode) return;
@@ -159,16 +269,32 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
 
   const submit = () => {
     const value = Number(amount);
-    if (!(value > 0) || !resolvedName) return;
+    if (!canSave || submitted.current) return;
+    submitted.current = true;
     const sched = schedule();
-    const month = startDate ? startDate.slice(0, 7) : currentMonthKey();
-    const due = clampDay(Math.floor(Number(startDate.slice(8, 10)) || 1));
+    const month = startMonth;
+    // The shown date clamps the due day to the start month (31 shows as 28 in
+    // February), so keep the stored day unless the date was changed.
+    const due =
+      emi && startDate === startDateOf(emi)
+        ? emi.dueDay
+        : clampDay(Math.floor(Number(startDate.slice(8, 10)) || 1), month);
+    const loanTerms = isLoan
+      ? {
+          principal: Number(principal) || 0,
+          interestRate: rateNum,
+          amountChanges: changes
+            .map((c) => ({ from: c.from, amount: Number(c.amount) }))
+            .sort((a, b) => a.from.localeCompare(b.from)),
+        }
+      : {};
     if (emi) {
       updateEmi(emi.id, {
         name: resolvedName,
         monthlyAmount: value,
         startMonth: month,
         dueDay: due,
+        ...loanTerms,
         ...sched,
       });
       toast({
@@ -185,6 +311,7 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
         principal: 0,
         interestRate: 0,
         dueDay: due,
+        ...loanTerms,
         ...sched,
       });
       toast({ title: "Added", description: resolvedName, variant: "success" });
@@ -193,11 +320,36 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
       setAmount("");
       setStartDate(currentDateKey());
       setTenure("");
+      setEndInput("");
+      setPrincipal("");
+      setRate("");
+      setChanges([]);
       setPaid("");
       setPaidMode("months");
     }
     onClose();
   };
+
+  const amountField = (
+    <div className={styles.group}>
+      <NumberInput
+        label={`Monthly amount (${symbol})`}
+        inputMode="decimal"
+        placeholder="0"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+      />
+      {isLoan && suggestion > 0 && suggestion !== Number(amount) && (
+        <button
+          type="button"
+          className={styles.suggest}
+          onClick={() => setAmount(String(suggestion))}
+        >
+          Suggested EMI {formatCurrency(suggestion)} · <strong>Use</strong>
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <BottomSheet
@@ -230,35 +382,134 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
           />
         )}
 
-        <NumberInput
-          label={`Monthly amount (${symbol})`}
-          inputMode="decimal"
-          placeholder="0"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-        />
+        {isLoan && (
+          <div className={styles.row}>
+            <NumberInput
+              label={`Loan amount (${symbol})`}
+              inputMode="decimal"
+              placeholder="Optional"
+              value={principal}
+              onChange={(e) => setPrincipal(e.target.value)}
+            />
+            <NumberInput
+              label="Interest (% p.a.)"
+              inputMode="decimal"
+              placeholder="Optional"
+              value={rate}
+              onChange={(e) => setRate(e.target.value)}
+              error={rateError}
+            />
+          </div>
+        )}
+
+        {!isLoan && amountField}
 
         <Input
           label={isLoan ? "Start date" : "Investing since"}
           type="date"
           value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
+          onChange={(e) => changeStartDate(e.target.value)}
           hint="The day of this date sets the monthly due day"
         />
 
         {isLoan && (
-          <NumberInput
-            label="Tenure (months)"
-            inputMode="numeric"
-            placeholder="0"
-            value={tenure}
-            onChange={(e) => setTenure(e.target.value)}
-          />
+          <>
+            <div className={styles.row}>
+              <NumberInput
+                label="Tenure (months)"
+                inputMode="numeric"
+                placeholder="0"
+                value={tenure}
+                onChange={(e) => changeTenure(e.target.value)}
+              />
+              <Input
+                label="End month"
+                type="month"
+                placeholder="YYYY-MM"
+                min={startMonth}
+                value={endInput}
+                onChange={(e) => changeEndMonth(e.target.value)}
+                error={endError}
+                hint={
+                  tenureNum > 0
+                    ? `${tenureNum} month${tenureNum === 1 ? "" : "s"}`
+                    : undefined
+                }
+              />
+            </div>
+
+            {amountField}
+
+            <div className={styles.group}>
+              <div className={styles.paid_top}>
+                <span className={styles.paid_label}>EMI changes</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  icon={Plus}
+                  onClick={addChange}
+                >
+                  Add change
+                </Button>
+              </div>
+              {changes.length === 0 ? (
+                <span className={styles.note}>
+                  For rate revisions or step-ups: a new EMI from a month onward.
+                </span>
+              ) : (
+                changes.map((c, i) => {
+                  const error = changeError(c, i);
+                  return (
+                    <div key={i} className={styles.change}>
+                      <div className={styles.change_row}>
+                        <Input
+                          aria-label={`Change ${i + 1} from month`}
+                          type="month"
+                          placeholder="YYYY-MM"
+                          min={startMonth}
+                          max={endMonth || undefined}
+                          value={c.from}
+                          onChange={(e) =>
+                            updateChange(i, { from: e.target.value })
+                          }
+                        />
+                        <NumberInput
+                          aria-label={`Change ${i + 1} EMI amount`}
+                          inputMode="decimal"
+                          placeholder={`${symbol}0`}
+                          value={c.amount}
+                          onChange={(e) =>
+                            updateChange(i, { amount: e.target.value })
+                          }
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          icon={X}
+                          aria-label={`Remove change ${i + 1}`}
+                          onClick={() =>
+                            setChanges((rows) => rows.filter((_, j) => j !== i))
+                          }
+                        />
+                      </div>
+                      {error && (
+                        <span role="alert" className={styles.change_error}>
+                          {error}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </>
         )}
 
         <div className={styles.paid}>
           <div className={styles.paid_top}>
-            <span className={styles.paid_label}>
+            <span id={paidLabelId} className={styles.paid_label}>
               {isLoan
                 ? "Paid so far"
                 : loggedCount > 0
@@ -267,12 +518,14 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
             </span>
             <SegmentedControl
               size="sm"
+              aria-labelledby={paidLabelId}
               segments={PAID_MODES}
               value={paidMode}
               onChange={switchPaidMode}
             />
           </div>
           <NumberInput
+            aria-labelledby={paidLabelId}
             inputMode={paidMode === "amount" ? "decimal" : "numeric"}
             placeholder={
               paidMode === "amount" ? `${symbol}0` : "Number of months"

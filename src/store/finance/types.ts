@@ -9,6 +9,7 @@ import type {
   Emi,
   EmiInput,
   Profile,
+  SpendBudget,
   Transaction,
   TransactionInput,
 } from "@/types";
@@ -24,6 +25,7 @@ export interface FinanceState {
   emis: Emi[];
   borrowings: Borrowing[];
   budgets: Partial<Record<CategoryId, number>>;
+  spendBudget: SpendBudget | null;
   loadError: string | null;
   pendingSync: number;
   historyFrom: string | null;
@@ -31,12 +33,14 @@ export interface FinanceState {
   syncStatus: "idle" | "syncing" | "offline";
 
   setBudgets: (budgets: Partial<Record<CategoryId, number>>) => void;
+  setSpendBudget: (limits: { daily: number; major: number }) => void;
 
   hydrate: (userId: string) => Promise<void>;
   flushSync: () => Promise<void>;
   loadHistory: (month: string) => Promise<void>;
   retrySync: () => void;
-  discardPendingSync: () => void;
+  /** Drops queued changes for `uid` (default: the current user). */
+  discardPendingSync: (uid?: string) => void;
   resetAll: () => void;
   updateProfile: (patch: Partial<Profile>) => void;
 
@@ -49,7 +53,12 @@ export interface FinanceState {
   setDailyAccount: (id: string) => void;
 
   addAccount: (input: AccountInput) => void;
-  updateAccount: (id: string, patch: Partial<Account>) => void;
+  /** `savingAdjustment` also records a savings deposit (+) / withdrawal (-). */
+  updateAccount: (
+    id: string,
+    patch: Partial<Account>,
+    savingAdjustment?: number,
+  ) => void;
   deleteAccount: (id: string) => void;
   addSavingDeposit: (accountId: string, amount: number) => void;
   addSavingWithdrawal: (accountId: string, amount: number) => void;
@@ -117,6 +126,7 @@ export const emptyState = {
   emis: [],
   borrowings: [],
   budgets: {},
+  spendBudget: null,
   loadError: null,
   pendingSync: 0,
   historyFrom: null,
@@ -130,7 +140,6 @@ export type FinanceGet = StoreApi<FinanceState>["getState"];
 export interface SyncStep {
   op: Op;
   undo?: Op[];
-  retry?: boolean;
 }
 
 export interface MutationHelpers {
@@ -141,7 +150,7 @@ export interface MutationHelpers {
   pendingCount: () => number;
   retry: () => void;
   deferResync: () => void;
-  discardPending: () => void;
+  discardPending: (uid?: string) => void;
 }
 
 export type SliceCreator<T> = (

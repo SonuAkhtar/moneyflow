@@ -29,16 +29,24 @@
     @include truncate(1);
   }
 
-  &_streak {
-    align-self: flex-start;
+  &_meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
     margin-top: var(--space-1);
+  }
+
+  &_since {
+    font-size: var(--font-xs);
+    color: var(--text-tertiary);
   }
 
   &_edit {
     display: grid;
     place-items: center;
-    width: 36px;
-    height: 36px;
+    width: var(--tap-min);
+    height: var(--tap-min);
     border-radius: var(--radius-pill);
     background: var(--surface-glass);
     color: var(--text-secondary);
@@ -46,145 +54,189 @@
   }
 }
 
-.savings {
-  position: relative;
+.group {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-  padding: var(--space-5);
+}
+
+// Related cards read as one grouped list: shared outline, hairline dividers.
+.stack {
+  display: flex;
+  flex-direction: column;
   border-radius: var(--radius-lg);
-  background: var(--surface-card-solid);
   border: 1px solid var(--border-subtle);
   box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.page .stack > * {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+
+  & + * {
+    border-top: 1px solid var(--border-subtle);
+  }
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--space-4);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 60px;
+  padding: var(--space-3) 0;
+  text-align: left;
   color: var(--text-primary);
 
-  &_head {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+  & + & {
+    border-top: 1px solid var(--border-subtle);
   }
 
-  &_label {
-    font-size: var(--font-2xs);
-    font-weight: var(--weight-semibold);
-    color: var(--text-tertiary);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-  }
-
-  &_total {
-    font-family: var(--num-font);
-    font-size: var(--font-3xl);
-    font-weight: var(--weight-semibold);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
-    color: var(--color-success);
-  }
-
-  &_grid {
+  &_icon {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-3);
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-input);
+    color: var(--text-secondary);
+    flex-shrink: 0;
+
+    &--violet {
+      background: var(--tint-sip-bg);
+      color: var(--tint-sip-fg);
+    }
+
+    &--blue {
+      background: var(--tint-bank-bg);
+      color: var(--tint-bank-fg);
+    }
+
+    &--amber {
+      background: var(--color-warning-bg);
+      color: var(--color-warning-text);
+    }
+
+    &--danger {
+      background: var(--color-danger-bg);
+      color: var(--color-danger);
+    }
   }
 
-  &_cell {
+  &_text {
     display: flex;
     flex-direction: column;
-    gap: 3px;
-    padding: var(--space-3);
-    border-radius: var(--radius-md);
-    background: var(--surface-input);
-    border: 1px solid var(--border-subtle);
+    gap: 1px;
+    flex: 1;
     min-width: 0;
   }
 
-  &_cellHead {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    font-size: var(--font-xs);
+  &_label {
+    flex: 1;
+    font-size: var(--font-sm);
     font-weight: var(--weight-semibold);
-    color: var(--text-secondary);
-
-    svg {
-      color: var(--text-secondary);
-    }
   }
 
-  &_cellValue {
-    font-family: var(--num-font);
-    font-size: var(--font-lg);
-    font-weight: var(--weight-semibold);
-    font-variant-numeric: tabular-nums;
-    color: var(--text-primary);
-    @include truncate(1);
-  }
-
-  &_cellSub {
+  &_sub {
     font-size: var(--font-xs);
     color: var(--text-tertiary);
-    @include truncate(1);
-
-    &--up {
-      color: var(--color-success);
-      font-weight: var(--weight-medium);
-    }
-  }
-}
-
-.settings {
-  display: flex;
-  flex-direction: column;
-}
-
-.row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-3) 0;
-  border-bottom: 1px solid var(--border-subtle);
-
-  &:last-child {
-    border-bottom: none;
-  }
-
-  &_label {
-    font-size: var(--font-sm);
-    color: var(--text-secondary);
   }
 
   &_value {
     font-size: var(--font-sm);
     font-weight: var(--weight-semibold);
-    font-variant-numeric: tabular-nums;
-  }
-}
-
-.credit {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding-top: var(--space-3);
-
-  &_label {
-    font-size: var(--font-sm);
     color: var(--text-secondary);
   }
 
-  &_link {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: var(--font-sm);
-    font-weight: var(--weight-semibold);
-    color: var(--accent-text);
+  &_chevron {
+    color: var(--text-tertiary);
     flex-shrink: 0;
   }
 }
 
-.actions {
+button.item {
+  cursor: pointer;
+  @include focus-ring;
+}
+
+.danger {
+  color: var(--color-danger);
+}
+
+.credit {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  gap: var(--space-1);
+  min-height: var(--tap-min);
+  padding-bottom: var(--space-4);
+  font-size: var(--font-xs);
+  color: var(--text-tertiary);
+}
+
+.fonts {
   display: flex;
-  justify-content: center;
-  padding: var(--space-1) 0 var(--space-6);
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-bottom: var(--space-4);
+}
+
+.font {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-input);
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-smooth);
+  @include focus-ring;
+
+  &--active {
+    border-color: var(--accent-text);
+    background: var(--accent-bg);
+  }
+
+  &_sample {
+    width: 44px;
+    font-size: var(--font-3xl);
+    font-weight: var(--weight-bold);
+    line-height: 1;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  &_text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &_name {
+    font-size: var(--font-md);
+    font-weight: var(--weight-semibold);
+  }
+
+  &_note {
+    font-size: var(--font-xs);
+    color: var(--text-secondary);
+  }
+
+  &_check {
+    color: var(--accent-text);
+    flex-shrink: 0;
+  }
 }

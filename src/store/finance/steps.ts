@@ -6,16 +6,20 @@ import type {
   CategoryId,
   Emi,
   EmiPayment,
+  SpendBudget,
   Transaction,
 } from "@/types";
 import type { ProfilePatch } from "./ops";
 import type { SyncStep } from "./types";
 
+const newOpId = () => crypto.randomUUID();
+
 export const step = {
   adjustBalance: (accountId: string, delta: number): SyncStep => ({
-    op: { k: "account.adjust", id: accountId, delta },
-    undo: [{ k: "account.adjust", id: accountId, delta: -delta }],
-    retry: false,
+    op: { k: "account.adjust", id: accountId, delta, opId: newOpId() },
+    undo: [
+      { k: "account.adjust", id: accountId, delta: -delta, opId: newOpId() },
+    ],
   }),
 
   insertAccount: (account: Account): SyncStep => ({
@@ -128,6 +132,10 @@ export const step = {
 
   saveBudgets: (budgets: Partial<Record<CategoryId, number>>): SyncStep => ({
     op: { k: "budgets.save", budgets },
+  }),
+
+  saveSpendBudget: (budget: SpendBudget | null): SyncStep => ({
+    op: { k: "spendBudget.save", budget },
   }),
 };
 

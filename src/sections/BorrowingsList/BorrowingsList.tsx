@@ -58,16 +58,28 @@ export const BorrowingsList = () => {
   const [editing, setEditing] = useState<Borrowing | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [childTarget, setChildTarget] = useState<ChildTarget | null>(null);
+  const [childOpen, setChildOpen] = useState(false);
+  // Bumped on every open: the sheet remounts with fresh form state, but keeps
+  // its content (and exit animation) while closing.
+  const [openCount, setOpenCount] = useState(0);
 
   const totalOutstanding = sumBy(borrowings, borrowingOutstanding);
 
   const openAdd = () => {
     setEditing(null);
     setSheetOpen(true);
+    setOpenCount((n) => n + 1);
   };
   const openEdit = (b: Borrowing) => {
     setEditing(b);
     setSheetOpen(true);
+    setOpenCount((n) => n + 1);
+  };
+
+  const openChild = (target: ChildTarget) => {
+    setChildTarget(target);
+    setChildOpen(true);
+    setOpenCount((n) => n + 1);
   };
 
   return (
@@ -210,7 +222,7 @@ export const BorrowingsList = () => {
                             type="button"
                             className={styles.child}
                             onClick={() =>
-                              setChildTarget({
+                              openChild({
                                 borrowingId: b.id,
                                 payment: p,
                                 outstanding,
@@ -237,7 +249,7 @@ export const BorrowingsList = () => {
                           className={styles.childAdd}
                           aria-label="Record a repayment"
                           onClick={() =>
-                            setChildTarget({
+                            openChild({
                               borrowingId: b.id,
                               payment: null,
                               outstanding,
@@ -262,23 +274,20 @@ export const BorrowingsList = () => {
       )}
 
       <AddBorrowingSheet
-        key={editing?.id ?? "new"}
+        key={`sheet-${openCount}`}
         open={sheetOpen}
         borrowing={editing}
         onClose={() => setSheetOpen(false)}
       />
 
       <AddBorrowingPaymentSheet
-        key={
-          childTarget?.payment?.id ??
-          `${childTarget?.borrowingId ?? "none"}-new`
-        }
-        open={childTarget !== null}
+        key={`child-${openCount}`}
+        open={childOpen}
         borrowingId={childTarget?.borrowingId ?? null}
         payment={childTarget?.payment ?? null}
         outstanding={childTarget?.outstanding ?? 0}
         currency={currency}
-        onClose={() => setChildTarget(null)}
+        onClose={() => setChildOpen(false)}
       />
     </section>
   );

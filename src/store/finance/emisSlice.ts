@@ -54,6 +54,7 @@ export const createEmisSlice: SliceCreator<EmisSlice> = (
         interestRate: input.interestRate,
         dueDay: input.dueDay,
         status: "active",
+        amountChanges: input.amountChanges ?? [],
         payments: [],
         createdAt: isoNow(),
       },
@@ -99,7 +100,9 @@ export const createEmisSlice: SliceCreator<EmisSlice> = (
   addEmiPayment: (emiId, input) => {
     const s = get();
     const old = s.emis.find((e) => e.id === emiId);
-    if (!old) return;
+    // The server allows one payment per EMI per month.
+    if (!old || (old.payments ?? []).some((p) => p.month === input.month))
+      return;
     ownerId();
     const payment: EmiPayment = {
       id: newId(),

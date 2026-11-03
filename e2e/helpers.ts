@@ -116,12 +116,18 @@ export const signIn = async (
   await page.getByRole("button", { name: "Sign in" }).click();
 };
 
+/** The monthly statement's amounts start hidden; most tests read them. */
+export const showAmounts = async (page: Page) => {
+  await page.getByRole("button", { name: "Show monthly amounts" }).click();
+};
+
 export const signInSeeded = async (page: Page, opts: SeedOptions = {}) => {
   const user = await seedUser(opts);
   await signIn(page, user.email, user.password);
   await expect(
     page.getByRole("region", { name: "Monthly statement" }),
   ).toBeVisible();
+  await showAmounts(page);
   return user;
 };
 

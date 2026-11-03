@@ -4,11 +4,17 @@ import type {
   BorrowingPayment,
   CategoryId,
   Emi,
+  EmiAmountChange,
   EmiPayment,
   Profile,
   Transaction,
 } from "@/types";
-import type { Tables, TablesInsert } from "./database.types";
+import type {
+  Json,
+  Tables,
+  TablesInsert,
+  TablesUpdate,
+} from "./database.types";
 
 const n = (v: number | string | null | undefined): number =>
   v == null ? 0 : typeof v === "number" ? v : Number(v) || 0;
@@ -44,10 +50,9 @@ export const profileToUpdate = (
     majorAccountId?: string | null;
     dailyAccountId?: string | null;
   },
-): TablesInsert<"profiles"> => {
+): TablesUpdate<"profiles"> => {
+  // email and username are owned by auth and not writable by the client.
   const out: Record<string, unknown> = {};
-  if (patch.email !== undefined) out.email = patch.email;
-  if (patch.username !== undefined) out.username = patch.username;
   if (patch.fullName !== undefined) out.full_name = patch.fullName;
   if (patch.phone !== undefined) out.phone = patch.phone;
   if (patch.avatarUrl !== undefined) out.avatar_url = patch.avatarUrl;
@@ -63,7 +68,7 @@ export const profileToUpdate = (
     out.major_account_id = patch.majorAccountId;
   if (patch.dailyAccountId !== undefined)
     out.daily_account_id = patch.dailyAccountId;
-  return out as TablesInsert<"profiles">;
+  return out as TablesUpdate<"profiles">;
 };
 
 export const rowToAccount = (r: Tables<"accounts">): Account => ({
@@ -118,6 +123,18 @@ export const transactionToRow = (
   occurred_at: t.occurredAt,
 });
 
+const toAmountChanges = (v: Json | undefined): EmiAmountChange[] =>
+  Array.isArray(v)
+    ? v.flatMap((c) =>
+        c &&
+        typeof c === "object" &&
+        !Array.isArray(c) &&
+        typeof c.from === "string"
+          ? [{ from: c.from, amount: n(c.amount as number | string) }]
+          : [],
+      )
+    : [];
+
 export const rowToEmi = (r: Tables<"emis">, payments: EmiPayment[]): Emi => ({
   id: r.id,
   userId: r.user_id,
@@ -133,6 +150,7 @@ export const rowToEmi = (r: Tables<"emis">, payments: EmiPayment[]): Emi => ({
   interestRate: n(r.interest_rate),
   dueDay: r.due_day,
   status: r.status,
+  amountChanges: toAmountChanges(r.amount_changes),
   payments,
   createdAt: r.created_at,
 });
@@ -152,6 +170,10 @@ export const emiToRow = (e: Emi): TablesInsert<"emis"> => ({
   interest_rate: e.interestRate,
   due_day: e.dueDay,
   status: e.status,
+  amount_changes: (e.amountChanges ?? []).map((c) => ({
+    from: c.from,
+    amount: c.amount,
+  })),
 });
 
 export const rowToEmiPayment = (r: Tables<"emi_payments">): EmiPayment => ({

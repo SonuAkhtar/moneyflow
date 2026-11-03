@@ -67,9 +67,9 @@ const smallFields = (page: Page) =>
 
 const SHEETS: [string, string, (p: Page) => Promise<void>][] = [
   [
-    "quick add",
+    "add expense",
     "/",
-    (p) => p.getByRole("button", { name: "Add expense", exact: true }).click(),
+    (p) => p.getByRole("button", { name: "Add daily expense" }).click(),
   ],
   [
     "transaction filters",

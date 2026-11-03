@@ -23,7 +23,7 @@ vi.mock("@/services/repositories", () => {
       insert: rec("account.insert"),
       updateMeta: rec("account.updateMeta"),
       remove: rec("account.remove"),
-      adjustBalance: vi.fn(async (id: string, _u: string, delta: number) => {
+      adjustBalance: vi.fn(async (id: string, delta: number) => {
         calls.push(`adjust:${id}:${delta}`);
         server.set(id, (server.get(id) ?? 0) + delta);
         return server.get(id);

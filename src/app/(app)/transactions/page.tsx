@@ -82,6 +82,15 @@ function TransactionsView() {
   );
   const visible = useMemo(() => results.slice(0, limit), [results, limit]);
   const groups = useMemo(() => groupByMonth(visible), [visible]);
+  const netByMonth = useMemo(() => {
+    const totals = new Map<string, number>();
+    for (const t of results) {
+      if (isBankTransfer(t)) continue;
+      const key = monthKey(t.occurredAt);
+      totals.set(key, (totals.get(key) ?? 0) + transactionDelta(t));
+    }
+    return totals;
+  }, [results]);
   const activeCount = activeFilterCount(filters);
   const hasAnyFilter =
     activeCount > 0 || filters.query.trim() !== "" || filters.type !== "all";
@@ -264,10 +273,7 @@ function TransactionsView() {
         </Card>
       ) : (
         groups.map((group) => {
-          const net = group.items.reduce(
-            (acc, t) => acc + (isBankTransfer(t) ? 0 : transactionDelta(t)),
-            0,
-          );
+          const net = netByMonth.get(group.month) ?? 0;
           return (
             <section
               key={group.month}

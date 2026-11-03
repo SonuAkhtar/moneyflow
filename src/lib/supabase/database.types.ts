@@ -121,6 +121,7 @@ export interface Database {
           interest_rate: number;
           due_day: number;
           status: EmiStatus;
+          amount_changes: Json;
           created_at: string;
           updated_at: string;
         };
@@ -139,6 +140,7 @@ export interface Database {
           interest_rate?: number;
           due_day?: number;
           status?: EmiStatus;
+          amount_changes?: Json;
         };
         Update: Partial<Database["public"]["Tables"]["emis"]["Insert"]>;
         Relationships: [];
@@ -214,11 +216,40 @@ export interface Database {
         >;
         Relationships: [];
       };
+      balance_ops: {
+        Row: {
+          op_id: string;
+          user_id: string;
+          account_id: string;
+          created_at: string;
+        };
+        Insert: {
+          op_id: string;
+          user_id: string;
+          account_id: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["balance_ops"]["Insert"]>;
+        Relationships: [];
+      };
+      rate_limits: {
+        Row: { key: string; count: number; reset_at: string };
+        Insert: { key: string; count: number; reset_at: string };
+        Update: Partial<Database["public"]["Tables"]["rate_limits"]["Insert"]>;
+        Relationships: [];
+      };
     };
     Views: Record<never, never>;
     Functions: {
-      email_for_username: { Args: { uname: string }; Returns: string };
+      email_for_username: { Args: { uname: string }; Returns: string | null };
       username_available: { Args: { uname: string }; Returns: boolean };
+      adjust_balance: {
+        Args: { p_account_id: string; p_delta: number; p_op_id: string };
+        Returns: number | null;
+      };
+      hit_rate_limit: {
+        Args: { p_key: string; p_max: number; p_window_seconds: number };
+        Returns: number;
+      };
     };
     Enums: {
       transaction_type: TransactionType;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Landmark, Minus, Plus } from "lucide-react";
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
 import { Button } from "@/components/Button/Button";
@@ -27,11 +27,29 @@ export const MonthlySavingSheet = ({
   open,
   onClose,
   account,
-}: MonthlySavingSheetProps) => (
-  <BottomSheet open={open} onClose={onClose} title="Add saving for this month">
-    {account && <Form key={account.id} account={account} onClose={onClose} />}
-  </BottomSheet>
-);
+}: MonthlySavingSheetProps) => {
+  // The parent clears `account` on close: keep showing the last one while the
+  // sheet animates out, and start a fresh form on every open.
+  const [shown, setShown] = useState(account);
+  const [wasOpen, setWasOpen] = useState(false);
+  const [session, setSession] = useState(0);
+  if (account && account !== shown) setShown(account);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setSession((n) => n + 1);
+  }
+  const current = account ?? shown;
+
+  return (
+    <BottomSheet
+      open={open}
+      onClose={onClose}
+      title="Add saving for this month"
+    >
+      {current && <Form key={session} account={current} onClose={onClose} />}
+    </BottomSheet>
+  );
+};
 
 const Form = ({
   account,
@@ -53,13 +71,15 @@ const Form = ({
 
   const [mode, setMode] = useState<"add" | "take">("add");
   const [amount, setAmount] = useState("");
+  const submitted = useRef(false);
   const value = Number(amount) || 0;
   const newBalance =
     mode === "add" ? account.balance + value : account.balance - value;
   const canSave = value > 0;
 
   const save = () => {
-    if (!canSave) return;
+    if (!canSave || submitted.current) return;
+    submitted.current = true;
     if (mode === "add") {
       addSavingDeposit(account.id, value);
     } else {

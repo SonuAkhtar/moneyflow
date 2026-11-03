@@ -7,6 +7,7 @@ import {
   resetMock,
   serverBalance,
   serverState,
+  showAmounts,
   signInSeeded,
 } from "./helpers";
 
@@ -68,6 +69,7 @@ test("bank transfer moves money and is not counted as spending", async ({
   await expect.poll(() => serverBalance(SBI)).toBe(23000);
 
   await page.goto("/");
+  await showAmounts(page);
   await expect(spentOnHome(page)).toHaveText("₹0");
 });
 
@@ -113,6 +115,7 @@ test("credit card spending adds to what is owed; paying the bill is a transfer",
   await expect.poll(() => serverBalance(CARD)).toBe(0);
   await expect.poll(() => serverBalance(HDFC)).toBe(48800);
   await page.goto("/");
+  await showAmounts(page);
   await expect(spentOnHome(page)).toHaveText("₹1,200");
 });
 
@@ -209,7 +212,7 @@ test("profile photo is uploaded to storage", async ({ page }) => {
 test("deleting the account removes the user and all data", async ({ page }) => {
   await signInSeeded(page);
   await page.goto("/profile");
-  await page.getByRole("button", { name: "Delete", exact: true }).click();
+  await page.getByRole("button", { name: /Delete account/ }).click();
   const sheet = page.getByRole("dialog");
   const confirm = sheet.getByRole("button", { name: "Delete my account" });
   await expect(confirm).toBeDisabled();

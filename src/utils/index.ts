@@ -1,5 +1,5 @@
 import clsx, { type ClassValue } from "clsx";
-import { format, parseISO, startOfMonth, subMonths } from "date-fns";
+import { addMonths, format, parseISO, startOfMonth, subMonths } from "date-fns";
 import { CURRENCY, HEALTH_THRESHOLDS } from "@/constants";
 import { localeForCurrency as localeFor } from "@/constants/currencies";
 import type {
@@ -124,7 +124,45 @@ export const emiPaidAmount = (e: Emi): number => {
     e.totalMonths > 0
       ? Math.min(emiPaidMonths(e), e.totalMonths)
       : emiPaidMonths(e);
-  return months * e.monthlyAmount;
+  return emiScheduledAmount(e, months);
+};
+
+export const shiftMonth = (month: string, n: number): string =>
+  monthKey(addMonths(parseISO(`${month}-01`), n));
+
+/** Last instalment month of a loan with a tenure. */
+export const emiEndMonth = (e: Emi): string =>
+  shiftMonth(emiStartMonth(e), e.totalMonths - 1);
+
+/** The EMI due for `month`: the latest amount change on or before it. */
+export const emiAmountFor = (e: Emi, month: string): number => {
+  let latest: Emi["amountChanges"][number] | undefined;
+  for (const c of e.amountChanges ?? [])
+    if (c.from <= month && (!latest || c.from >= latest.from)) latest = c;
+  return latest?.amount ?? e.monthlyAmount;
+};
+
+/** Total of the first `months` instalments from the start month. */
+export const emiScheduledAmount = (e: Emi, months: number): number => {
+  if (!e.amountChanges?.length) return months * e.monthlyAmount;
+  const start = emiStartMonth(e);
+  let total = 0;
+  for (let i = 0; i < months; i += 1)
+    total += emiAmountFor(e, shiftMonth(start, i));
+  return round2(total);
+};
+
+/** Standard amortised EMI, rounded to a whole unit; 0 if inputs are missing. */
+export const suggestedEmi = (
+  principal: number,
+  annualRatePct: number,
+  months: number,
+): number => {
+  if (!(principal > 0) || !(months > 0)) return 0;
+  const r = Math.max(0, annualRatePct) / 12 / 100;
+  if (r === 0) return Math.round(principal / months);
+  const f = (1 + r) ** months;
+  return Math.round((principal * r * f) / (f - 1));
 };
 
 export const cn = (...inputs: ClassValue[]): string => clsx(inputs);
@@ -167,6 +205,7 @@ export const formatCurrency = (
     style: "currency",
     currency,
     notation: compact ? "compact" : "standard",
+    minimumFractionDigits: compact || value % 1 === 0 ? 0 : 2,
     maximumFractionDigits: compact ? 1 : value % 1 === 0 ? 0 : 2,
   });
   const formatted = formatter.format(Math.abs(value));
@@ -185,6 +224,19 @@ export const formatMoneyShort = (value: number): string =>
 
 export const formatPercent = (value: number, digits = 0): string =>
   `${value.toFixed(digits)}%`;
+
+/** One "*" per whole digit, so a hidden amount keeps its rough size. */
+export const maskDigits = (value: number): string =>
+  "*".repeat(Math.max(1, String(Math.floor(Math.abs(value))).length));
+
+export const formatAmount = (
+  value: number,
+  currency: string,
+  hidden: boolean,
+): string =>
+  hidden
+    ? `${getCurrencySymbol(currency)}${maskDigits(value)}`
+    : formatCurrency(value, currency);
 
 export const formatNumber = (value: number): string =>
   new Intl.NumberFormat(localeFor(ACTIVE_CURRENCY)).format(value);
@@ -273,7 +325,8 @@ export const computeHealthScore = ({
   const rate =
     income > 0 ? Math.max(0, Math.min(100, (savings / income) * 100)) : 0;
   const savingsScore = Math.min(60, rate * 0.6);
-  const emiRatio = income > 0 ? Math.min(1, emiBurden / income) : 1;
+  const emiRatio =
+    income > 0 ? Math.min(1, emiBurden / income) : emiBurden > 0 ? 1 : 0;
   const emiScore = (1 - emiRatio) * 40;
   return Math.round(Math.max(0, Math.min(100, savingsScore + emiScore)));
 };

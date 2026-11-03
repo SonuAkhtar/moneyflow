@@ -1,0 +1,29 @@
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1) var(--space-2);
+  margin-top: calc(var(--space-2) * -1);
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+
+  strong {
+    color: var(--text-primary);
+    font-weight: var(--weight-semibold);
+  }
+
+  svg {
+    flex-shrink: 0;
+    color: var(--text-tertiary);
+  }
+
+  &_scope {
+    font-weight: var(--weight-semibold);
+  }
+}
+
+.line .over {
+  color: var(--color-danger);
+}

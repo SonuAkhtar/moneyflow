@@ -14,13 +14,11 @@ import {
   formatCurrency,
   formatNumber,
   getCurrencySymbol,
+  maskDigits,
   sumBy,
 } from "@/utils";
 import type { Account } from "@/types";
 import styles from "./SavingsAccordion.module.scss";
-
-const maskFor = (n: number) =>
-  "*".repeat(Math.max(1, String(Math.floor(Math.abs(n))).length));
 
 export const SavingsAccordion = () => {
   const accounts = useFinanceStore((s) => s.accounts);
@@ -33,8 +31,6 @@ export const SavingsAccordion = () => {
   const banks = accounts.filter((a) => a.type === "savings");
   const total = sumBy(banks, (a) => a.balance);
   const month = currentMonthKey();
-
-  const toggleReveal = () => setRevealed((v) => !v);
 
   return (
     <Card surface="solid" padded={false} className={styles.accordion}>
@@ -66,7 +62,7 @@ export const SavingsAccordion = () => {
                   formatNumber(total)
                 ) : (
                   <span className={styles.accordion_dots}>
-                    {maskFor(total)}
+                    {maskDigits(total)}
                   </span>
                 )}
               </span>
@@ -75,7 +71,7 @@ export const SavingsAccordion = () => {
                 className={styles.accordion_eye}
                 aria-label={revealed ? "Hide amounts" : "Show amounts"}
                 aria-pressed={revealed}
-                onClick={toggleReveal}
+                onClick={() => setRevealed((v) => !v)}
               >
                 {revealed ? <Eye size={16} /> : <EyeOff size={16} />}
               </button>
@@ -142,7 +138,7 @@ export const SavingsAccordion = () => {
                         ) : (
                           <>
                             Last mo {getCurrencySymbol()}
-                            {maskFor(lastMonth)}
+                            {maskDigits(lastMonth)}
                           </>
                         )}
                       </span>
@@ -155,7 +151,7 @@ export const SavingsAccordion = () => {
                     >
                       {revealed
                         ? formatCurrency(bank.balance, currency)
-                        : `${getCurrencySymbol()}${maskFor(bank.balance)}`}
+                        : `${getCurrencySymbol()}${maskDigits(bank.balance)}`}
                     </span>
                   </button>
                 );

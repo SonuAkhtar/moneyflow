@@ -109,15 +109,22 @@ export const INCOME_CATEGORIES: CategoryId[] = [
   "other",
 ];
 
-export const QUICK_EXPENSE_CATEGORIES: CategoryId[] = [
+export const DAILY_EXPENSE_CATEGORIES: CategoryId[] = [
   "food",
-  "groceries",
   "transport",
   "shopping",
-  "bills",
-  "rent",
-  "entertainment",
+  "groceries",
+  "other",
+];
+
+export const MAJOR_EXPENSE_CATEGORIES: CategoryId[] = [
+  "shopping",
   "travel",
+  "rent",
+  "bills",
+  "health",
+  "education",
+  "entertainment",
   "other",
 ];
 

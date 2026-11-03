@@ -8,7 +8,14 @@
   position: relative;
   align-self: center;
   cursor: pointer;
+  border-radius: var(--radius-pill);
   @include tap-highlight-none;
+
+  &:focus-within {
+    box-shadow:
+      0 0 0 2px var(--surface-base),
+      0 0 0 4px var(--focus-ring);
+  }
 
   &_badge {
     position: absolute;

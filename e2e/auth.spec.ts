@@ -68,5 +68,11 @@ test("sign in with email and sign out @mobile", async ({ page }) => {
   ).toBeVisible();
   await page.goto("/profile");
   await page.getByRole("button", { name: "Sign out" }).click();
+  const confirm = page.getByRole("alertdialog", { name: "Sign out?" });
+  await confirm.getByRole("button", { name: "Cancel" }).click();
+  await expect(confirm).toBeHidden();
+  await expect(page).toHaveURL(/\/profile$/);
+  await page.getByRole("button", { name: "Sign out" }).click();
+  await confirm.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/login$/);
 });

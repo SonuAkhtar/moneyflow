@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Pencil, Plus, Wallet } from "lucide-react";
 import { Collapsible } from "@/components/Collapsible/Collapsible";
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
@@ -33,6 +33,7 @@ export const SalaryManager = () => {
   const [editMonth, setEditMonth] = useState<string | null>(null);
   const [amount, setAmount] = useState("");
   const [bankId, setBankId] = useState("");
+  const submitted = useRef(false);
 
   const salaryByMonth = useMemo(
     () => salaryTotalsByMonth(transactions),
@@ -46,6 +47,7 @@ export const SalaryManager = () => {
     accounts.find((a) => a.isPrimary)?.id ?? accounts[0]?.id ?? "";
 
   const openEditor = (month: string) => {
+    submitted.current = false;
     setEditMonth(month);
     setAmount(
       salaryByMonth[month]
@@ -64,7 +66,7 @@ export const SalaryManager = () => {
   };
 
   const save = () => {
-    if (!editMonth) return;
+    if (!editMonth || submitted.current) return;
     if (accounts.length === 0) {
       toast({
         title: "Add an account first",
@@ -74,6 +76,7 @@ export const SalaryManager = () => {
       });
       return;
     }
+    submitted.current = true;
     setSalary(editMonth, Number(amount) || 0, bankId || undefined);
     toast({
       title: "Salary updated",
@@ -84,7 +87,8 @@ export const SalaryManager = () => {
   };
 
   const remove = () => {
-    if (!editMonth) return;
+    if (!editMonth || submitted.current) return;
+    submitted.current = true;
     transactions
       .filter(
         (t) =>
