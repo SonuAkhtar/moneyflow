@@ -151,6 +151,7 @@ export interface Database {
           emi_id: string;
           user_id: string;
           account_id: string | null;
+          kind: string;
           month: string;
           paid_on: string | null;
           amount: number;
@@ -161,6 +162,7 @@ export interface Database {
           emi_id: string;
           user_id: string;
           account_id?: string | null;
+          kind?: string;
           month: string;
           paid_on?: string | null;
           amount?: number;

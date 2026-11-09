@@ -112,14 +112,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={fontVariables} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={fontVariables}
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+    >
       <head>
-        <link
-          rel="preload"
-          as="image"
-          href="/icons/splash-logo.png"
-          fetchPriority="high"
-        />
         {supabaseOrigin && (
           <>
             <link

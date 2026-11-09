@@ -86,15 +86,23 @@ describe("POST /api/auth/sign-in", () => {
     );
   });
 
-  it("limits attempts per username", async () => {
+  it("limits attempts per username from the same IP", async () => {
     lookup.mockResolvedValue({ data: null, error: null });
     const codes: number[] = [];
     for (let i = 0; i < 6; i += 1)
       codes.push(
-        (await call({ username: "alice", password: "x" }, `9.9.9.${i}`)).status,
+        (await call({ username: "alice", password: "x" }, "9.9.9.9")).status,
       );
     expect(codes.slice(0, 5)).toEqual([401, 401, 401, 401, 401]);
     expect(codes[5]).toBe(429);
+  });
+
+  it("does not let attempts from other IPs lock a user out", async () => {
+    lookup.mockResolvedValue({ data: null, error: null });
+    for (let i = 0; i < 6; i += 1)
+      await call({ username: "bob", password: "x" }, "7.7.7.7");
+    const own = await call({ username: "bob", password: "x" }, "8.8.8.8");
+    expect(own.status).toBe(401);
   });
 
   it("limits attempts per IP and sends Retry-After", async () => {

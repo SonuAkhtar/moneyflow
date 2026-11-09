@@ -37,7 +37,6 @@ export const TransactionItem = memo(function TransactionItem({
       className={styles.item}
       onClick={() => onClick?.(transaction)}
       whileTap={{ scale: 0.98 }}
-      layout
     >
       <span
         className={styles.item_icon}

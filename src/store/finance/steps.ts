@@ -54,14 +54,6 @@ export const step = {
     undo: [{ k: "txn.save", txn }],
   }),
 
-  removeAccountTransactions: (
-    accountId: string,
-    loaded: Transaction[],
-  ): SyncStep => ({
-    op: { k: "txn.removeByAccount", accountId },
-    undo: loaded.map((txn) => ({ k: "txn.save" as const, txn })),
-  }),
-
   updateProfile: (patch: ProfilePatch, previous: ProfilePatch): SyncStep => ({
     op: { k: "profile.update", patch },
     undo: [{ k: "profile.update", patch: previous }],

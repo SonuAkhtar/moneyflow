@@ -104,18 +104,22 @@ export const AccountsList = () => {
     (t) => t.leg.amount,
   );
   const transferGroups = useMemo(() => {
+    const totals = new Map<string, number>();
+    for (const row of transfers) {
+      const key = monthKey(row.leg.occurredAt);
+      totals.set(key, (totals.get(key) ?? 0) + row.leg.amount);
+    }
     const groups: { month: string; total: number; rows: typeof transfers }[] =
       [];
     for (const row of visibleTransfers) {
       const key = monthKey(row.leg.occurredAt);
       const last = groups[groups.length - 1];
-      if (last && last.month === key) {
-        last.rows.push(row);
-        last.total += row.leg.amount;
-      } else groups.push({ month: key, total: row.leg.amount, rows: [row] });
+      if (last && last.month === key) last.rows.push(row);
+      else
+        groups.push({ month: key, total: totals.get(key) ?? 0, rows: [row] });
     }
     return groups;
-  }, [visibleTransfers]);
+  }, [transfers, visibleTransfers]);
 
   const openSheet = (bank: Account | null) => {
     setEditing(bank);

@@ -13,7 +13,11 @@ const usernameField = z
 
 export const signUpSchema = z
   .object({
-    fullName: z.string().min(2, "Tell us your name"),
+    fullName: z
+      .string()
+      .trim()
+      .min(2, "Tell us your name")
+      .max(200, "At most 200 characters"),
     username: usernameField,
     email: z.string().email("Enter a valid email"),
     password: z

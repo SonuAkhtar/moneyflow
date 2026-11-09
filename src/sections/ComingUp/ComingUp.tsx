@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, type CSSProperties } from "react";
+import { useMemo } from "react";
 import { format, parseISO } from "date-fns";
-import { Check, CreditCard, HandCoins, TrendingUp } from "lucide-react";
+import { AlertCircle, Check, Clock } from "lucide-react";
 import { useFinanceStore } from "@/store/financeStore";
 import {
   borrowingOutstanding,
@@ -11,8 +11,9 @@ import {
   currentMonthKey,
   dayShort,
   emiAmountFor,
+  emiCanLogMonth,
+  emiInstalments,
   emiKind,
-  emiStartMonth,
   formatCurrency,
 } from "@/utils";
 import styles from "./ComingUp.module.scss";
@@ -45,10 +46,13 @@ const daysUntil = (date: Date): number => {
 };
 
 const META = {
-  loan: { icon: CreditCard, color: "var(--color-danger)", label: "Loan EMI" },
-  sip: { icon: TrendingUp, color: "var(--color-success)", label: "SIP" },
-  borrow: { icon: HandCoins, color: "var(--color-warning)", label: "Borrowed" },
+  loan: { tone: "bank", label: "Loan EMI" },
+  sip: { tone: "sip", label: "SIP" },
+  borrow: { tone: "borrow", label: "Borrowed" },
 } as const;
+
+const STATUS_ICON = { paid: Check, upcoming: Clock, overdue: AlertCircle };
+const STATUS_LABEL = { paid: "Paid", upcoming: "Upcoming", overdue: "Overdue" };
 
 export const ComingUp = () => {
   const emis = useFinanceStore((s) => s.emis);
@@ -60,14 +64,14 @@ export const ComingUp = () => {
   const { items, dueTotal } = useMemo(() => {
     const out: DueItem[] = [];
     for (const e of emis) {
-      if (e.status !== "active" || emiStartMonth(e) > thisMonth) continue;
+      if (e.status !== "active" || !emiCanLogMonth(e, thisMonth)) continue;
       out.push({
         id: e.id,
         label: e.name,
         amount: emiAmountFor(e, thisMonth),
         date: dueDateThisMonth(e.dueDay),
         type: emiKind(e),
-        paid: (e.payments ?? []).some((p) => p.month === thisMonth),
+        paid: emiInstalments(e).some((p) => p.month === thisMonth),
       });
     }
     for (const b of borrowings) {
@@ -98,19 +102,13 @@ export const ComingUp = () => {
   return (
     <section className={styles.section} aria-labelledby="coming-up-title">
       <div className={styles.head}>
-        <div>
-          <h2 id="coming-up-title" className={styles.head_title}>
-            Upcoming payments
-          </h2>
-          <p className={styles.head_caption}>EMIs, SIPs & dues</p>
-        </div>
+        <h2 id="coming-up-title" className={styles.head_title}>
+          Upcoming payments
+        </h2>
         {dueTotal > 0 && (
-          <div className={styles.total}>
-            <span className={styles.total_label}>Due</span>
-            <span className={styles.total_value}>
-              {formatCurrency(dueTotal, currency)}
-            </span>
-          </div>
+          <span className={styles.head_due}>
+            <strong>{formatCurrency(dueTotal, currency)}</strong> due
+          </span>
         )}
       </div>
 
@@ -121,7 +119,6 @@ export const ComingUp = () => {
       >
         {items.map((item) => {
           const meta = META[item.type];
-          const Icon = meta.icon;
           const days = daysUntil(item.date);
           const urgency = days < 0 ? "overdue" : days <= 3 ? "soon" : "later";
           const when =
@@ -132,31 +129,36 @@ export const ComingUp = () => {
                 : days === 1
                   ? "Tomorrow"
                   : `In ${days} days`;
+          const status = item.paid ? "paid" : days < 0 ? "overdue" : "upcoming";
+          const StatusIcon = STATUS_ICON[status];
           return (
             <li
               key={item.id}
               className={cn(
-                styles.ticket,
-                item.paid ? styles["ticket--paid"] : styles["ticket--pending"],
+                styles.tile,
+                styles[`tile--${meta.tone}`],
+                styles[`tile--${status}`],
               )}
-              style={{ "--tone": meta.color } as CSSProperties}
             >
-              <span className={styles.cal} aria-hidden>
-                <span className={styles.cal_month}>
+              <span className={styles.date} aria-hidden>
+                <span className={styles.date_month}>
                   {format(item.date, "MMM")}
                 </span>
-                <span className={styles.cal_day}>{format(item.date, "d")}</span>
-              </span>
-              <span className={styles.ticket_info}>
-                <span className={styles.ticket_name}>
-                  <Icon size={12} className={styles.ticket_icon} aria-hidden />
-                  <span className="sr-only">{meta.label}: </span>
-                  <span className={styles.ticket_label}>{item.label}</span>
+                <span className={styles.date_day}>
+                  {format(item.date, "d")}
                 </span>
-                <span className={styles.ticket_amount}>
+              </span>
+              <span className={styles.info}>
+                <span className={styles.info_name}>
+                  <span className="sr-only">{meta.label}: </span>
+                  {item.label}
+                </span>
+                <span className={styles.info_amount}>
                   {formatCurrency(item.amount, currency)}
                 </span>
-                {!item.paid && (
+                {item.paid ? (
+                  <span className={styles.paid}>Paid</span>
+                ) : (
                   <span
                     className={cn(styles.when, styles[`when--${urgency}`])}
                     title={dayShort(item.date)}
@@ -165,11 +167,13 @@ export const ComingUp = () => {
                   </span>
                 )}
               </span>
-              {item.paid && (
-                <span className={styles.paid} role="img" aria-label="Paid">
-                  <Check size={15} strokeWidth={3} aria-hidden />
-                </span>
-              )}
+              <span
+                className={styles.status}
+                role="img"
+                aria-label={STATUS_LABEL[status]}
+              >
+                <StatusIcon size={15} strokeWidth={2.6} aria-hidden />
+              </span>
             </li>
           );
         })}

@@ -43,6 +43,7 @@ export const createBorrowingsSlice: SliceCreator<BorrowingsSlice> = (
     updateBorrowing: (id, patch) => {
       const old = get().borrowings.find((b) => b.id === id);
       if (!old) return;
+      ownerId();
       const updated = { ...old, ...patch };
       replace(id, updated);
       sync([step.saveBorrowing(updated, old)]);
@@ -62,6 +63,7 @@ export const createBorrowingsSlice: SliceCreator<BorrowingsSlice> = (
     addBorrowingPayment: (borrowingId, input) => {
       const old = get().borrowings.find((b) => b.id === borrowingId);
       if (!old) return;
+      ownerId();
       const payment: BorrowingPayment = {
         id: newId(),
         paidOn: input.paidOn,
@@ -79,6 +81,7 @@ export const createBorrowingsSlice: SliceCreator<BorrowingsSlice> = (
       const old = get().borrowings.find((b) => b.id === borrowingId);
       const previous = old?.payments?.find((p) => p.id === paymentId);
       if (!old || !previous) return;
+      ownerId();
       const updated = { ...previous, ...patch };
       replace(borrowingId, {
         ...old,
@@ -93,6 +96,7 @@ export const createBorrowingsSlice: SliceCreator<BorrowingsSlice> = (
       const old = get().borrowings.find((b) => b.id === borrowingId);
       const payment = old?.payments?.find((p) => p.id === paymentId);
       if (!old || !payment) return;
+      ownerId();
       replace(borrowingId, {
         ...old,
         payments: (old.payments ?? []).filter((p) => p.id !== paymentId),

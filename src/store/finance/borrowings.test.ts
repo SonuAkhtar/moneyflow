@@ -87,6 +87,26 @@ describe("borrowings", () => {
     ]);
   });
 
+  it("changes nothing locally when the profile isn't loaded yet", () => {
+    useFinanceStore.getState().addBorrowing({
+      lender: "Rahul",
+      amount: 5000,
+      borrowedOn: "2026-09-01",
+    });
+    const before = useFinanceStore.getState().borrowings;
+    useFinanceStore.setState({ profile: null });
+    const id = before[0]!.id;
+    expect(() =>
+      useFinanceStore.getState().updateBorrowing(id, { amount: 1 }),
+    ).toThrow();
+    expect(() =>
+      useFinanceStore
+        .getState()
+        .addBorrowingPayment(id, { paidOn: "2026-09-02", amount: 10 }),
+    ).toThrow();
+    expect(useFinanceStore.getState().borrowings).toEqual(before);
+  });
+
   it("deleting a borrowing removes its payments explicitly first", async () => {
     useFinanceStore.getState().addBorrowing({
       lender: "Office",

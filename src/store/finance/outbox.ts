@@ -35,11 +35,20 @@ export const saveOutbox = (groups: OutboxGroup[]): void => {
   const store = storage();
   memory = groups;
   if (!store) return;
-  try {
+  const write = () => {
     if (groups.length === 0) store.removeItem(OUTBOX_KEY);
     else store.setItem(OUTBOX_KEY, JSON.stringify(groups));
+  };
+  try {
+    write();
     memoryOnly = false;
   } catch {
-    memoryOnly = true;
+    try {
+      store.removeItem("mf-finance-cache");
+      write();
+      memoryOnly = false;
+    } catch {
+      memoryOnly = true;
+    }
   }
 };

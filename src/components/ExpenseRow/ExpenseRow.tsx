@@ -31,7 +31,6 @@ export const ExpenseRow = memo(function ExpenseRow({
       className={styles.row}
       onClick={() => onClick?.(transaction)}
       whileTap={{ scale: 0.98 }}
-      layout
     >
       <span
         className={styles.row_icon}

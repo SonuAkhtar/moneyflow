@@ -5,6 +5,7 @@ import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
 import { Input } from "@/components/Input/Input";
 import { Select } from "@/components/Select/Select";
 import { AmountField } from "@/components/AmountField/AmountField";
+import { SegmentedControl } from "@/components/SegmentedControl/SegmentedControl";
 import { SheetActions } from "@/components/SheetActions/SheetActions";
 import { ConfirmDialog } from "@/components/ConfirmDialog/ConfirmDialog";
 import { useFinanceStore } from "@/store/financeStore";
@@ -15,12 +16,22 @@ import {
   currentDateKey,
   currentMonthKey,
   emiAmountFor,
+  emiCanLogMonth,
+  emiEndMonth,
+  emiInstalments,
+  emiStartMonth,
+  shiftMonth,
   formatCurrency,
   lastNMonthKeys,
   monthLabel,
 } from "@/utils";
-import type { EmiKind, EmiPayment } from "@/types";
+import type { EmiKind, EmiPayment, EmiPaymentKind } from "@/types";
 import styles from "./AddEmiPaymentSheet.module.scss";
+
+const PAYMENT_KINDS: { label: string; value: EmiPaymentKind }[] = [
+  { label: "EMI", value: "emi" },
+  { label: "Lump sum", value: "extra" },
+];
 
 interface AddEmiPaymentSheetProps {
   open: boolean;
@@ -51,12 +62,40 @@ export const AddEmiPaymentSheet = ({
   const toast = useToast();
   const isEdit = Boolean(payment);
   const noun = kind === "sip" ? "SIP" : "EMI";
+  const [paymentKind, setPaymentKind] = useState<EmiPaymentKind>(
+    payment?.kind ?? "emi",
+  );
+  const extra = paymentKind === "extra";
 
+  const loanMonths = (() => {
+    if (kind !== "loan" || !emi) return null;
+    const last = emi.totalMonths > 0 ? emiEndMonth(emi) : currentMonthKey();
+    const logged = new Set(
+      emiInstalments(emi)
+        .filter((p) => p.id !== payment?.id)
+        .map((p) => p.month),
+    );
+    const months: string[] = [];
+    for (let m = emiStartMonth(emi); m <= last; m = shiftMonth(m, 1))
+      if (!logged.has(m)) months.push(m);
+    return months;
+  })();
+  const loggable =
+    loanMonths ??
+    lastNMonthKeys(12)
+      .reverse()
+      .filter((m) => !emi || emiCanLogMonth(emi, m));
   const [month, setMonth] = useState(
-    payment?.month ?? defaultMonth ?? currentMonthKey(),
+    payment?.month ??
+      defaultMonth ??
+      (loggable.includes(currentMonthKey())
+        ? currentMonthKey()
+        : (loggable[0] ?? currentMonthKey())),
   );
   const defaultAmount = (m: string) =>
-    !payment && emi && kind === "loan" ? String(emiAmountFor(emi, m)) : "";
+    !payment && !extra && emi && kind === "loan"
+      ? String(emiAmountFor(emi, m))
+      : "";
   const [amount, setAmount] = useState(
     payment ? String(payment.amount) : defaultAmount(month),
   );
@@ -72,22 +111,29 @@ export const AddEmiPaymentSheet = ({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const submitted = useRef(false);
 
-  const monthOptions = lastNMonthKeys(12).reverse();
+  const monthOptions = [...loggable];
   if (!monthOptions.includes(month)) monthOptions.push(month);
+  const monthCounted =
+    !extra && !isEdit && Boolean(emi) && !emiCanLogMonth(emi!, month);
   const bankOptions = banks.map((a) => ({
     label: accountLabel(a, currency),
     value: a.id,
   }));
   if (isEdit) bankOptions.unshift({ label: "No bank", value: "" });
 
-  const monthTaken = (payments ?? []).some(
-    (p) => p.month === month && p.id !== payment?.id,
-  );
+  const monthTaken =
+    !extra &&
+    emiInstalments({ payments }).some(
+      (p) => p.month === month && p.id !== payment?.id,
+    );
+  const paidMonth = extra ? paidOn.slice(0, 7) : month;
   const value = Number(amount) || 0;
   const canSave =
     value > 0 &&
     !monthTaken &&
+    !monthCounted &&
     Boolean(paidOn) &&
+    paidOn <= currentDateKey() &&
     Boolean(emiId) &&
     (Boolean(resolve(bankId)) || (isEdit && bankId === ""));
 
@@ -98,21 +144,22 @@ export const AddEmiPaymentSheet = ({
     if (payment) {
       updateEmiPayment(emiId, payment.id, {
         amount: value,
-        month,
+        month: paidMonth,
         paidOn,
         accountId: account?.id ?? null,
       });
       toast({ title: `${noun} updated`, variant: "success" });
     } else {
       addEmiPayment(emiId, {
+        kind: paymentKind,
         amount: value,
-        month,
+        month: paidMonth,
         paidOn,
         accountId: account?.id ?? null,
       });
       toast({
-        title: `${noun} added`,
-        description: monthLabel(month),
+        title: extra ? "Lump sum added" : `${noun} added`,
+        description: monthLabel(paidMonth),
         variant: "success",
       });
     }
@@ -130,7 +177,7 @@ export const AddEmiPaymentSheet = ({
     <BottomSheet
       open={open}
       onClose={onClose}
-      title={`${isEdit ? "Edit" : "Add"} ${noun} payment`}
+      title={`${isEdit ? "Edit" : "Add"} ${extra ? "lump sum" : noun} payment`}
       footer={
         <SheetActions
           onSave={save}
@@ -141,37 +188,67 @@ export const AddEmiPaymentSheet = ({
       }
     >
       <div className={styles.body}>
+        {kind === "loan" && !isEdit && (
+          <SegmentedControl
+            aria-label="Payment type"
+            segments={PAYMENT_KINDS}
+            value={paymentKind}
+            onChange={(next) => {
+              if (amount === defaultAmount(month))
+                setAmount(
+                  next === "extra" || !emi
+                    ? ""
+                    : String(emiAmountFor(emi, month)),
+                );
+              setPaymentKind(next);
+            }}
+          />
+        )}
         <AmountField value={amount} onChange={setAmount} />
-        <Select
-          label={`${noun} for`}
-          value={month}
-          onChange={(e) => {
-            if (amount === defaultAmount(month))
-              setAmount(defaultAmount(e.target.value));
-            setMonth(e.target.value);
-          }}
-          options={monthOptions.map((m) => ({
-            label: monthLabel(m),
-            value: m,
-          }))}
-          error={
-            monthTaken
-              ? `${monthLabel(month)} already has a payment - edit that one instead.`
-              : undefined
-          }
-        />
+        {!extra && (
+          <Select
+            label={`${noun} for`}
+            value={month}
+            onChange={(e) => {
+              if (amount === defaultAmount(month))
+                setAmount(defaultAmount(e.target.value));
+              setMonth(e.target.value);
+            }}
+            options={monthOptions.map((m) => ({
+              label: monthLabel(m),
+              value: m,
+            }))}
+            error={
+              monthTaken
+                ? `${monthLabel(month)} already has a payment. Edit that one instead.`
+                : monthCounted
+                  ? `${monthLabel(month)} is outside this plan's schedule.`
+                  : undefined
+            }
+          />
+        )}
         <Input
           label="Payment date"
           type="date"
           max={currentDateKey()}
           value={paidOn}
           onChange={(e) => setPaidOn(e.target.value)}
+          error={
+            paidOn > currentDateKey()
+              ? "Pick today or an earlier date"
+              : undefined
+          }
         />
         <Select
           label="Pay from bank"
           value={bankId}
           onChange={(e) => setBankId(e.target.value)}
           options={bankOptions}
+          error={
+            bankOptions.length === 0
+              ? "Add a bank account in Savings first"
+              : undefined
+          }
         />
       </div>
 

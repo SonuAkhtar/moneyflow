@@ -5,8 +5,10 @@ import {
   computeHealthScore,
   currentStreak,
   emiAmountFor,
+  emiCanLogMonth,
+  emiMonthsDue,
   emiPaidAmount,
-  emiScheduledAmount,
+  emiPaidMonths,
   formatCurrency,
   getCurrencySymbol,
   monthKey,
@@ -187,26 +189,39 @@ describe("emiPaidAmount", () => {
     expect(emiPaidAmount(sip)).toBe(7000);
   });
 
-  it("for a loan, multiplies paid months by the monthly amount", () => {
+  it("for a loan, sums the payments actually logged, whatever each one was", () => {
+    const pay = (month: string, amount: number) => ({
+      id: month,
+      month,
+      amount,
+      paidOn: `${month}-05`,
+      accountId: null,
+    });
     const loan = emi({
       kind: "loan",
       monthlyAmount: 2000,
-      paidMonths: 3,
+      paidMonths: 9,
       totalMonths: 12,
+      payments: [pay("2026-01", 2000), pay("2026-02", 2150)],
     });
-    expect(emiPaidAmount(loan)).toBe(6000);
+    expect(emiPaidAmount(loan)).toBe(4150);
+    expect(emiPaidMonths(loan)).toBe(2);
   });
 
-  it("for a loan, sums each paid month's EMI across amount changes", () => {
-    const loan = emi({
-      kind: "loan",
-      monthlyAmount: 2000,
-      paidMonths: 4,
-      totalMonths: 12,
-      amountChanges: [{ from: "2026-03", amount: 2500 }],
-    });
-    expect(emiPaidAmount(loan)).toBe(2000 + 2000 + 2500 + 2500);
-    expect(emiScheduledAmount(loan, 12)).toBe(2 * 2000 + 10 * 2500);
+  it("counts the EMIs due from the start month, capped at the tenure", () => {
+    const loan = emi({ kind: "loan", startMonth: "2026-01", totalMonths: 12 });
+    expect(emiMonthsDue(loan, "2026-01")).toBe(1);
+    expect(emiMonthsDue(loan, "2026-05")).toBe(5);
+    expect(emiMonthsDue(loan, "2027-08")).toBe(12);
+    expect(emiMonthsDue(loan, "2025-12")).toBe(0);
+  });
+
+  it("lets a loan log any month in its schedule from the start", () => {
+    const loan = emi({ kind: "loan", startMonth: "2026-01", totalMonths: 12 });
+    expect(emiCanLogMonth(loan, "2026-01")).toBe(true);
+    expect(emiCanLogMonth(loan, "2026-12")).toBe(true);
+    expect(emiCanLogMonth(loan, "2025-12")).toBe(false);
+    expect(emiCanLogMonth(loan, "2027-01")).toBe(false);
   });
 });
 

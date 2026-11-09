@@ -154,7 +154,7 @@ const DEFAULTS = {
     interest_rate: 0,
     amount_changes: [],
   }),
-  emi_payments: () => ({ account_id: null }),
+  emi_payments: () => ({ account_id: null, kind: "emi" }),
   borrowings: () => ({ purpose: null, due_date: null, note: null }),
   borrowing_payments: () => ({ note: null }),
   profiles: () => ({}),

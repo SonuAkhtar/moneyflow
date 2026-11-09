@@ -32,6 +32,10 @@ export const ResetPasswordForm = () => {
       .getSession()
       .then(({ data }) => {
         if (data.session) setReady(true);
+        else
+          setServerError(
+            "This reset link has expired or was already used. Please request a new one.",
+          );
       })
       .catch(() => {
         setServerError(
@@ -40,6 +44,7 @@ export const ResetPasswordForm = () => {
       });
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (session && (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN")) {
+        setServerError(null);
         setReady(true);
       }
     });

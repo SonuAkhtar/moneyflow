@@ -8,8 +8,8 @@ import {
   computeHealthScore,
   currentMonthKey,
   emiAmountFor,
+  emiCanLogMonth,
   emiKind,
-  emiStartMonth,
   healthBand,
   sumBy,
 } from "@/utils";
@@ -49,7 +49,7 @@ export const useFinanceMetrics = (
         (e) =>
           e.status === "active" &&
           emiKind(e) === "loan" &&
-          emiStartMonth(e) <= month,
+          emiCanLogMonth(e, month),
       ),
       (e) => emiAmountFor(e, month),
     );

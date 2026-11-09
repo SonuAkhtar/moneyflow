@@ -138,3 +138,10 @@
     font-variant-numeric: tabular-nums;
   }
 }
+
+.error {
+  margin: calc(var(--space-2) * -1) 0 0;
+  font-size: var(--font-xs);
+  color: var(--color-danger);
+  text-align: center;
+}

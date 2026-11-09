@@ -39,8 +39,8 @@ export const ProgressBar = ({
     >
       <m.span
         className={cn(styles.progress_fill, styles[`progress_fill--${tone}`])}
-        initial={{ width: 0 }}
-        animate={{ width: `${clamped}%` }}
+        initial={{ x: "-100%" }}
+        animate={{ x: `${clamped - 100}%` }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
       />
     </div>

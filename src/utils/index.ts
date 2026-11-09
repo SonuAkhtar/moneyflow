@@ -1,5 +1,12 @@
 import clsx, { type ClassValue } from "clsx";
-import { addMonths, format, parseISO, startOfMonth, subMonths } from "date-fns";
+import {
+  addMonths,
+  differenceInCalendarMonths,
+  format,
+  parseISO,
+  startOfMonth,
+  subMonths,
+} from "date-fns";
 import { CURRENCY, HEALTH_THRESHOLDS } from "@/constants";
 import { localeForCurrency as localeFor } from "@/constants/currencies";
 import type {
@@ -7,6 +14,7 @@ import type {
   Borrowing,
   Emi,
   EmiKind,
+  EmiPayment,
   HealthBand,
   Transaction,
 } from "@/types";
@@ -110,21 +118,30 @@ export const accountMonthDelta = (
 const SIP_NAMES = ["SIP", "Mutual Funds"];
 export const emiKind = (e: Emi): EmiKind =>
   e.kind ?? (SIP_NAMES.includes(e.name) ? "sip" : "loan");
+export const emiInstalments = (e: { payments?: EmiPayment[] }): EmiPayment[] =>
+  (e.payments ?? []).filter((p) => p.kind !== "extra");
 export const emiPaidMonths = (e: Emi): number =>
-  e.paidMonths ?? Math.max(0, e.totalMonths - e.remainingMonths);
+  emiKind(e) === "loan"
+    ? emiInstalments(e).length
+    : (e.paidMonths ?? Math.max(0, e.totalMonths - e.remainingMonths));
 export const emiStartMonth = (e: Emi): string =>
   e.startMonth ?? monthKey(e.createdAt);
 
 export const emiPaidAmount = (e: Emi): number => {
-  if (emiKind(e) === "sip") {
-    const logged = (e.payments ?? []).reduce((acc, p) => acc + p.amount, 0);
-    return e.principal + logged;
-  }
+  const logged = round2(
+    (e.payments ?? []).reduce((acc, p) => acc + p.amount, 0),
+  );
+  return emiKind(e) === "sip" ? e.principal + logged : logged;
+};
+
+export const emiMonthsDue = (e: Emi, today: string = monthKey()): number => {
   const months =
-    e.totalMonths > 0
-      ? Math.min(emiPaidMonths(e), e.totalMonths)
-      : emiPaidMonths(e);
-  return emiScheduledAmount(e, months);
+    differenceInCalendarMonths(
+      parseISO(`${today}-01`),
+      parseISO(`${emiStartMonth(e)}-01`),
+    ) + 1;
+  const due = Math.max(0, months);
+  return e.totalMonths > 0 ? Math.min(due, e.totalMonths) : due;
 };
 
 export const shiftMonth = (month: string, n: number): string =>
@@ -132,6 +149,11 @@ export const shiftMonth = (month: string, n: number): string =>
 
 export const emiEndMonth = (e: Emi): string =>
   shiftMonth(emiStartMonth(e), e.totalMonths - 1);
+
+export const emiCanLogMonth = (e: Emi, month: string): boolean => {
+  if (month < emiStartMonth(e)) return false;
+  return emiKind(e) !== "loan" || e.totalMonths <= 0 || month <= emiEndMonth(e);
+};
 
 export const emiAmountFor = (e: Emi, month: string): number => {
   let latest: Emi["amountChanges"][number] | undefined;

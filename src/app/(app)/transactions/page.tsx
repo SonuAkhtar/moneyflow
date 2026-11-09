@@ -50,9 +50,9 @@ const KIND_OPTIONS: { label: string; value: TxnKindFilter }[] = [
 
 const sanitizeAmount = (raw: string) => raw.replace(/[^0-9.]/g, "");
 
-function TransactionsView() {
-  const params = useSearchParams();
+function TransactionsView({ params }: { params: URLSearchParams }) {
   const initialKind = params.get("kind");
+  const initialFrom = params.get("from") ?? "";
   const transactions = useFinanceStore((s) => s.transactions);
   const accounts = useFinanceStore((s) => s.accounts);
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
@@ -64,6 +64,7 @@ function TransactionsView() {
     ...EMPTY_FILTERS,
     kind:
       initialKind === "major" || initialKind === "daily" ? initialKind : "all",
+    from: /^\d{4}-\d{2}-\d{2}$/.test(initialFrom) ? initialFrom : "",
   }));
   const [panelOpen, setPanelOpen] = useState(false);
   const [limit, setLimit] = useState(PAGE_SIZE);
@@ -374,10 +375,20 @@ function TransactionsView() {
   );
 }
 
+function TransactionsRoute() {
+  const params = useSearchParams();
+  return (
+    <TransactionsView
+      key={params.toString()}
+      params={new URLSearchParams(params)}
+    />
+  );
+}
+
 export default function TransactionsPage() {
   return (
     <Suspense fallback={null}>
-      <TransactionsView />
+      <TransactionsRoute />
     </Suspense>
   );
 }

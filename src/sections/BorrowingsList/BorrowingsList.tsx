@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { AnimatePresence, m } from "framer-motion";
 import { parseISO } from "date-fns";
-import { CheckCircle2, ChevronRight, HandCoins, Plus } from "lucide-react";
+import {
+  CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  HandCoins,
+  Plus,
+} from "lucide-react";
 import { Card } from "@/components/Card/Card";
 import { ProgressBar } from "@/components/ProgressBar/ProgressBar";
 import { AddBorrowingSheet } from "@/sections/AddBorrowingSheet/AddBorrowingSheet";
@@ -61,7 +67,11 @@ export const BorrowingsList = () => {
   const [childOpen, setChildOpen] = useState(false);
   const [openCount, setOpenCount] = useState(0);
 
+  const [showSettled, setShowSettled] = useState(false);
+
   const totalOutstanding = sumBy(borrowings, borrowingOutstanding);
+  const active = borrowings.filter((b) => !borrowingSettled(b));
+  const settledList = borrowings.filter(borrowingSettled);
 
   const openAdd = () => {
     setEditing(null);
@@ -80,6 +90,146 @@ export const BorrowingsList = () => {
     setOpenCount((n) => n + 1);
   };
 
+  const renderCard = (b: Borrowing) => {
+    const repaid = borrowingRepaid(b);
+    const outstanding = borrowingOutstanding(b);
+    const settled = borrowingSettled(b);
+    const pct = b.amount > 0 ? Math.min(100, (repaid / b.amount) * 100) : 0;
+    const payments = [...(b.payments ?? [])].sort((a, c) =>
+      c.paidOn.localeCompare(a.paidOn),
+    );
+    const isOpen = expanded === b.id;
+    const status = statusFor(settled, b.dueDate);
+    return (
+      <Card
+        key={b.id}
+        surface="solid"
+        className={cn(styles.item, styles[`item--${status.tone}`])}
+      >
+        <div className={styles.item_head}>
+          <button
+            type="button"
+            className={styles.item_main}
+            onClick={() => openEdit(b)}
+            aria-label={`Edit borrowing from ${b.lender}`}
+          >
+            <span className={styles.item_avatar} aria-hidden>
+              {b.lender.trim().charAt(0).toUpperCase() || "?"}
+            </span>
+            <span className={styles.item_info}>
+              <span className={styles.item_name}>{b.lender}</span>
+              <span className={styles.item_sub}>
+                {b.purpose ? `${b.purpose} · ` : ""}
+                {dayShort(b.borrowedOn)}
+              </span>
+            </span>
+          </button>
+          <span
+            className={cn(
+              styles.item_amount,
+              settled && styles["item_amount--settled"],
+            )}
+          >
+            {formatCurrency(settled ? b.amount : outstanding, currency)}
+            <span className={styles.item_per}>
+              {settled ? " repaid" : " left"}
+            </span>
+          </span>
+          <button
+            type="button"
+            className={styles.item_arrow}
+            onClick={() => setExpanded(isOpen ? null : b.id)}
+            aria-label={`${isOpen ? "Hide" : "Show"} payments for ${b.lender}`}
+            aria-expanded={isOpen}
+          >
+            <m.span
+              animate={{ rotate: isOpen ? 90 : 0 }}
+              transition={{ duration: 0.2 }}
+              style={{ display: "grid" }}
+            >
+              <ChevronRight size={18} />
+            </m.span>
+          </button>
+        </div>
+
+        <ProgressBar
+          value={pct}
+          tone={settled ? "lime" : "ocean"}
+          size="sm"
+          label={`${b.lender}: ${Math.round(pct)}% repaid`}
+        />
+        <div className={styles.item_foot}>
+          <span className={cn(styles.status, styles[`status--${status.tone}`])}>
+            {settled && <CheckCircle2 size={11} aria-hidden />}
+            {status.label}
+          </span>
+          <span className={styles.item_remaining}>
+            {formatCurrency(repaid, currency)} of{" "}
+            {formatCurrency(b.amount, currency)} repaid
+          </span>
+        </div>
+
+        <AnimatePresence initial={false}>
+          {isOpen && (
+            <m.div
+              className={styles.children}
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            >
+              {payments.length > 0 ? (
+                payments.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    className={styles.child}
+                    onClick={() =>
+                      openChild({
+                        borrowingId: b.id,
+                        payment: p,
+                        outstanding,
+                      })
+                    }
+                  >
+                    <span className={styles.child_month}>
+                      {dayShort(p.paidOn)}
+                      {p.note ? ` · ${p.note}` : ""}
+                    </span>
+                    <span className={styles.child_amount}>
+                      {formatCurrency(p.amount, currency)}
+                    </span>
+                  </button>
+                ))
+              ) : (
+                <span className={styles.child_empty}>
+                  No repayments logged yet
+                </span>
+              )}
+              {!settled && (
+                <button
+                  type="button"
+                  className={styles.childAdd}
+                  aria-label="Record a repayment"
+                  onClick={() =>
+                    openChild({
+                      borrowingId: b.id,
+                      payment: null,
+                      outstanding,
+                    })
+                  }
+                >
+                  <Plus size={15} />
+                  Add
+                </button>
+              )}
+            </m.div>
+          )}
+        </AnimatePresence>
+      </Card>
+    );
+  };
+
   return (
     <section>
       <div className={styles.header}>
@@ -90,7 +240,12 @@ export const BorrowingsList = () => {
             {totalOutstanding > 0 ? " · outstanding" : ""}
           </p>
         </div>
-        <span className={styles.header_out}>
+        <span
+          className={cn(
+            styles.header_out,
+            totalOutstanding === 0 && styles["header_out--clear"],
+          )}
+        >
           {formatCurrency(totalOutstanding, currency)}
         </span>
       </div>
@@ -112,161 +267,49 @@ export const BorrowingsList = () => {
         </button>
       ) : (
         <div className={styles.list}>
-          {borrowings.map((b) => {
-            const repaid = borrowingRepaid(b);
-            const outstanding = borrowingOutstanding(b);
-            const settled = borrowingSettled(b);
-            const pct =
-              b.amount > 0 ? Math.min(100, (repaid / b.amount) * 100) : 0;
-            const payments = [...(b.payments ?? [])].sort((a, c) =>
-              c.paidOn.localeCompare(a.paidOn),
-            );
-            const isOpen = expanded === b.id;
-            const status = statusFor(settled, b.dueDate);
-            return (
-              <Card
-                key={b.id}
-                surface="solid"
-                className={cn(styles.item, styles[`item--${status.tone}`])}
+          {active.map(renderCard)}
+          {settledList.length > 0 && (
+            <button
+              type="button"
+              className={styles.toggle}
+              onClick={() => setShowSettled((v) => !v)}
+              aria-expanded={showSettled}
+              aria-label={`${showSettled ? "Hide" : "Show"} settled (${settledList.length})`}
+            >
+              <span className={styles.toggle_icon}>
+                <CheckCircle2 size={16} aria-hidden />
+              </span>
+              <span className={styles.toggle_label}>Settled</span>
+              <span className={styles.toggle_count}>{settledList.length}</span>
+              <m.span
+                className={styles.toggle_chevron}
+                animate={{ rotate: showSettled ? 180 : 0 }}
+                transition={{ duration: 0.25 }}
               >
-                <div className={styles.item_head}>
-                  <button
-                    type="button"
-                    className={styles.item_main}
-                    onClick={() => openEdit(b)}
-                    aria-label={`Edit borrowing from ${b.lender}`}
-                  >
-                    <span className={styles.item_avatar} aria-hidden>
-                      {b.lender.trim().charAt(0).toUpperCase() || "?"}
-                    </span>
-                    <span className={styles.item_info}>
-                      <span className={styles.item_name}>{b.lender}</span>
-                      <span className={styles.item_sub}>
-                        {b.purpose ? `${b.purpose} · ` : ""}
-                        {dayShort(b.borrowedOn)}
-                      </span>
-                    </span>
-                  </button>
-                  <span className={styles.item_right}>
-                    <span
-                      className={cn(
-                        styles.item_amount,
-                        settled && styles["item_amount--settled"],
-                      )}
-                    >
-                      {formatCurrency(
-                        settled ? b.amount : outstanding,
-                        currency,
-                      )}
-                    </span>
-                    <span className={styles.item_per}>
-                      {settled ? "repaid" : "left"}
-                    </span>
-                  </span>
-                  <button
-                    type="button"
-                    className={styles.item_arrow}
-                    onClick={() => setExpanded(isOpen ? null : b.id)}
-                    aria-label={isOpen ? "Hide payments" : "Show payments"}
-                    aria-expanded={isOpen}
-                  >
-                    <m.span
-                      animate={{ rotate: isOpen ? 90 : 0 }}
-                      transition={{ duration: 0.2 }}
-                      style={{ display: "grid" }}
-                    >
-                      <ChevronRight size={18} />
-                    </m.span>
-                  </button>
-                </div>
-
-                <div className={styles.item_progress}>
-                  <ProgressBar
-                    value={pct}
-                    tone={settled ? "lime" : "ocean"}
-                    size="sm"
-                    label={`${b.lender}: ${Math.round(pct)}% repaid`}
-                  />
-                  <div className={styles.item_foot}>
-                    <span className={styles.item_remaining}>
-                      {formatCurrency(repaid, currency)} of{" "}
-                      {formatCurrency(b.amount, currency)} · {Math.round(pct)}%
-                    </span>
-                    <span
-                      className={cn(
-                        styles.status,
-                        styles[`status--${status.tone}`],
-                      )}
-                    >
-                      {settled && <CheckCircle2 size={11} aria-hidden />}
-                      {status.label}
-                    </span>
-                  </div>
-                </div>
-
-                <AnimatePresence initial={false}>
-                  {isOpen && (
-                    <m.div
-                      className={styles.children}
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                    >
-                      {payments.length > 0 ? (
-                        payments.map((p) => (
-                          <button
-                            key={p.id}
-                            type="button"
-                            className={styles.child}
-                            onClick={() =>
-                              openChild({
-                                borrowingId: b.id,
-                                payment: p,
-                                outstanding,
-                              })
-                            }
-                          >
-                            <span className={styles.child_month}>
-                              {dayShort(p.paidOn)}
-                              {p.note ? ` · ${p.note}` : ""}
-                            </span>
-                            <span className={styles.child_amount}>
-                              {formatCurrency(p.amount, currency)}
-                            </span>
-                          </button>
-                        ))
-                      ) : (
-                        <span className={styles.child_empty}>
-                          No repayments logged yet
-                        </span>
-                      )}
-                      {!settled && (
-                        <button
-                          type="button"
-                          className={styles.childAdd}
-                          aria-label="Record a repayment"
-                          onClick={() =>
-                            openChild({
-                              borrowingId: b.id,
-                              payment: null,
-                              outstanding,
-                            })
-                          }
-                        >
-                          <Plus size={15} />
-                          Add
-                        </button>
-                      )}
-                    </m.div>
-                  )}
-                </AnimatePresence>
-              </Card>
-            );
-          })}
-          <button type="button" className={styles.add} onClick={openAdd}>
-            <Plus size={18} />
-            Add New Record
+                <ChevronDown size={18} aria-hidden />
+              </m.span>
+            </button>
+          )}
+          <AnimatePresence initial={false}>
+            {showSettled && (
+              <m.div
+                className={styles.collapse}
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              >
+                {settledList.map(renderCard)}
+              </m.div>
+            )}
+          </AnimatePresence>
+          <button
+            type="button"
+            className={styles.fab}
+            onClick={openAdd}
+            aria-label="Add New Record"
+          >
+            <Plus size={22} strokeWidth={2.4} />
           </button>
         </div>
       )}

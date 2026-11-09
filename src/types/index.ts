@@ -100,8 +100,11 @@ export interface EmiAmountChange {
   amount: number;
 }
 
+export type EmiPaymentKind = "emi" | "extra";
+
 export interface EmiPayment {
   id: string;
+  kind?: EmiPaymentKind;
   month: string;
   paidOn: string;
   amount: number;

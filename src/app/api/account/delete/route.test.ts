@@ -9,6 +9,7 @@ const deleteUser = vi.fn(async (id: string) => {
 });
 let deleteResult: { error: unknown } = { error: null };
 let files: { name: string }[] = [];
+let removeError: unknown = null;
 
 vi.mock("@/config", () => ({
   env: { supabaseUrl: "http://sb.test", supabaseAnonKey: "anon", appUrl: "" },
@@ -23,6 +24,7 @@ vi.mock("@supabase/supabase-js", () => ({
         list: async () => ({ data: files, error: null }),
         remove: async (paths: string[]) => {
           log.push(`storage.remove:${paths.join(",")}`);
+          if (removeError) return { error: removeError };
           files = [];
           return { error: null };
         },
@@ -49,6 +51,7 @@ beforeEach(() => {
   log.length = 0;
   files = [{ name: "a.jpg" }];
   deleteResult = { error: null };
+  removeError = null;
   getUser.mockReset();
   deleteUser.mockClear();
   deleteAccountLimiter.local.reset();
@@ -74,19 +77,27 @@ describe("POST /api/account/delete", () => {
     expect(log).toEqual([]);
   });
 
-  it("deletes the auth user (rows cascade), then their files", async () => {
+  it("removes the files, then deletes the auth user (rows cascade)", async () => {
     getUser.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
     const res = await call("good");
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true });
-    expect(log).toEqual(["deleteUser:u1", "storage.remove:u1/a.jpg"]);
+    expect(log).toEqual(["storage.remove:u1/a.jpg", "deleteUser:u1"]);
   });
 
-  it("keeps the files if the auth user can't be deleted", async () => {
+  it("keeps the account if the photos can't be removed, so no photo is left public", async () => {
+    getUser.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
+    files = [{ name: "a.jpg" }];
+    removeError = { message: "storage down" };
+    expect((await call("good")).status).toBe(500);
+    expect(log).toEqual(["storage.remove:u1/a.jpg"]);
+  });
+
+  it("reports a failure when the auth user can't be deleted", async () => {
     getUser.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
     deleteResult = { error: { message: "x" } };
     expect((await call("good")).status).toBe(500);
-    expect(log).toEqual(["deleteUser:u1"]);
+    expect(log.at(-1)).toBe("deleteUser:u1");
   });
 
   it("rate limits repeated attempts", async () => {

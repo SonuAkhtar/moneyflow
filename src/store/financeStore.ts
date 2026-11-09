@@ -9,6 +9,7 @@ import {
 import { setActiveCurrency } from "@/utils";
 import { createMutationHelpers } from "./finance/helpers";
 import { emptyState, type FinanceState } from "./finance/types";
+import type { EmiPaymentKind } from "@/types";
 import { createCoreSlice } from "./finance/coreSlice";
 import { createTransactionsSlice } from "./finance/transactionsSlice";
 import { createAccountsSlice } from "./finance/accountsSlice";
@@ -25,6 +26,7 @@ const noopStorage: StateStorage = {
 
 type LegacyEmiPayment = {
   id: string;
+  kind?: EmiPaymentKind;
   month: string;
   amount: number;
   paidOn?: string;
@@ -63,6 +65,7 @@ export const useFinanceStore = create<FinanceState>()(
             payments: ((e.payments ?? []) as unknown as LegacyEmiPayment[]).map(
               (p) => ({
                 id: p.id,
+                kind: p.kind,
                 month: p.month,
                 amount: p.amount,
                 paidOn: p.paidOn ?? `${p.month}-01`,

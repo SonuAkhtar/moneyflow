@@ -8,6 +8,7 @@ import type {
   CategoryId,
   Emi,
   EmiInput,
+  EmiPaymentKind,
   Profile,
   SpendBudget,
   Transaction,
@@ -69,6 +70,7 @@ export interface FinanceState {
   addEmiPayment: (
     emiId: string,
     input: {
+      kind?: EmiPaymentKind;
       month: string;
       amount: number;
       paidOn?: string;
@@ -146,6 +148,7 @@ export interface MutationHelpers {
   toastError: (message: string) => void;
   idle: () => Promise<void>;
   pendingCount: () => number;
+  queuedCount: () => number;
   retry: () => void;
   deferResync: () => void;
   discardPending: (uid?: string) => void;

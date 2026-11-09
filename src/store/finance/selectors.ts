@@ -55,7 +55,7 @@ export const loanEmiPaidInMonth = (emis: Emi[], month: string): number =>
       emis.filter((e) => emiKind(e) === "loan"),
       (e) =>
         sumBy(
-          (e.payments ?? []).filter((p) => p.month === month),
+          (e.payments ?? []).filter((p) => p.paidOn.slice(0, 7) === month),
           (p) => p.amount,
         ),
     ),

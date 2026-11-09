@@ -35,6 +35,11 @@
       padding-left: var(--space-3);
     }
 
+    &:has(input[type="date"]),
+    &:has(input[type="month"]) {
+      padding: 0 var(--space-3);
+    }
+
     &--error {
       border-color: var(--color-danger);
 
@@ -59,6 +64,14 @@
     outline: none;
     color: var(--text-primary);
     font-size: var(--font-input);
+
+    &::-webkit-datetime-edit {
+      padding: 0;
+    }
+
+    &::-webkit-calendar-picker-indicator {
+      margin-left: var(--space-1);
+    }
 
     &::-webkit-outer-spin-button,
     &::-webkit-inner-spin-button {

@@ -15,6 +15,7 @@ export const NavigationProgress = () => {
   const [phase, setPhase] = useState<Phase>("idle");
   const timers = useRef<number[]>([]);
   const pending = useRef(false);
+  const shownPath = useRef(pathname);
 
   const clear = () => {
     timers.current.forEach((t) => window.clearTimeout(t));
@@ -50,15 +51,20 @@ export const NavigationProgress = () => {
     };
 
     document.addEventListener("click", onClick, true);
-    window.addEventListener("popstate", start);
+    const onPop = () => {
+      if (window.location.pathname !== shownPath.current) start();
+    };
+
+    window.addEventListener("popstate", onPop);
     return () => {
       document.removeEventListener("click", onClick, true);
-      window.removeEventListener("popstate", start);
+      window.removeEventListener("popstate", onPop);
       clear();
     };
   }, []);
 
   useEffect(() => {
+    shownPath.current = pathname;
     if (!pending.current) return;
     pending.current = false;
     clear();

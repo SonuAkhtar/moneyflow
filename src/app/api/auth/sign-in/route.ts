@@ -2,7 +2,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { env, isSupabaseConfigured } from "@/config";
 import { clientIp, hitRateLimit } from "@/lib/rateLimit";
-import { signInIpLimiter, signInUsernameLimiter } from "@/lib/authLimits";
+import {
+  signInAccountLimiter,
+  signInIpLimiter,
+  signInUsernameLimiter,
+} from "@/lib/authLimits";
 
 const INVALID = "Invalid username or password";
 
@@ -33,11 +37,8 @@ export async function POST(request: NextRequest) {
   }
   const admin = serverClient(serviceKey);
 
-  const byIp = await hitRateLimit(
-    admin,
-    signInIpLimiter,
-    clientIp(request.headers),
-  );
+  const ip = clientIp(request.headers);
+  const byIp = await hitRateLimit(admin, signInIpLimiter, ip);
   if (!byIp.ok) return tooMany(byIp.retryAfter);
 
   let username = "";
@@ -59,8 +60,14 @@ export async function POST(request: NextRequest) {
   if (!username || !password) {
     return NextResponse.json({ ok: false, message: INVALID }, { status: 401 });
   }
-  const byUser = await hitRateLimit(admin, signInUsernameLimiter, username);
+  const byUser = await hitRateLimit(
+    admin,
+    signInUsernameLimiter,
+    `${username}:${ip}`,
+  );
   if (!byUser.ok) return tooMany(byUser.retryAfter);
+  const byAccount = await hitRateLimit(admin, signInAccountLimiter, username);
+  if (!byAccount.ok) return tooMany(byAccount.retryAfter);
 
   const { data: email, error: lookupError } = await admin.rpc(
     "email_for_username",
@@ -75,7 +82,15 @@ export async function POST(request: NextRequest) {
     env.supabaseAnonKey,
   ).auth.signInWithPassword({ email, password });
   if (error) {
-    if (error.status === 429) return tooMany(60);
+    if (error.status === 429)
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            "Too many sign-ins right now. Sign in with your email instead.",
+        },
+        { status: 429, headers: { "Retry-After": "60" } },
+      );
     if (!error.status || error.status >= 500) return unavailable();
     const unconfirmed = error.code === "email_not_confirmed";
     return NextResponse.json(

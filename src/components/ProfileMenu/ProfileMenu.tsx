@@ -65,6 +65,7 @@ export const ProfileMenu = ({
           <>
             <m.div
               className={styles.backdrop}
+              data-no-ptr
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -74,6 +75,7 @@ export const ProfileMenu = ({
               ref={menuRef}
               id={id}
               className={styles.menu}
+              data-no-ptr
               initial={{ opacity: 0, y: -8, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.96 }}

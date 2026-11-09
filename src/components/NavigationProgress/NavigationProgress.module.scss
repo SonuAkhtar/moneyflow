@@ -10,7 +10,9 @@
   &_fill {
     display: block;
     height: 100%;
-    width: 0;
+    width: 100%;
+    transform: scaleX(0);
+    transform-origin: left;
     border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
     background: linear-gradient(
       90deg,
@@ -37,29 +39,29 @@
   }
 
   &--done &_fill {
-    width: 100%;
-    transition: width 180ms var(--ease-smooth);
+    transform: scaleX(1);
+    transition: transform 180ms var(--ease-smooth);
   }
 }
 
 @keyframes creep {
   0% {
-    width: 0;
+    transform: scaleX(0);
   }
   10% {
-    width: 35%;
+    transform: scaleX(0.35);
   }
   40% {
-    width: 70%;
+    transform: scaleX(0.7);
   }
   100% {
-    width: 92%;
+    transform: scaleX(0.92);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .bar--loading .bar_fill {
     animation: none;
-    width: 70%;
+    transform: scaleX(0.7);
   }
 }

@@ -1,4 +1,4 @@
-import { emiKind, isoNow } from "@/utils";
+import { emiCanLogMonth, emiInstalments, emiKind, isoNow } from "@/utils";
 import type { Emi, EmiPayment } from "@/types";
 import { applyBalance, newId } from "./helpers";
 import { balanceSteps, step } from "./steps";
@@ -68,6 +68,7 @@ export const createEmisSlice: SliceCreator<EmisSlice> = (
     const s = get();
     const old = s.emis.find((e) => e.id === id);
     if (!old) return;
+    ownerId();
     const merged: Emi = { ...old, ...patch };
     const updated =
       patch.paidMonths !== undefined || patch.totalMonths !== undefined
@@ -100,19 +101,29 @@ export const createEmisSlice: SliceCreator<EmisSlice> = (
   addEmiPayment: (emiId, input) => {
     const s = get();
     const old = s.emis.find((e) => e.id === emiId);
-    if (!old || (old.payments ?? []).some((p) => p.month === input.month))
+    const extra = input.kind === "extra";
+    if (
+      !old ||
+      (!extra &&
+        (emiInstalments(old).some((p) => p.month === input.month) ||
+          !emiCanLogMonth(old, input.month)))
+    )
       return;
     ownerId();
     const payment: EmiPayment = {
       id: newId(),
+      kind: extra ? "extra" : "emi",
       month: input.month,
       paidOn: input.paidOn ?? `${input.month}-01`,
       amount: input.amount,
       accountId: input.accountId ?? null,
     };
+    const payments = [payment, ...(old.payments ?? [])];
     const updatedEmi = withPaidMonths(
-      { ...old, payments: [payment, ...(old.payments ?? [])] },
-      (old.paidMonths ?? 0) + 1,
+      { ...old, payments },
+      emiKind(old) === "loan"
+        ? emiInstalments({ payments }).length
+        : (old.paidMonths ?? 0) + (extra ? 0 : 1),
     );
     set({
       emis: s.emis.map((e) => (e.id === emiId ? updatedEmi : e)),
@@ -163,12 +174,12 @@ export const createEmisSlice: SliceCreator<EmisSlice> = (
     const payment = old?.payments?.find((p) => p.id === paymentId);
     if (!old || !payment) return;
     ownerId();
+    const payments = (old.payments ?? []).filter((p) => p.id !== paymentId);
     const updatedEmi = withPaidMonths(
-      {
-        ...old,
-        payments: (old.payments ?? []).filter((p) => p.id !== paymentId),
-      },
-      (old.paidMonths ?? 0) - 1,
+      { ...old, payments },
+      emiKind(old) === "loan"
+        ? emiInstalments({ payments }).length
+        : (old.paidMonths ?? 0) - (payment.kind === "extra" ? 0 : 1),
     );
     set({
       emis: s.emis.map((e) => (e.id === emiId ? updatedEmi : e)),

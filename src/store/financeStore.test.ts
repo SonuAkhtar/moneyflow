@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { currentMonthKey } from "@/utils";
+import {
+  currentMonthKey,
+  emiPaidAmount,
+  emiPaidMonths,
+  shiftMonth,
+} from "@/utils";
 import type { Account, Profile } from "@/types";
 
 vi.mock("@/services/repositories", () => {
@@ -244,6 +249,91 @@ describe("financeStore mutations (optimistic reducer)", () => {
     expect(emi.name).toBe("Laptop Loan");
     expect(emi.payments).toHaveLength(1);
     expect(emi.payments[0]!.amount).toBe(100);
+  });
+
+  it("a loan counts only logged EMIs, from its start month, once per month", () => {
+    seed({ accounts: [account(100000)] });
+    const store = useFinanceStore.getState();
+    const start = shiftMonth(currentMonthKey(), -4);
+    store.addEmi({
+      name: "Home Loan",
+      kind: "loan",
+      startMonth: start,
+      principal: 0,
+      monthlyAmount: 20000,
+      totalMonths: 12,
+      remainingMonths: 12,
+      paidMonths: 0,
+      interestRate: 0,
+      dueDay: 5,
+    });
+    const emiId = useFinanceStore.getState().emis[0]!.id;
+    const pay = (month: string, amount: number) =>
+      store.addEmiPayment(emiId, { month, amount, accountId: "acc1" });
+
+    pay(start, 20000);
+    pay(shiftMonth(start, 2), 21500);
+    pay(shiftMonth(start, -1), 20000);
+    pay(start, 20000);
+
+    const s = useFinanceStore.getState();
+    const emi = s.emis[0]!;
+    expect(emi.payments.map((p) => p.amount).sort()).toEqual([20000, 21500]);
+    expect(emi.paidMonths).toBe(2);
+    expect(emi.remainingMonths).toBe(10);
+    expect(s.accounts[0]!.balance).toBe(100000 - 41500);
+
+    store.deleteEmiPayment(emiId, emi.payments[0]!.id);
+    expect(useFinanceStore.getState().emis[0]!.paidMonths).toBe(1);
+  });
+
+  it("a lump sum is charged and counted in the total but not as an EMI month", () => {
+    seed({ accounts: [account(100000)] });
+    const store = useFinanceStore.getState();
+    const start = shiftMonth(currentMonthKey(), -2);
+    store.addEmi({
+      name: "Home Loan",
+      kind: "loan",
+      startMonth: start,
+      principal: 0,
+      monthlyAmount: 20000,
+      totalMonths: 12,
+      remainingMonths: 12,
+      paidMonths: 0,
+      interestRate: 0,
+      dueDay: 5,
+    });
+    const emiId = useFinanceStore.getState().emis[0]!.id;
+    store.addEmiPayment(emiId, {
+      month: start,
+      amount: 20000,
+      accountId: "acc1",
+    });
+    store.addEmiPayment(emiId, {
+      kind: "extra",
+      month: start,
+      paidOn: `${start}-20`,
+      amount: 50000,
+      accountId: "acc1",
+    });
+    store.addEmiPayment(emiId, {
+      kind: "extra",
+      month: shiftMonth(start, -6),
+      amount: 10000,
+      accountId: "acc1",
+    });
+
+    const s = useFinanceStore.getState();
+    const emi = s.emis[0]!;
+    expect(emi.payments).toHaveLength(3);
+    expect(emiPaidMonths(emi)).toBe(1);
+    expect(emi.remainingMonths).toBe(11);
+    expect(emiPaidAmount(emi)).toBe(80000);
+    expect(s.accounts[0]!.balance).toBe(20000);
+
+    const lump = emi.payments.find((p) => p.amount === 50000)!;
+    store.deleteEmiPayment(emiId, lump.id);
+    expect(useFinanceStore.getState().emis[0]!.paidMonths).toBe(1);
   });
 
   it("addEmiPayment deducts from the chosen bank; deleteEmi refunds it", () => {

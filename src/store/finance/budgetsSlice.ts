@@ -17,16 +17,18 @@ const clean = (budgets: Budgets): Budgets => {
 export const createBudgetsSlice: SliceCreator<BudgetsSlice> = (
   set,
   get,
-  { sync },
+  { ownerId, sync },
 ) => {
   return {
     setBudgets: (next) => {
+      ownerId();
       const budgets = clean(next);
       set({ budgets });
       sync([step.saveBudgets(budgets)]);
     },
 
     setSpendBudget: ({ daily, major }) => {
+      ownerId();
       const prev = get().spendBudget;
       const spendBudget =
         daily > 0 || major > 0

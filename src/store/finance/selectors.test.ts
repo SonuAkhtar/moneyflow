@@ -111,6 +111,24 @@ describe("loanEmiPaidInMonth", () => {
     ];
     expect(loanEmiPaidInMonth(emis, "2026-05")).toBe(100);
   });
+
+  it("counts a payment in the month it was paid, not the EMI month", () => {
+    const emis = [
+      emi({
+        payments: [
+          {
+            id: "late",
+            month: "2026-04",
+            paidOn: "2026-05-12",
+            amount: 300,
+            accountId: null,
+          },
+        ],
+      }),
+    ];
+    expect(loanEmiPaidInMonth(emis, "2026-05")).toBe(300);
+    expect(loanEmiPaidInMonth(emis, "2026-04")).toBe(0);
+  });
 });
 
 describe("salaryTotalsByMonth", () => {

@@ -152,13 +152,15 @@ const ProfileForm = ({ profile, onClose }: ProfileFormProps) => {
       }
     }
     let nextAvatar = avatarUrl;
+    let photoFailed = false;
     if (pendingAvatar) {
       setSaving(true);
       try {
         nextAvatar = await avatarRepo.upload(profile.id, pendingAvatar.blob);
       } catch (err) {
         logger.warn("profile.avatarUpload", err);
-        nextAvatar = pendingAvatar.dataUrl;
+        nextAvatar = profile.avatarUrl ?? null;
+        photoFailed = true;
       }
       setSaving(false);
     }
@@ -170,15 +172,22 @@ const ProfileForm = ({ profile, onClose }: ProfileFormProps) => {
       avatarUrl: nextAvatar,
     });
     updateName(fullName.trim());
-    toast(
-      emailChanged
-        ? {
-            title: "Confirm your new email",
-            description: `We sent a link to ${nextEmail}. Your login email changes once you confirm it.`,
-            variant: "info",
-          }
-        : { title: "Profile updated", variant: "success" },
-    );
+    if (photoFailed)
+      toast({
+        title: "Couldn't upload photo",
+        description: "Your other changes were saved. Try the photo again.",
+        variant: "error",
+      });
+    else
+      toast(
+        emailChanged
+          ? {
+              title: "Confirm your new email",
+              description: `We sent a link to ${nextEmail}. Your login email changes once you confirm it.`,
+              variant: "info",
+            }
+          : { title: "Profile updated", variant: "success" },
+      );
     onClose();
   };
 

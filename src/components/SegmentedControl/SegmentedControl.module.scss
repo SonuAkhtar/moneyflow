@@ -1,4 +1,5 @@
 .segmented {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-1);
@@ -35,7 +36,15 @@
 
   &_pill {
     position: absolute;
-    inset: 0;
+    top: var(--space-1);
+    bottom: var(--space-1);
+    left: var(--space-1);
+    width: calc(
+      (100% - 2 * var(--space-1) - (var(--count) - 1) * var(--space-1)) /
+        var(--count)
+    );
+    transform: translateX(calc(var(--index) * (100% + var(--space-1))));
+    transition: transform 0.3s var(--ease-smooth);
     border-radius: var(--radius-pill);
     background: var(--accent-solid);
     box-shadow: var(--shadow-soft);

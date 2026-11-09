@@ -38,6 +38,9 @@ export const AddBorrowingPaymentSheet = ({
   const deleteBorrowingPayment = useFinanceStore(
     (s) => s.deleteBorrowingPayment,
   );
+  const borrowedOn = useFinanceStore(
+    (s) => s.borrowings.find((b) => b.id === borrowingId)?.borrowedOn ?? "",
+  ).slice(0, 10);
   const toast = useToast();
   const isEdit = Boolean(payment);
 
@@ -50,9 +53,17 @@ export const AddBorrowingPaymentSheet = ({
   const submitted = useRef(false);
 
   const value = Number(amount) || 0;
-  const overpaying = !isEdit && value > outstanding + 0.001;
+  const maxPayable = outstanding + (payment?.amount ?? 0);
+  const overpaying = value > maxPayable + 0.001;
+  const futureDate = paidOn > todayKey();
+  const beforeBorrowed = Boolean(borrowedOn) && paidOn < borrowedOn;
   const canSave =
-    value > 0 && Boolean(paidOn) && Boolean(borrowingId) && !overpaying;
+    value > 0 &&
+    Boolean(paidOn) &&
+    !futureDate &&
+    !beforeBorrowed &&
+    Boolean(borrowingId) &&
+    !overpaying;
 
   const save = () => {
     if (!canSave || !borrowingId || submitted.current) return;
@@ -97,7 +108,17 @@ export const AddBorrowingPaymentSheet = ({
       }
     >
       <div className={styles.body}>
-        <AmountField value={amount} onChange={setAmount} />
+        <AmountField
+          value={amount}
+          onChange={setAmount}
+          aria-invalid={overpaying}
+        />
+        {overpaying && (
+          <p className={styles.error} role="alert">
+            That is more than the {formatCurrency(maxPayable, currency)} still
+            owed.
+          </p>
+        )}
         {!isEdit && outstanding > 0 && (
           <button
             type="button"
@@ -110,9 +131,17 @@ export const AddBorrowingPaymentSheet = ({
         <Input
           label="Paid on"
           type="date"
+          min={borrowedOn || undefined}
           max={todayKey()}
           value={paidOn}
           onChange={(e) => setPaidOn(e.target.value)}
+          error={
+            futureDate
+              ? "Pick today or an earlier date"
+              : beforeBorrowed
+                ? "Pick a date on or after the borrowed date"
+                : undefined
+          }
         />
         <Input
           label="Note (optional)"

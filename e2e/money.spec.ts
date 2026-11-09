@@ -134,29 +134,69 @@ test("budgets are saved to the account, not just this device", async ({
     .toEqual({ food: 5000 });
 });
 
-test("a loan closed by its last payment stays reachable", async ({ page }) => {
+test("a loan logs each month from its start date, takes lump sums and closes on the last EMI", async ({
+  page,
+}) => {
+  const start = new Date();
+  start.setDate(5);
+  start.setMonth(start.getMonth() - 1);
+  const key = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  const first = key(start);
+  const next = new Date(start);
+  next.setMonth(next.getMonth() + 1);
+
   await signInSeeded(page);
   await page.goto("/emi");
   await page.getByRole("button", { name: /No loan EMIs yet/ }).click();
   const sheet = page.getByRole("dialog");
-  await sheet.getByLabel(/Monthly amount/).fill("1000");
+  await sheet.getByLabel(/Monthly EMI/).fill("1000");
+  await sheet.getByLabel("Start date").fill(`${first}-05`);
   await sheet.getByLabel("Tenure (months)").fill("2");
-  await sheet.getByPlaceholder("Number of months").fill("1");
+  await expect(sheet.getByText("Paid so far")).toHaveCount(0);
+  await expect(sheet.getByPlaceholder("Number of months")).toHaveCount(0);
   await sheet.getByRole("button", { name: "Add", exact: true }).click();
 
   await page.getByRole("button", { name: "Show payments" }).click();
   await page.getByRole("button", { name: "Add payment to this Loan" }).click();
-  const pay = page.getByRole("dialog");
-  await pay.getByLabel("Amount").fill("1000");
-  await pay.getByLabel("Pay from bank").selectOption(HDFC);
-  await pay.getByRole("button", { name: "Add", exact: true }).click();
+  const lump = page.getByRole("dialog");
+  await lump.getByRole("button", { name: "Lump sum" }).click();
+  await expect(lump.getByLabel(/ for$/)).toHaveCount(0);
+  await lump.getByLabel("Amount").fill("5000");
+  await lump.getByLabel("Payment date").fill(`${first}-20`);
+  await lump.getByLabel("Pay from bank").selectOption(HDFC);
+  await lump.getByRole("button", { name: "Add", exact: true }).click();
+  await expect(lump).toBeHidden();
+  await expect(page.getByText("Lump sum", { exact: true })).toBeVisible();
+
+  for (const [month, amount] of [
+    [first, "1000"],
+    [key(next), "1250"],
+  ] as const) {
+    await page
+      .getByRole("button", { name: "Add payment to this Loan" })
+      .click();
+    const pay = page.getByRole("dialog");
+    await pay.getByLabel(/ for$/).selectOption(month);
+    await pay.getByLabel("Amount").fill(amount);
+    await pay.getByLabel("Pay from bank").selectOption(HDFC);
+    await pay.getByRole("button", { name: "Add", exact: true }).click();
+    await expect(pay).toBeHidden();
+  }
 
   await page.getByRole("button", { name: "Show closed (1)" }).click();
-  await expect(page.getByText("Closed", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: /^Edit / }).click();
+  await expect(
+    page.getByRole("dialog").getByText(/2 EMIs logged/),
+  ).toContainText("2 due since");
+  await page.getByRole("dialog").getByRole("button", { name: "Close" }).click();
+  await expect(page.getByRole("button", { name: /^Edit / })).toContainText(
+    "Closed",
+  );
   await expect
     .poll(async () => (await serverState()).db.emis![0]!.status)
     .toBe("closed");
-  await expect.poll(() => serverBalance(HDFC)).toBe(49000);
+  await expect.poll(() => serverBalance(HDFC)).toBe(42750);
 });
 
 test("older history loads on demand", async ({ page }) => {

@@ -53,11 +53,15 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
     };
     supabase.auth
       .getSession()
-      .then(({ data }) => apply(data.session?.user ?? null));
+      .then(({ data }) => apply(data.session?.user ?? null))
+      .catch(() => apply(null));
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return;
       if (event === "SIGNED_OUT") {
         hydratedFor.current = null;
+        navigator.serviceWorker?.controller?.postMessage({
+          type: "CLEAR_CACHES",
+        });
         resetAll();
         setUser(null);
         return;
@@ -106,6 +110,13 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (status !== "authed" || !hasHydrated) return;
+    const connection = (
+      navigator as Navigator & {
+        connection?: { saveData?: boolean; effectiveType?: string };
+      }
+    ).connection;
+    if (connection?.saveData || /2g/.test(connection?.effectiveType ?? ""))
+      return;
     const warm = () => {
       void import("@/components/charts");
     };

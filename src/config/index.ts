@@ -19,7 +19,7 @@ export const isSupabaseConfigured =
 
 export const siteConfig = {
   name: APP.name,
-  title: `${APP.name} - ${APP.tagline}`,
+  title: `${APP.name} · ${APP.tagline}`,
   description: APP.description,
   themeColor: "#0a0b0d",
   accentColor: "#16c784",

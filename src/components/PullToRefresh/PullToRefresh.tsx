@@ -19,6 +19,7 @@ export const PullToRefresh = ({ onRefresh, children }: PullToRefreshProps) => {
   const y = useMotionValue(0);
   const [refreshing, setRefreshing] = useState(false);
   const startY = useRef<number | null>(null);
+  const startX = useRef(0);
   const pulling = useRef(false);
   const distance = useRef(0);
   const refreshingRef = useRef(false);
@@ -35,13 +36,14 @@ export const PullToRefresh = ({ onRefresh, children }: PullToRefreshProps) => {
         window.scrollY > 0 ||
         document.body.style.overflow === "hidden" ||
         target?.closest(
-          '[role="dialog"], [role="alertdialog"], [aria-modal="true"]',
+          '[role="dialog"], [role="alertdialog"], [aria-modal="true"], [data-no-ptr]',
         )
       ) {
         startY.current = null;
         return;
       }
       startY.current = e.touches[0]?.clientY ?? null;
+      startX.current = e.touches[0]?.clientX ?? 0;
       pulling.current = false;
       distance.current = 0;
     };
@@ -50,6 +52,11 @@ export const PullToRefresh = ({ onRefresh, children }: PullToRefreshProps) => {
       if (refreshingRef.current || startY.current === null) return;
       const cur = e.touches[0]?.clientY ?? 0;
       const delta = cur - startY.current;
+      const dx = Math.abs((e.touches[0]?.clientX ?? 0) - startX.current);
+      if (!pulling.current && dx > Math.abs(delta)) {
+        startY.current = null;
+        return;
+      }
       if (delta <= 0 || window.scrollY > 0) {
         if (pulling.current) {
           pulling.current = false;

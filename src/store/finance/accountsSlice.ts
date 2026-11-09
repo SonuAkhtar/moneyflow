@@ -67,6 +67,8 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (
     const s = get();
     const account = s.accounts.find((a) => a.id === accountId);
     if (!account || amount <= 0) return;
+    if (note === SAVINGS_WITHDRAWAL_NOTE && amount > account.balance + 0.001)
+      return;
     const txn = savingTxn(ownerId(), accountId, amount, note);
     const delta = note === SAVINGS_DEPOSIT_NOTE ? amount : -amount;
     set({
@@ -191,7 +193,6 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (
       ownerId();
       const major = s.majorAccountId === id ? null : s.majorAccountId;
       const daily = s.dailyAccountId === id ? null : s.dailyAccountId;
-      const removedTxns = s.transactions.filter((t) => t.accountId === id);
 
       const detachedPayments: {
         payment: EmiPayment;
@@ -232,7 +233,6 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (
       });
 
       const steps: SyncStep[] = [
-        step.removeAccountTransactions(id, removedTxns),
         ...detachedPayments.map(({ payment, previous, emiId }) =>
           step.saveEmiPayment(emiId, payment, previous),
         ),

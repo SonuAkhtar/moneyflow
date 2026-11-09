@@ -3,6 +3,14 @@ import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import { PGlite } from "@electric-sql/pglite";
 import { pgcrypto } from "@electric-sql/pglite/contrib/pgcrypto";
+import {
+  accountToRow,
+  borrowingPaymentToRow,
+  borrowingToRow,
+  emiPaymentToRow,
+  emiToRow,
+  transactionToRow,
+} from "../../src/lib/supabase/mappers";
 
 const SUPABASE_STUBS = `
 create role anon nologin;
@@ -286,6 +294,20 @@ describe("baseline migration", () => {
         ),
       ),
     ).rejects.toThrow(/duplicate key/);
+    await as("authenticated", BOB, () =>
+      db.query(
+        "insert into public.emi_payments (emi_id, user_id, month, kind) values ($1, $2, '2026-02', 'extra')",
+        [emi, BOB],
+      ),
+    );
+    await expect(
+      as("authenticated", BOB, () =>
+        db.query(
+          "insert into public.emi_payments (emi_id, user_id, month, kind) values ($1, $2, '2026-02', 'other')",
+          [emi, BOB],
+        ),
+      ),
+    ).rejects.toThrow(/check constraint/);
     await expect(
       db.query(
         `insert into auth.users (id, raw_user_meta_data)
@@ -414,5 +436,30 @@ describe("baseline migration", () => {
       [ALICE],
     );
     expect(Number(left.rows[0]?.n)).toBe(0);
+  });
+});
+
+describe("app and schema stay in sync", () => {
+  it("every column the app writes exists after all migrations", async () => {
+    const any = {} as never;
+    const written: Record<string, string[]> = {
+      accounts: Object.keys(accountToRow(any)),
+      transactions: Object.keys(transactionToRow(any)),
+      emis: Object.keys(emiToRow(any)),
+      emi_payments: Object.keys(emiPaymentToRow(any, "", "")),
+      borrowings: Object.keys(borrowingToRow(any)),
+      borrowing_payments: Object.keys(borrowingPaymentToRow(any, "", "")),
+    };
+    for (const [table, columns] of Object.entries(written)) {
+      const { rows } = await db.query<{ column_name: string }>(
+        "select column_name from information_schema.columns where table_schema = 'public' and table_name = $1",
+        [table],
+      );
+      const existing = new Set(rows.map((r) => r.column_name));
+      expect(
+        columns.filter((c) => !existing.has(c)),
+        table,
+      ).toEqual([]);
+    }
   });
 });

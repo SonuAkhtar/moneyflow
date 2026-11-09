@@ -212,12 +212,30 @@ test("home 'See all' opens the transactions screen filtered to that list", async
     merchant: `Cafe ${i}`,
     occurred_at: new Date(Date.now() - i * 3_600_000).toISOString(),
   }));
-  await signInSeeded(page, { transactions: daily });
+  const lastMonth = new Date();
+  lastMonth.setDate(1);
+  lastMonth.setMonth(lastMonth.getMonth() - 1);
+  const older = Array.from({ length: 3 }, (_, i) => ({
+    account_id: HDFC,
+    type: "expense",
+    amount: 50 + i,
+    category: "food",
+    merchant: `Old ${i}`,
+    occurred_at: lastMonth.toISOString(),
+  }));
+  await signInSeeded(page, { transactions: [...daily, ...older] });
   await page.getByRole("link", { name: "See all 7" }).click();
   await expect(page).toHaveURL(/\/transactions\?kind=daily/);
   await expect(page.getByText("7 transactions", { exact: true })).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Filters, 1 active" }),
+    page.getByRole("button", { name: "Filters, 2 active" }),
+  ).toBeVisible();
+
+  await page.getByRole("link", { name: "Search transactions" }).click();
+  await expect(page).toHaveURL(/\/transactions$/);
+  await expect(page.getByRole("button", { name: "Filters" })).toBeVisible();
+  await expect(
+    page.getByText("10 transactions", { exact: true }),
   ).toBeVisible();
 });
 

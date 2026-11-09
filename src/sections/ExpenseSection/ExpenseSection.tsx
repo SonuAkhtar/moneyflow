@@ -57,8 +57,7 @@ export const ExpenseSection = ({ variant }: ExpenseSectionProps) => {
   const banks = accounts;
 
   const fallbackBankId =
-    accountId ??
-    banks[0]?.id ??
+    accounts.find((a) => a.id === accountId)?.id ??
     accounts.find((a) => a.isPrimary)?.id ??
     accounts[0]?.id;
   const bank = accounts.find((a) => a.id === fallbackBankId) ?? null;
@@ -195,7 +194,7 @@ export const ExpenseSection = ({ variant }: ExpenseSectionProps) => {
             {items.length > PREVIEW_COUNT && (
               <div className={styles.foot}>
                 <Link
-                  href={`${ROUTES.transactions}?kind=${variant}`}
+                  href={`${ROUTES.transactions}?kind=${variant}&from=${currentMonthKey()}-01`}
                   className={styles.seeAll}
                 >
                   See all {items.length}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { Landmark, Minus, Plus } from "lucide-react";
 import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
 import { Button } from "@/components/Button/Button";
@@ -73,7 +73,9 @@ const Form = ({
   const value = Number(amount) || 0;
   const newBalance =
     mode === "add" ? account.balance + value : account.balance - value;
-  const canSave = value > 0;
+  const overdrawn = mode === "take" && value > account.balance + 0.001;
+  const canSave = value > 0 && !overdrawn;
+  const overdrawnId = useId();
 
   const save = () => {
     if (!canSave || submitted.current) return;
@@ -167,6 +169,7 @@ const Form = ({
             styles.toggle_btn,
             mode === "add" && styles["toggle_btn--add"],
           )}
+          aria-pressed={mode === "add"}
           onClick={() => setMode("add")}
         >
           <Plus size={16} /> Add money
@@ -177,6 +180,7 @@ const Form = ({
             styles.toggle_btn,
             mode === "take" && styles["toggle_btn--take"],
           )}
+          aria-pressed={mode === "take"}
           onClick={() => setMode("take")}
         >
           <Minus size={16} /> Take money
@@ -187,7 +191,15 @@ const Form = ({
         value={amount}
         onChange={setAmount}
         tone={mode === "add" ? "success" : "danger"}
+        aria-invalid={overdrawn}
+        aria-describedby={overdrawn ? overdrawnId : undefined}
       />
+      {overdrawn && (
+        <p id={overdrawnId} className={styles.error} role="alert">
+          Amount is more than the {formatCurrency(account.balance, currency)}{" "}
+          saved in {account.name}.
+        </p>
+      )}
 
       <div className={styles.preview}>
         <span className={styles.preview_label}>New total</span>

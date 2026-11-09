@@ -25,7 +25,7 @@
     box-shadow: var(--shadow-card);
 
     .header_logoImg {
-      height: 28px;
+      transform: scale(0.73);
     }
 
     .header_actions {
@@ -46,7 +46,8 @@
     height: 2.4rem;
     width: auto;
     display: block;
-    transition: height var(--dur-base) var(--ease-smooth);
+    transform-origin: left center;
+    transition: transform var(--dur-base) var(--ease-smooth);
   }
 
   &_actions {

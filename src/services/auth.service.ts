@@ -123,7 +123,9 @@ export const authService = {
 
   async signOut(): Promise<void> {
     const supabase = getBrowserSupabase();
-    if (supabase) await supabase.auth.signOut();
+    if (!supabase) return;
+    const { error } = await supabase.auth.signOut();
+    if (error) await supabase.auth.signOut({ scope: "local" });
   },
 
   async resetPassword(email: string): Promise<AuthResult> {

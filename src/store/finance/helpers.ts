@@ -5,7 +5,7 @@ import { getBrowserSupabase } from "@/lib/supabase/client";
 import { isAuthError, isTransientError, runWithRetry } from "@/lib/retry";
 import { transactionDelta } from "@/utils";
 import type { Account, Transaction } from "@/types";
-import { runOp } from "./ops";
+import { runOp, type Op } from "./ops";
 import { loadOutbox, OUTBOX_KEY, saveOutbox, type OutboxGroup } from "./outbox";
 import type {
   FinanceGet,
@@ -40,6 +40,51 @@ const isOffline = () =>
 
 type GroupResult = "done" | "blocked";
 
+const writtenIds = (op: Op): string[] => {
+  switch (op.k) {
+    case "account.insert":
+      return [op.account.id];
+    case "txn.save":
+      return [op.txn.id];
+    case "emi.save":
+      return [op.emi.id];
+    case "borrowing.save":
+      return [op.borrowing.id];
+    case "emi.savePayment":
+    case "borrowing.savePayment":
+      return [op.payment.id];
+    case "account.meta":
+    case "account.remove":
+    case "txn.remove":
+    case "emi.remove":
+    case "emi.removePayment":
+    case "borrowing.remove":
+    case "borrowing.removePayment":
+      return [op.id];
+    default:
+      return [];
+  }
+};
+
+const referencedIds = (op: Op): string[] => {
+  switch (op.k) {
+    case "account.adjust":
+      return [op.id];
+    case "txn.save":
+      return [op.txn.accountId];
+    case "txn.removeByAccount":
+      return [op.accountId];
+    case "emi.save":
+      return op.emi.accountId ? [op.emi.accountId] : [];
+    case "emi.savePayment":
+      return [op.emiId, op.payment.accountId ?? ""];
+    case "borrowing.savePayment":
+      return [op.borrowingId];
+    default:
+      return [];
+  }
+};
+
 export const createMutationHelpers = (
   set: FinanceSet,
   get: FinanceGet,
@@ -50,6 +95,7 @@ export const createMutationHelpers = (
   let needsResync = false;
   let retryTimer: ReturnType<typeof setTimeout> | null = null;
   let retryIndex = 0;
+  let queued = 0;
   const created = new Set<string>();
 
   const currentUid = () =>
@@ -203,8 +249,36 @@ export const createMutationHelpers = (
         scheduleRetry();
         break;
       }
-      created.delete(group.id);
-      commit((stored) => stored.filter((g) => g.id !== group.id));
+      if (group.undoing) {
+        const reverted = new Set(
+          group.steps.flatMap((st) => writtenIds(st.op)),
+        );
+        const dropped: OutboxGroup[] = [];
+        for (const g of mine()) {
+          if (g.id === group.id) continue;
+          const ops = g.steps.map((st) => st.op);
+          const depends = ops.some((op) =>
+            [...writtenIds(op), ...referencedIds(op)].some((id) =>
+              reverted.has(id),
+            ),
+          );
+          if (!depends) continue;
+          dropped.push(g);
+          for (const op of ops)
+            for (const id of writtenIds(op)) reverted.add(id);
+        }
+        const gone = new Set([group.id, ...dropped.map((g) => g.id)]);
+        commit((stored) => stored.filter((g) => !gone.has(g.id)));
+        for (const id of gone) created.delete(id);
+        needsResync = true;
+        if (dropped.length > 0)
+          toastError(
+            `${dropped.length} later change${dropped.length === 1 ? " was" : "s were"} also reverted`,
+          );
+      } else {
+        created.delete(group.id);
+        commit((stored) => stored.filter((g) => g.id !== group.id));
+      }
       retryIndex = 0;
     }
     publish();
@@ -249,6 +323,7 @@ export const createMutationHelpers = (
       cursor: 0,
     };
     created.add(group.id);
+    queued += 1;
     commit((stored) => [...stored, group]);
     publish();
     void kick();
@@ -260,6 +335,7 @@ export const createMutationHelpers = (
     toastError,
     idle: kick,
     pendingCount: () => mine().length,
+    queuedCount: () => queued,
     retry: () => void kick(),
     deferResync: () => {
       needsResync = true;

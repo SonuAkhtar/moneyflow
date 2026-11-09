@@ -109,14 +109,10 @@ export default function AnalyticsPage() {
     </Button>
   );
 
-  const monthOptions = useMemo(
-    () =>
-      lastNMonthKeys(HISTORY_MONTH_OPTIONS)
-        .slice()
-        .reverse()
-        .map((key) => ({ label: monthLabel(key), value: key })),
-    [],
-  );
+  const monthOptions = lastNMonthKeys(HISTORY_MONTH_OPTIONS)
+    .slice()
+    .reverse()
+    .map((key) => ({ label: monthLabel(key), value: key }));
 
   const groups = useMemo(() => {
     const inMonth = transactions

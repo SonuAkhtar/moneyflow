@@ -31,17 +31,23 @@ export const createCoreSlice: SliceCreator<CoreSlice> = (
     idle,
     toastError,
     pendingCount,
+    queuedCount,
     deferResync,
     retry,
     discardPending,
   },
 ) => {
   let generation = 0;
+  let queuedFrom: string | null = null;
 
-  const loadOlder = async (from: string) => {
+  const loadOlder = async (from: string): Promise<void> => {
     const s = get();
     const uid = s.profile?.id;
-    if (!uid || !s.historyFrom || s.historyLoading) return;
+    if (s.historyLoading) {
+      if (queuedFrom === null || from < queuedFrom) queuedFrom = from;
+      return;
+    }
+    if (!uid || !s.historyFrom) return;
     if (from >= s.historyFrom) return;
     set({ historyLoading: true });
     try {
@@ -64,6 +70,9 @@ export const createCoreSlice: SliceCreator<CoreSlice> = (
       toastError(err instanceof Error ? err.message : "Couldn't load history");
     } finally {
       set({ historyLoading: false });
+      const next = queuedFrom;
+      queuedFrom = null;
+      if (next !== null) void loadOlder(next);
     }
   };
 
@@ -77,11 +86,15 @@ export const createCoreSlice: SliceCreator<CoreSlice> = (
           set({ hasHydrated: true });
           return;
         }
+        const queuedBefore = queuedCount();
         const snap = await fetchSnapshot(userId);
         if (gen !== generation) return;
         const prev = get();
         const hasLocal = prev.profile?.id === userId;
-        if (hasLocal && pendingCount() > 0) {
+        if (
+          hasLocal &&
+          (pendingCount() > 0 || queuedCount() !== queuedBefore)
+        ) {
           deferResync();
           set({ hasHydrated: true });
           void idle();

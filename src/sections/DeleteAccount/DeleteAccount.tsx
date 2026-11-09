@@ -48,6 +48,7 @@ export const DeleteAccount = ({ open, onClose }: DeleteAccountProps) => {
       return;
     }
     discardPendingSync();
+    navigator.serviceWorker?.controller?.postMessage({ type: "CLEAR_CACHES" });
     resetAll();
     clearAuth();
     toast({ title: "Your account and data were deleted", variant: "info" });

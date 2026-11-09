@@ -17,6 +17,8 @@ import { useToast } from "@/hooks/useToast";
 import {
   currentDateKey,
   currentMonthKey,
+  emiInstalments,
+  emiPaidAmount,
   emiPaidMonths,
   emiStartMonth,
   formatCurrency,
@@ -113,7 +115,8 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
       amount: String(c.amount),
     })),
   );
-  const loggedCount = emi?.payments?.length ?? 0;
+  const loggedCount = emi ? emiInstalments(emi).length : 0;
+  const paymentCount = emi?.payments?.length ?? 0;
   const editingSip = Boolean(emi) && !isLoan;
   const [paidMode, setPaidMode] = useState<PaidMode>(
     editingSip ? "amount" : "months",
@@ -134,8 +137,8 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
     .reduce((acc, p) => acc + p.amount, 0);
   const deleteMessage =
     `"${emi?.name ?? ""}"` +
-    (loggedCount > 0
-      ? ` and its ${loggedCount} logged payment${loggedCount === 1 ? "" : "s"} will be removed.`
+    (paymentCount > 0
+      ? ` and its ${paymentCount} logged payment${paymentCount === 1 ? "" : "s"} will be removed.`
       : " will be removed.") +
     (refund > 0
       ? ` ${formatCurrency(refund)} will be added back to your bank balance.`
@@ -166,10 +169,35 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
     if (months > 0) setTenure(String(months));
   };
 
+  const paidTotal = emi ? emiPaidAmount(emi) : 0;
+  const dueSoFar = Math.max(
+    0,
+    Math.min(
+      tenureNum > 0 ? tenureNum : Infinity,
+      differenceInCalendarMonths(
+        parseISO(`${currentMonthKey()}-01`),
+        parseISO(`${startMonth}-01`),
+      ) + 1,
+    ),
+  );
+
+  const loggedMonths = emi
+    ? emiInstalments(emi)
+        .map((p) => p.month)
+        .sort()
+    : [];
+  const firstLogged = loggedMonths[0];
+  const lastLogged = loggedMonths.at(-1);
+  const startError =
+    isLoan && firstLogged && startMonth > firstLogged
+      ? `EMIs are logged from ${monthLabel(firstLogged)}`
+      : undefined;
   const endError =
     endInput !== endMonth
       ? `Pick a month from ${monthLabel(startMonth)}`
-      : undefined;
+      : isLoan && lastLogged && endMonth && endMonth < lastLogged
+        ? `EMIs are logged up to ${monthLabel(lastLogged)}`
+        : undefined;
 
   const rateNum = Number(rate) || 0;
   const rateError = rateNum > 100 ? "Enter a rate up to 100%" : undefined;
@@ -183,7 +211,7 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
         : `Pick a month from ${monthLabel(startMonth)}`;
     if (changes.some((o, j) => j < i && o.from === c.from))
       return "This month already has a change";
-    if (c.amount !== "" && !(Number(c.amount) > 0)) return "Enter an amount";
+    if (!(Number(c.amount) > 0)) return "Enter an amount";
     return undefined;
   };
   const changesValid =
@@ -193,7 +221,7 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
   const canSave =
     Number(amount) > 0 &&
     Boolean(resolvedName) &&
-    !(isLoan && (rateError || endError)) &&
+    !(isLoan && (rateError || endError || startError)) &&
     changesValid;
 
   const updateChange = (i: number, patch: Partial<ChangeRow>) =>
@@ -249,11 +277,10 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
       };
     }
     const totalMonths = Math.max(0, Math.floor(Number(tenure) || 0));
-    const paidMonths = totalMonths > 0 ? Math.min(paidM, totalMonths) : paidM;
     return {
       totalMonths,
-      paidMonths,
-      remainingMonths: Math.max(0, totalMonths - paidMonths),
+      paidMonths: loggedCount,
+      remainingMonths: Math.max(0, totalMonths - loggedCount),
     };
   };
 
@@ -329,7 +356,9 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
   const amountField = (
     <div className={styles.group}>
       <NumberInput
-        label={`Monthly amount (${symbol})`}
+        label={
+          isLoan ? `Monthly EMI (${symbol})` : `Monthly amount (${symbol})`
+        }
         inputMode="decimal"
         placeholder="0"
         value={amount}
@@ -400,23 +429,26 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
 
         {!isLoan && amountField}
 
-        <Input
-          label={isLoan ? "Start date" : "Investing since"}
-          type="date"
-          value={startDate}
-          onChange={(e) => changeStartDate(e.target.value)}
-          hint="The day of this date sets the monthly due day"
-        />
+        {!isLoan && (
+          <Input
+            label="Investing since"
+            type="date"
+            value={startDate}
+            onChange={(e) => changeStartDate(e.target.value)}
+            hint="The day of this date sets the monthly due day"
+          />
+        )}
 
         {isLoan && (
           <>
             <div className={styles.row}>
-              <NumberInput
-                label="Tenure (months)"
-                inputMode="numeric"
-                placeholder="0"
-                value={tenure}
-                onChange={(e) => changeTenure(e.target.value)}
+              <Input
+                label="Start date"
+                type="date"
+                value={startDate}
+                onChange={(e) => changeStartDate(e.target.value)}
+                hint="Sets the due day"
+                error={startError}
               />
               <Input
                 label="End month"
@@ -426,15 +458,19 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
                 value={endInput}
                 onChange={(e) => changeEndMonth(e.target.value)}
                 error={endError}
-                hint={
-                  tenureNum > 0
-                    ? `${tenureNum} month${tenureNum === 1 ? "" : "s"}`
-                    : undefined
-                }
               />
             </div>
 
-            {amountField}
+            <div className={styles.row}>
+              <NumberInput
+                label="Tenure (months)"
+                inputMode="numeric"
+                placeholder="0"
+                value={tenure}
+                onChange={(e) => changeTenure(e.target.value)}
+              />
+              {amountField}
+            </div>
 
             <div className={styles.group}>
               <div className={styles.paid_top}>
@@ -503,33 +539,46 @@ export const AddEmiSheet = ({ open, onClose, kind, emi }: AddEmiSheetProps) => {
           </>
         )}
 
-        <div className={styles.paid}>
-          <div className={styles.paid_top}>
-            <span id={paidLabelId} className={styles.paid_label}>
-              {isLoan
-                ? "Paid so far"
-                : loggedCount > 0
+        {isLoan ? (
+          isEdit && (
+            <div className={styles.paid} aria-live="polite">
+              <span className={styles.paid_label}>Paid so far</span>
+              <span className={styles.note}>
+                {loggedCount > 0
+                  ? `${loggedCount} EMI${loggedCount === 1 ? "" : "s"} logged · ${formatCurrency(paidTotal)}`
+                  : "No EMIs logged yet"}
+                {dueSoFar > 0 &&
+                  ` · ${dueSoFar} due since ${monthLabel(startMonth)}`}
+              </span>
+            </div>
+          )
+        ) : (
+          <div className={styles.paid}>
+            <div className={styles.paid_top}>
+              <span id={paidLabelId} className={styles.paid_label}>
+                {loggedCount > 0
                   ? "Invested before logged payments"
                   : "Invested so far"}
-            </span>
-            <SegmentedControl
-              size="sm"
+              </span>
+              <SegmentedControl
+                size="sm"
+                aria-labelledby={paidLabelId}
+                segments={PAID_MODES}
+                value={paidMode}
+                onChange={switchPaidMode}
+              />
+            </div>
+            <NumberInput
               aria-labelledby={paidLabelId}
-              segments={PAID_MODES}
-              value={paidMode}
-              onChange={switchPaidMode}
+              inputMode={paidMode === "amount" ? "decimal" : "numeric"}
+              placeholder={
+                paidMode === "amount" ? `${symbol}0` : "Number of months"
+              }
+              value={paid}
+              onChange={(e) => setPaid(e.target.value)}
             />
           </div>
-          <NumberInput
-            aria-labelledby={paidLabelId}
-            inputMode={paidMode === "amount" ? "decimal" : "numeric"}
-            placeholder={
-              paidMode === "amount" ? `${symbol}0` : "Number of months"
-            }
-            value={paid}
-            onChange={(e) => setPaid(e.target.value)}
-          />
-        </div>
+        )}
       </FormStack>
 
       <ConfirmDialog

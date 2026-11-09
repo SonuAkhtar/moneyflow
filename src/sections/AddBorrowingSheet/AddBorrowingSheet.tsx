@@ -8,7 +8,13 @@ import { SheetActions } from "@/components/SheetActions/SheetActions";
 import { ConfirmDialog } from "@/components/ConfirmDialog/ConfirmDialog";
 import { useFinanceStore } from "@/store/financeStore";
 import { useToast } from "@/hooks/useToast";
-import { currentDateKey, getCurrencySymbol } from "@/utils";
+import {
+  borrowingRepaid,
+  currentDateKey,
+  dayShort,
+  formatCurrency,
+  getCurrencySymbol,
+} from "@/utils";
 import type { Borrowing } from "@/types";
 import styles from "./AddBorrowingSheet.module.scss";
 
@@ -48,7 +54,21 @@ export const AddBorrowingSheet = ({
   const submitted = useRef(false);
 
   const value = Number(amount) || 0;
-  const canSave = value > 0 && Boolean(lender.trim());
+  const repaid = borrowing ? borrowingRepaid(borrowing) : 0;
+  const belowRepaid = value > 0 && value < repaid - 0.001;
+  const futureBorrow = borrowedOn > todayKey();
+  const dueTooEarly = Boolean(dueDate) && dueDate < borrowedOn;
+  const firstRepaid = (borrowing?.payments ?? [])
+    .map((p) => p.paidOn.slice(0, 10))
+    .sort()[0];
+  const afterRepaid = Boolean(firstRepaid) && borrowedOn > firstRepaid!;
+  const canSave =
+    value > 0 &&
+    Boolean(lender.trim()) &&
+    !belowRepaid &&
+    !futureBorrow &&
+    !afterRepaid &&
+    !dueTooEarly;
 
   const submit = () => {
     if (!canSave || submitted.current) return;
@@ -112,32 +132,52 @@ export const AddBorrowingSheet = ({
       }
     >
       <div className={styles.form}>
-        <Input
-          label="Borrowed from"
-          placeholder="e.g. Rahul, Office, Bank"
-          value={lender}
-          onChange={(e) => setLender(e.target.value)}
-        />
-        <NumberInput
-          label={`Amount (${symbol})`}
-          inputMode="decimal"
-          placeholder="0"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-        />
-        <Input
-          label="Borrowed on"
-          type="date"
-          max={todayKey()}
-          value={borrowedOn}
-          onChange={(e) => setBorrowedOn(e.target.value)}
-        />
-        <Input
-          label="Due date (optional)"
-          type="date"
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-        />
+        <div className={styles.row}>
+          <Input
+            label="Borrowed from"
+            placeholder="e.g. Rahul"
+            value={lender}
+            onChange={(e) => setLender(e.target.value)}
+          />
+          <NumberInput
+            label={`Amount (${symbol})`}
+            inputMode="decimal"
+            placeholder="0"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            error={
+              belowRepaid
+                ? `You have already repaid ${formatCurrency(repaid)}`
+                : undefined
+            }
+          />
+        </div>
+        <div className={styles.row}>
+          <Input
+            label="Borrowed on"
+            type="date"
+            max={todayKey()}
+            value={borrowedOn}
+            onChange={(e) => setBorrowedOn(e.target.value)}
+            error={
+              futureBorrow
+                ? "Pick today or an earlier date"
+                : afterRepaid
+                  ? `A repayment was made on ${dayShort(firstRepaid!)}`
+                  : undefined
+            }
+          />
+          <Input
+            label="Due date (optional)"
+            type="date"
+            min={borrowedOn}
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
+            error={
+              dueTooEarly ? "Pick a date on or after Borrowed on" : undefined
+            }
+          />
+        </div>
         <Input
           label="Purpose (optional)"
           placeholder="e.g. Medical, rent, emergency"

@@ -79,6 +79,5 @@ export const hitRateLimit = async (
 
 export const clientIp = (headers: Headers): string =>
   headers.get("x-vercel-forwarded-for")?.trim() ||
-  headers.get("x-real-ip")?.trim() ||
   headers.get("x-forwarded-for")?.split(",").pop()?.trim() ||
   "unknown";

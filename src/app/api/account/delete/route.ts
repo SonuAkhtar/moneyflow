@@ -61,18 +61,20 @@ export async function POST(request: NextRequest) {
   if (authError || !user)
     return json({ ok: false, message: "Not signed in" }, 401);
 
-  const { error: deleteError } = await admin.auth.admin.deleteUser(user.id);
-  if (deleteError) {
-    return json(
+  const failed = () =>
+    json(
       { ok: false, message: "Couldn't delete your account. Please try again." },
       500,
     );
-  }
 
   try {
     await removeAvatars(admin, user.id);
   } catch (err) {
     logger.error("account.delete.avatars", err, { userId: user.id });
+    return failed();
   }
+
+  const { error: deleteError } = await admin.auth.admin.deleteUser(user.id);
+  if (deleteError) return failed();
   return json({ ok: true });
 }

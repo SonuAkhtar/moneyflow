@@ -109,6 +109,23 @@ describe("account types", () => {
   });
 });
 
+describe("savings withdrawals", () => {
+  it("cannot take out more than the bank holds", () => {
+    const s = useFinanceStore.getState();
+    s.addAccount({
+      name: "HDFC",
+      type: "savings",
+      balance: 1000,
+      colorTag: "#000",
+    });
+    const id = useFinanceStore.getState().accounts[0]!.id;
+    s.addSavingWithdrawal(id, 5000);
+    expect(useFinanceStore.getState().accounts[0]!.balance).toBe(1000);
+    s.addSavingWithdrawal(id, 1000);
+    expect(useFinanceStore.getState().accounts[0]!.balance).toBe(0);
+  });
+});
+
 describe("loadHistory", () => {
   const txn = (id: string, occurredAt: string): Transaction => ({
     id,

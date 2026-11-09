@@ -306,7 +306,7 @@ describe("EMI fixes", () => {
     useFinanceStore.getState().addEmi({
       name: "Loan",
       kind: "loan",
-      startMonth: "2025-01",
+      startMonth: currentMonthKey(),
       monthlyAmount: 100,
       principal: 0,
       interestRate: 0,

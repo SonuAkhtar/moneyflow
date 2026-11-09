@@ -177,6 +177,7 @@ export const emiToRow = (e: Emi): TablesInsert<"emis"> => ({
 
 export const rowToEmiPayment = (r: Tables<"emi_payments">): EmiPayment => ({
   id: r.id,
+  kind: r.kind === "extra" ? "extra" : "emi",
   month: r.month,
   paidOn: r.paid_on ?? `${r.month}-01`,
   amount: n(r.amount),
@@ -192,6 +193,7 @@ export const emiPaymentToRow = (
   emi_id: emiId,
   user_id: userId,
   account_id: p.accountId,
+  kind: p.kind ?? "emi",
   month: p.month,
   paid_on: p.paidOn,
   amount: p.amount,

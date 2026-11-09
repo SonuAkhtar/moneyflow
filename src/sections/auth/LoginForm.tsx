@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, ArrowRight, Lock, User } from "lucide-react";
@@ -13,6 +13,22 @@ import { useAuthStore } from "@/store/authStore";
 import { signInSchema, type SignInValues } from "@/utils/validation";
 import { ROUTES } from "@/constants";
 import styles from "./auth.module.scss";
+
+const LINK_ERRORS: Record<string, string> = {
+  link_expired: "That link has expired. Request a new one and try again.",
+  auth_callback: "That link didn't work. Sign in or request a new link.",
+};
+
+export const LinkErrorAlert = () => {
+  const message = LINK_ERRORS[useSearchParams().get("error") ?? ""];
+  if (!message) return null;
+  return (
+    <div className={styles.alert} role="alert">
+      <AlertCircle size={16} />
+      {message}
+    </div>
+  );
+};
 
 export const LoginForm = () => {
   const router = useRouter();

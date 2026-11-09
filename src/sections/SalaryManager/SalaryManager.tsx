@@ -7,6 +7,7 @@ import { BottomSheet } from "@/components/BottomSheet/BottomSheet";
 import { AmountField } from "@/components/AmountField/AmountField";
 import { Select } from "@/components/Select/Select";
 import { SheetActions } from "@/components/SheetActions/SheetActions";
+import { ConfirmDialog } from "@/components/ConfirmDialog/ConfirmDialog";
 import { useFinanceStore } from "@/store/financeStore";
 import { salaryTotalsByMonth } from "@/store/finance/selectors";
 import { useToast } from "@/hooks/useToast";
@@ -25,6 +26,7 @@ export const SalaryManager = () => {
   const accounts = useFinanceStore((s) => s.accounts);
   const setSalary = useFinanceStore((s) => s.setSalary);
   const deleteTransaction = useFinanceStore((s) => s.deleteTransaction);
+  const restoreTransaction = useFinanceStore((s) => s.restoreTransaction);
   const currency = useFinanceStore((s) => s.profile?.currency ?? "INR");
   const expectedSalary = useFinanceStore((s) => s.profile?.monthlySalary ?? 0);
   const toast = useToast();
@@ -33,6 +35,7 @@ export const SalaryManager = () => {
   const [editMonth, setEditMonth] = useState<string | null>(null);
   const [amount, setAmount] = useState("");
   const [bankId, setBankId] = useState("");
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const submitted = useRef(false);
 
   const salaryByMonth = useMemo(
@@ -40,8 +43,8 @@ export const SalaryManager = () => {
     [transactions],
   );
 
-  const months = useMemo(() => lastNMonthKeys(7).reverse(), []);
   const current = currentMonthKey();
+  const months = lastNMonthKeys(7).reverse();
 
   const defaultBankId =
     accounts.find((a) => a.isPrimary)?.id ?? accounts[0]?.id ?? "";
@@ -89,19 +92,23 @@ export const SalaryManager = () => {
   const remove = () => {
     if (!editMonth || submitted.current) return;
     submitted.current = true;
-    transactions
-      .filter(
-        (t) =>
-          t.type === "income" &&
-          t.category === "salary" &&
-          monthKey(t.occurredAt) === editMonth,
-      )
-      .forEach((t) => deleteTransaction(t.id));
+    const removed = transactions.filter(
+      (t) =>
+        t.type === "income" &&
+        t.category === "salary" &&
+        monthKey(t.occurredAt) === editMonth,
+    );
+    removed.forEach((t) => deleteTransaction(t.id));
     toast({
       title: "Salary removed",
       description: monthLabel(editMonth),
       variant: "info",
+      action: {
+        label: "Undo",
+        onClick: () => removed.forEach((t) => restoreTransaction(t)),
+      },
     });
+    setConfirmOpen(false);
     setEditMonth(null);
   };
 
@@ -175,12 +182,20 @@ export const SalaryManager = () => {
           />
           <SheetActions
             onSave={save}
-            onDelete={editorHasValue ? remove : undefined}
+            onDelete={editorHasValue ? () => setConfirmOpen(true) : undefined}
             saveLabel="Save salary"
             disabled={Number(amount) <= 0}
           />
         </div>
       </BottomSheet>
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Remove this salary?"
+        message={`The ${editMonth ? monthLabel(editMonth) : ""} salary will be removed and taken back out of your bank balance.`}
+        confirmLabel="Remove"
+        onConfirm={remove}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </>
   );
 };
